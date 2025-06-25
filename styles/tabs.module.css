@@ -1,0 +1,18 @@
+.root {
+  @apply bg-white flex flex-col gap-6 rounded-lg h-full overflow-auto p-4;
+}
+
+.tab {
+  @apply p-4 font-medium text-sm border-b border-b-transparent text-grey-500;
+}
+
+.tab[data-active] {
+  @apply text-primary border-b border-b-primary font-medium text-sm;
+}
+
+.panel {
+  @apply flex-1 overflow-auto;
+}
+.list {
+  border-bottom: 1px solid #e4e7ec;
+}

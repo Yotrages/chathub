@@ -1,0 +1,12 @@
+.th {
+  @apply font-semibold text-xs text-grey-400 uppercase;
+}
+.td {
+  @apply text-sm text-grey-500 px-3 py-4;
+}
+.tr {
+  @apply border-b border-b-grey-100
+}
+.thead {
+  @apply bg-[#F9FAFB]
+}

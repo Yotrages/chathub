@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --border-border-primary: #d1d5db;
+}
+body {
+  background-color: white !important;
+  color: black !important;
+}
+.gradient-text {
+  background: linear-gradient(
+    91.16deg,
+    #ffa982 1.74%,
+    #ffffff 43.71%,
+    #ffffff 61.62%,
+    #ffa982 102.48%
+  );
+}
+
+.nav-shadow {
+  box-shadow: 0px 0px 3px -1px #1019280a, 0px 14px 22px -9px #10192824;
+}
+
+.bg-gradient {
+  background: linear-gradient(178.65deg, #fff8f5 1.15%, #ffffff 15.52%);
+}
+.feature-shadow {
+  box-shadow: 0px 1.5px 4px -1px #10192812;
+}
+.how_it_works_shadow {
+  box-shadow: 0px 4px 200px 0px #e8f9f733;
+}
+.information-gradient {
+  background: linear-gradient(180deg, #0d111f 0%, #080808 100%);
+}
+.input-border {
+  border: 1px solid;
+  border-image-source: linear-gradient(
+    90.3deg,
+    rgba(255, 255, 255, 0.4) 0.26%,
+    rgba(255, 255, 255, 0.04) 99.24%
+  );
+}
+.bg-projects {
+  background: linear-gradient(0deg, #ffffff, #ffffff),
+    linear-gradient(178.65deg, #fff8f5 1.15%, #ffffff 15.52%);
+}
+
+.register-gradient {
+  background: radial-gradient(
+    51.34% 87.15% at 50% 0%,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0) 99.11%
+  );
+}
+
+.register-shadow {
+  box-shadow: 0px 4px 6px -4px #121a2b0d;
+  box-shadow: 0px 12px 15px -4px #121a2b1a;
+}
+
+.button-gradient {
+  border-image-source: linear-gradient(
+      0deg,
+      var(--border-border-primary, #d1d5db),
+      var(--border-border-primary, #d1d5db)
+    ),
+    radial-gradient(
+        74.89% 74.89% at 50.15% 25.11%,
+        #f8f8f8 0%,
+        rgba(248, 248, 248, 0) 100%
+      )
+      /* warning: gradient uses a rotation that is not supported by CSS and may not behave as expected */;
+}
+
+.input-shadow {
+  box-shadow: 0px 1px 2px 0px #121a2b0d;
+}
+
+input[type="checkbox"].custom-checkbox:checked {
+  background-color: #eb5017;
+  border-color: #eb5017;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M6.00004 10.8002L3.20004 8.00021L2.26671 8.93354L6.00004 12.6669L14 4.66688L13.0667 3.73354L6.00004 10.8002Z'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.green {
+  background-color: #ff9800;
+}
+
+.mantine-Tabs-tab .count {
+  @apply bg-neutral-50 border text-heading-secondary border-neutral-200;
+}
+.mantine-Tabs-tab[data-active] .count {
+  @apply text-white border-0 bg-primary;
+}
+
+.allocation-shadow {
+  box-shadow: 0px 2px 4px -1px #10192805;
+
+box-shadow: 0px 5px 13px -5px #1019280D;
+
+}
+
+.map-gradient {
+  background: linear-gradient(176.37deg, #FFFFFF 5.55%, rgba(255, 255, 255, 0) 24.76%);
+}
+
+
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
