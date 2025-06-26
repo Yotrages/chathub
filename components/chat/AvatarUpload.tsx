@@ -1,4 +1,3 @@
-// File: src/frontend/components/chat/AvatarUpload.tsx
 'use client';
 import { useState, useRef } from 'react';
 import { X, Upload, User } from 'lucide-react';

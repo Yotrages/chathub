@@ -1,4 +1,3 @@
-// components/post/PostItem.tsx
 "use client";
 import { useState, useRef } from "react";
 import { useLikePost, useAddComment, useDeletePost, useUpdatePost } from "@/hooks/usePosts";
@@ -48,7 +47,7 @@ export const PostItem = ({ post }: PostItemProps) => {
   const { mutate: addComment } = useAddComment(post._id);
   const {mutate: deletePost} = useDeletePost(post._id)
   const {mutate: EditPost} = useUpdatePost(post._id)
-  // Extract post properties
+
   const { _id, authorId, content, createdAt, likes, comments, images } = post;
 
   // Process media files

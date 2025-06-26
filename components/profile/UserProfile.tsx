@@ -11,12 +11,10 @@ interface PostListProps {
 }
 
 export const UserPosts = ({ isLoading }: PostListProps) => {
-  // Fixed: Changed from 'post' to 'posts' and accessing the correct properties
   const { posts, pagination, isLoading: postsLoading } = useSelector((state: RootState) => state.post);
   const [ref, inView] = useInView();
   const { trigger } = useGetUserPosts();
 
-  // Determine if there are more posts to load
   const hasMore = pagination?.hasNextPage ?? false;
 
   // Infinite loading

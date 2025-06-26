@@ -1,8 +1,7 @@
-// components/posts/CreatePost.tsx
 'use client';
 import { useState, useRef } from 'react';
 import { useCreatePost } from '@/hooks/usePosts';
-import { fileUploadService } from '@/hooks/usePosts'; // Updated import
+import { fileUploadService } from '@/hooks/usePosts'; 
 import { Image, Video, Paperclip, X, FileText, Play } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/libs/redux/store';

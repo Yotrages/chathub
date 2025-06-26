@@ -1,4 +1,3 @@
-// components/posts/PostList.tsx
 'use client';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
@@ -12,12 +11,10 @@ interface PostListProps {
 }
 
 export const PostList = ({ isLoading }: PostListProps) => {
-  // Fixed: Changed from 'post' to 'posts' and accessing the correct properties
   const { posts, pagination, isLoading: postsLoading } = useSelector((state: RootState) => state.post);
   const [ref, inView] = useInView();
   const { trigger } = useGetPosts();
 
-  // Determine if there are more posts to load
   const hasMore = pagination?.hasNextPage ?? false;
 
   // Infinite loading

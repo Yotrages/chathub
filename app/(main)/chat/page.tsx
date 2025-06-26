@@ -1,4 +1,3 @@
-// pages/ChatPage.tsx
 'use client';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { ChatWindow } from '@/components/chat/ChatWindow';

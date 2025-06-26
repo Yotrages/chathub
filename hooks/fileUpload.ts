@@ -1,4 +1,3 @@
-// libs/upload/file-service.ts
 import { api } from '@/libs/axios/config';
 
 export interface UploadProgress {
