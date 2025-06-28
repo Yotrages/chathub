@@ -56,7 +56,6 @@ export const CreatePost = () => {
             filePreview.preview = await fileUploadService.createVideoPreview(file);
             console.log('🎥 Created video thumbnail for:', file.name);
           }
-          // Documents don't need previews
         } catch (error) {
           console.error(`❌ Error creating preview for ${file.name}:`, error);
         }
@@ -78,7 +77,6 @@ export const CreatePost = () => {
 
   const removeFile = (index: number) => {
     console.log('🗑️ Removing file at index:', index);
-    // Clean up object URL to prevent memory leaks
     if (filePreviews[index]?.preview && filePreviews[index].preview?.startsWith('blob:')) {
       URL.revokeObjectURL(filePreviews[index].preview!);
     }
@@ -96,16 +94,14 @@ export const CreatePost = () => {
       type: f.type 
     })));
     
-    // Validate that we have content or files
     if (!data.content.trim() && files.length === 0) {
       alert('Post must have content or files');
       return;
     }
     
-    // Pass data in the format expected by the backend
     const postData = {
       content: data.content,
-      images: files // Backend expects 'images' key for all file types
+      images: files 
     };
     
     console.log('🚀 Sending post data:', {

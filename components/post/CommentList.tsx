@@ -54,7 +54,6 @@ interface CommentItemProps {
   }>, type: string) => void;
 }
 
-// Likes Modal Component
 const LikesModal: React.FC<LikesModalProps> = ({
   likes,
   isOpen,
@@ -111,7 +110,6 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
   } = useAddNestedReply(postId, commentId, reply._id);
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Fixed the isLiked logic
   const isLiked = user && reply.likes ? 
     reply.likes.some((like) => like?._id === user.id) : false;
 
@@ -294,7 +292,6 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
    const { user } = useSelector((state: RootState) => state.auth);
 
-  // Fixed the isLiked logic here too
   const isLiked = user && comment.likes ? 
     comment.likes.some((like) => like?._id === user.id) : false;
 
@@ -468,7 +465,7 @@ export const CommentList: React.FC<CommentListProps> = ({
       likes: [],
       content:
         "This is an amazing post! Thanks for sharing this valuable information.",
-      createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+      createdAt: new Date(Date.now() - 1000 * 60 * 30), 
       replies: [
         {
           _id: "1",
@@ -476,14 +473,14 @@ export const CommentList: React.FC<CommentListProps> = ({
           content:
             "I totally agree! This helped me understand the concept better.",
           likes: [],
-          createdAt: new Date(Date.now() - 1000 * 60 * 25), // 25 minutes ago
+          createdAt: new Date(Date.now() - 1000 * 60 * 25),
           replies: [
             {
               _id: "2",
               authorId: { username: "bob_wilson", avatar: "" },
               content: "Same here! Very well explained.",
               likes: [],
-              createdAt: new Date(Date.now() - 1000 * 60 * 20), // 20 minutes ago
+              createdAt: new Date(Date.now() - 1000 * 60 * 20), 
             },
           ],
         },
@@ -495,7 +492,7 @@ export const CommentList: React.FC<CommentListProps> = ({
       likes: [],
       content:
         "Great tutorial! I learned so much from this. The examples are particularly helpful.",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2), 
       replies: [
         {
           _id: "1",
@@ -503,7 +500,7 @@ export const CommentList: React.FC<CommentListProps> = ({
           content:
             "Glad you found it helpful! Feel free to ask if you have any questions.",
           likes: [],
-          createdAt: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
+          createdAt: new Date(Date.now() - 1000 * 60 * 60), 
         },
       ],
     },

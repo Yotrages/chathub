@@ -49,7 +49,6 @@ const SettingsPage: React.FC = () => {
     setLoading(true);
     
     try {
-      // API call would be made here using your existing API hook
       // await apiHook.updateProfile(profileData);
       
       console.log('Updating profile:', profileData);
@@ -75,7 +74,6 @@ const SettingsPage: React.FC = () => {
     setLoading(true);
     
     try {
-      // API call would be made here using your existing API hook
       // await apiHook.updateAccount(accountData);
       
       console.log('Updating account:', { email: accountData.email });
@@ -98,7 +96,6 @@ const SettingsPage: React.FC = () => {
   const handleAvatarUpload = (files: File[]) => {
     if (files.length > 0) {
       const file = files[0];
-      // Convert to base64 or upload to server
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {

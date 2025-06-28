@@ -3,38 +3,32 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: AuthState = {
   user: null,
-  token: null,
   isAuthenticated: false,
-  isLoading: true, // Add loading state for better UX
+  isLoading: true, 
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setUserCredentials: (state, action: PayloadAction<{user: User, token: string}>) => {
-      state.token = action.payload.token;
+    setUserCredentials: (state, action: PayloadAction<{user: User}>) => {
       state.user = action.payload.user;
       state.isAuthenticated = true;
       state.isLoading = false;
-      // Also store in localStorage as backup
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      sessionStorage.setItem('user', JSON.stringify(action.payload.user));
     },
     
     logout: (state) => {
       state.user = null;
-      state.token = null;
       state.isAuthenticated = false;
       state.isLoading = false;
-      // Clear localStorage
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
     },
     
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
     
-    // Add token validation action
     validateTokenStart: (state) => {
       state.isLoading = true;
     },
@@ -47,10 +41,9 @@ const authSlice = createSlice({
     
     validateTokenFailure: (state) => {
       state.user = null;
-      state.token = null;
       state.isAuthenticated = false;
       state.isLoading = false;
-      localStorage.removeItem('user');
+      sessionStorage.removeItem('user');
     },
   }
 });

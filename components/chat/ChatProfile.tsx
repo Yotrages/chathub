@@ -1,4 +1,3 @@
-// components/chat/ChatProfile.tsx
 'use client';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';

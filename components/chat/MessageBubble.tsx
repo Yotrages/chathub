@@ -1,4 +1,3 @@
-// File: src/frontend/components/chat/MessageBubble.tsx
 'use client';
 import { useState } from 'react';
 import { Download, Eye, Edit, Trash2, Smile } from 'lucide-react';

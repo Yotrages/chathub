@@ -14,38 +14,30 @@ const SignUp = () => {
   const handleOAuthLogin = (provider: string, intent = 'login') => {
     setLoading(provider);
     
-    // Create state parameter with intent and redirect info
     const state = btoa(JSON.stringify({ 
-      intent: intent, // 'login' or 'register'
+      intent: intent, 
       redirectUrl: intent === 'register' ? '/welcome' : '/dashboard',
-      timestamp: Date.now() // for additional security
+      timestamp: Date.now()
     }));
     
-    // Redirect to OAuth endpoint with state
     window.location.href = `http://localhost:5000/api/users/auth/${provider}?state=${state}`;
   };
   const { errors, register, handleSubmit, isLoading, isPending, formMethods } = useRegister();
 
-  // Handle avatar file selection
   const handleAvatarSelect = (file: File | null) => {
     setAvatarFile(file);
-    // Update the form value
     formMethods.setValue('avatar', file);
   };
 
-  // Custom submit handler
   const onSubmit = async (data: any) => {
     try {
-      // The data will include the file object
-      // Your API hook should handle FormData conversion
       const submitData = {
         ...data,
-        avatar: avatarFile // This will be the File object
+        avatar: avatarFile 
       };
 
       console.log('Submitting:', submitData);
       
-      // Call your API
       await handleSubmit?.(submitData);
     } catch (error) {
       console.error('Submit error:', error);

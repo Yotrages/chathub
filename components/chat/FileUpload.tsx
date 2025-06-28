@@ -37,7 +37,6 @@ export const FileUpload = ({ onUpload, onClose }: FileUploadProps) => {
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
     
-    // Create preview for images
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -180,7 +179,7 @@ interface AvatarUploadProps {
   onFileSelect: (file: File | null) => void;
   error?: string;
   preview?: boolean;
-  maxSize?: number; // in MB
+  maxSize?: number; 
 }
 
 export const AvatarUpload: React.FC<AvatarUploadProps> = ({
@@ -197,7 +196,6 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (file: File) => {
-    // Validate file size
     if (file.size > maxSize * 1024 * 1024) {
       alert(`File size must be less than ${maxSize}MB`);
       return;
@@ -206,7 +204,6 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({
     setSelectedFile(file);
     onFileSelect(file);
 
-    // Create preview for images
     if (preview && file.type.startsWith('image/')) {
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);

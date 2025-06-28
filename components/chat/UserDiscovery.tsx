@@ -1,4 +1,3 @@
-// File: src/frontend/components/chat/UserDiscovery.tsx
 'use client';
 import { useState } from 'react';
 import { Globe, MessageSquare, Search, Shield, Star, Users, Zap } from 'lucide-react';
@@ -34,16 +33,16 @@ export const UserDiscovery = ({ onClose }: UserDiscoveryProps) => {
   };
 
   const filteredUsers = users?.filter((u: any) => {
-    if (!u || u._id === user?.id) return false; // Exclude current user
+    if (!u || u._id === user?.id) return false; 
     const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === 'all' ||
       (selectedCategory === 'online' && u.status === 'online') ||
-      (selectedCategory === 'suggested' && u.isSuggested) || // Assume backend provides isSuggested
-      (selectedCategory === 'verified' && u.isVerified) || // Assume backend provides isVerified
-      (selectedCategory === 'recent' && new Date(u.lastSeen).getTime() > Date.now() - 24 * 60 * 60 * 1000) || // Last 24 hours
-      (selectedCategory === 'mutual' && u.mutualConnections?.length > 0); // Assume backend provides mutualConnections
+      (selectedCategory === 'suggested' && u.isSuggested) ||
+      (selectedCategory === 'verified' && u.isVerified) ||
+      (selectedCategory === 'recent' && new Date(u.lastSeen).getTime() > Date.now() - 24 * 60 * 60 * 1000) || 
+      (selectedCategory === 'mutual' && u.mutualConnections?.length > 0); 
     return matchesSearch && matchesCategory;
   }) || [];
 

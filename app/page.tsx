@@ -17,20 +17,15 @@ const HomePage: React.FC = () => {
     const validateAuth = async () => {
       const token = getCookie('auth-token');
       
-      if (!token) {
+      if (!token || !isAuthenticated) {
         router.push('/login');
         return;
-      }
-
-      if (!isAuthenticated && token) {
-        dispatch(validateTokenStart());
       }
     };
 
     validateAuth();
   }, [isAuthenticated, router, dispatch]);
 
-  // Show loading state while validating
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -42,7 +37,6 @@ const HomePage: React.FC = () => {
     );
   }
 
-  // Show loading state while redirecting
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

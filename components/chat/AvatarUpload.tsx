@@ -8,7 +8,7 @@ interface AvatarUploadProps {
   onFileSelect: (file: File | null) => void;
   error?: string;
   preview?: boolean;
-  maxSize?: number; // in MB
+  maxSize?: number;
 }
 
 export const AvatarUpload: React.FC<AvatarUploadProps> = ({

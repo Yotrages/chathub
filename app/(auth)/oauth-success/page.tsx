@@ -11,7 +11,7 @@ const OAuthSuccess = () => {
   const dispatch: AppDispatch = useDispatch()
 
   useEffect(() => {
-    if (hasRun.current) return; // skip second run
+    if (hasRun.current) return; 
     hasRun.current = true;
 
     const queryParams = new URLSearchParams(window.location.search);

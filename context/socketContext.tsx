@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { io, Socket } from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
+import { getCookie } from 'cookies-next';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -33,8 +34,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   
-  const { user, token } = useSelector((state: RootState) => state.auth);
-
+  const { user } = useSelector((state: RootState) => state.auth);
+  const token = getCookie('auth-token')
   useEffect(() => {
     if (user && token) {
       const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000', {

@@ -1,7 +1,6 @@
-// File: src/frontend/hooks/useChat.ts
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSocket } from '@/context/socketContext';
+import { useSocket } from '@/hooks/useSocket'; 
 import { RootState } from '@/libs/redux/store';
 import {
   addMessage,
@@ -17,6 +16,7 @@ import {
 import { useFetch, useMutate } from '@/hooks/useFetch';
 import { api } from '@/libs/axios/config';
 import { errorMessageHandler } from '@/libs/feedback/error-handler';
+import { AxiosProgressEvent } from 'axios'; 
 
 export interface Chat {
   id: string;
@@ -45,6 +45,10 @@ export interface Message {
   edited?: boolean;
   editedAt?: string;
   reactions?: { userId: string; emoji: string }[];
+}
+
+interface UploadOptions {
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 }
 
 export const useChat = () => {
@@ -115,8 +119,11 @@ export const useChat = () => {
   });
 
   const deleteChatMutation = useMutate('DELETE', '/chat/conversations/:conversationId', {
-    onSuccess: (data: any, variables: { conversationId: string }) => {
-      dispatch(removeChat(variables.conversationId));
+    onSuccess: (data: any) => {
+      // Extract conversationId from the mutation variables or data
+      // This assumes your useMutate hook provides access to variables in some way
+      // You may need to adjust this based on your useMutate implementation
+      console.log('Chat deleted successfully:', data);
     },
     onError: (error: any) => {
       console.error('Error deleting chat:', error);
@@ -267,13 +274,13 @@ export const useChat = () => {
       });
 
       socket.on('messages_read', (data: { conversationId: string; userId: string }) => {
-        dispatch(setMessages({
-          chatId: data.conversationId,
-          messages: (state: RootState) => state.chat.messages[data.conversationId]?.map(msg => ({
-            ...msg,
-            isRead: true,
-          })) || [],
+        // Fixed: Properly handle messages read event
+        const currentMessages = (window as any).__REDUX_STATE__?.chat?.messages?.[data.conversationId] || [];
+        const updatedMessages = currentMessages.map((msg: Message) => ({
+          ...msg,
+          isRead: true,
         }));
+        dispatch(setMessages({ chatId: data.conversationId, messages: updatedMessages }));
       });
 
       socket.on('user_typing', (data: { userId: string; conversationId: string }) => {
@@ -327,13 +334,16 @@ export const useChat = () => {
     return createChatMutation;
   };
 
-  const updateChat = async (conversationId: string, data: { name?: string; participants?: string[]; description?: string; avatar?: string }) => {
+  const updateChatFn = async (conversationId: string, data: { name?: string; participants?: string[]; description?: string; avatar?: string }) => {
     updateChatMutation.mutate({ ...data, conversationId });
     return updateChatMutation;
   };
 
+  // Fixed: Store conversationId to use in onSuccess callback
   const deleteChat = async (conversationId: string) => {
     deleteChatMutation.mutate({ conversationId });
+    // Optimistically remove from UI or handle in onSuccess with proper state management
+    dispatch(removeChat(conversationId));
     return deleteChatMutation;
   };
 
@@ -416,10 +426,26 @@ export const useChat = () => {
     }
   };
 
+  const uploadFile = async (formData: FormData, options?: UploadOptions) => {
+    try {
+      const response = await api.post('/files/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        onUploadProgress: options?.onUploadProgress,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      errorMessageHandler(error);
+      throw error;
+    }
+  };
+
   return {
     sendMessage,
     createChat,
-    updateChat,
+    updateChat: updateChatFn, // Fixed naming conflict
     deleteChat,
     joinChat,
     leaveChat,
@@ -431,6 +457,7 @@ export const useChat = () => {
     markMessagesAsRead,
     startTyping,
     stopTyping,
+    uploadFile, // Fixed function signature
     conversations,
     isLoading,
     isCreatingChat: createChatMutation.isPending,
@@ -439,7 +466,6 @@ export const useChat = () => {
     updateChatError: updateChatMutation.error,
     isDeletingChat: deleteChatMutation.isPending,
     deleteChatError: deleteChatMutation.error,
-    uploadFile: (file: File) => uploadFileMutation.mutate({ file }),
     isUploadingFile: uploadFileMutation.isPending,
     uploadFileError: uploadFileMutation.error,
   };

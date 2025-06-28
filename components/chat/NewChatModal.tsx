@@ -1,10 +1,11 @@
-// File: src/frontend/components/chat/NewChatModal.tsx
 'use client';
 import { useState } from 'react';
 import { X, Users, MessageCircle, Search } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
 import { useFetch } from '@/hooks/useFetch';
 import { AvatarUpload } from './AvatarUpload';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/libs/redux/store';
 
 interface NewChatModalProps {
   onClose: () => void;
@@ -19,11 +20,12 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
 
   const { createChat, uploadFile } = useChat();
   const { data: users, isLoading } = useFetch('/auth/users');
+  const { user } = useSelector((state: RootState) => state.auth);
 
-  const filteredUsers = users?.filter((user: any) =>
-    (user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     user.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    user._id !== user?.id // Exclude current user
+  const filteredUsers = users?.filter((userItem: any) =>
+    (userItem.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     userItem.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    userItem._id !== user?.id
   ) || [];
 
   const handleUserToggle = (userId: string) => {
@@ -34,33 +36,30 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
     );
   };
 
- // In src/frontend/components/chat/NewChatModal.tsx
-const handleCreateChat = async () => {
-  if (selectedUsers.length === 0) return;
+  const handleCreateChat = async () => {
+    if (selectedUsers.length === 0) return;
 
-  let avatarUrl: string | undefined;
-  if (groupAvatar) {
-    const formData = new FormData();
-    formData.append('file', groupAvatar);
-    const uploadResult = await uploadFile(formData, {
-      onUploadProgress: (progressEvent) => {
-        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-        // Update UI with progress if needed
-        console.log(`Upload progress: ${progress}%`);
-      },
-    });
-    avatarUrl = uploadResult.fileUrl;
-  }
+    try {
+      let avatarUrl: string | undefined;
+      if (groupAvatar) {
+        const formData = new FormData();
+        formData.append('file', groupAvatar);
+        const uploadResult = await uploadFile(formData);
+        avatarUrl = uploadResult.fileUrl;
+      }
 
-  if (chatType === 'group') {
-    if (!groupName.trim()) return;
-    await createChat(selectedUsers, true, groupName, avatarUrl);
-  } else {
-    await createChat(selectedUsers, false);
-  }
+      if (chatType === 'group') {
+        if (!groupName.trim()) return;
+        await createChat(selectedUsers, true, groupName, avatarUrl);
+      } else {
+        await createChat(selectedUsers, false);
+      }
 
-  onClose();
-};
+      onClose();
+    } catch (error) {
+      console.error('Error creating chat:', error);
+    }
+  };
 
   const canCreate = selectedUsers.length > 0 &&
     (chatType === 'direct' || (chatType === 'group' && groupName.trim()));
@@ -146,26 +145,26 @@ const handleCreateChat = async () => {
           ) : filteredUsers.length === 0 ? (
             <div className="text-center text-gray-500">No users found</div>
           ) : (
-            filteredUsers.map((user: any) => (
+            filteredUsers.map((userItem: any) => (
               <div
-                key={user._id}
+                key={userItem._id}
                 className="flex items-center p-2 hover:bg-gray-50 rounded-lg cursor-pointer"
-                onClick={() => handleUserToggle(user._id)}
+                onClick={() => handleUserToggle(userItem._id)}
               >
                 <input
                   type="checkbox"
-                  checked={selectedUsers.includes(user._id)}
-                  onChange={() => handleUserToggle(user._id)}
+                  checked={selectedUsers.includes(userItem._id)}
+                  onChange={() => handleUserToggle(userItem._id)}
                   className="mr-3"
                 />
                 <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
                   <span className="text-white font-semibold">
-                    {user.name?.charAt(0) || 'U'}
+                    {userItem.name?.charAt(0) || 'U'}
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{user.name || 'Unknown User'}</p>
-                  <p className="text-xs text-gray-500">{user.email}</p>
+                  <p className="text-sm font-medium">{userItem.name || 'Unknown User'}</p>
+                  <p className="text-xs text-gray-500">{userItem.email}</p>
                 </div>
               </div>
             ))

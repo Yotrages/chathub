@@ -17,14 +17,12 @@ export const PostList = ({ isLoading }: PostListProps) => {
 
   const hasMore = pagination?.hasNextPage ?? false;
 
-  // Infinite loading
   useEffect(() => {
     if (inView && hasMore && !postsLoading) {
       trigger();
     }
   }, [inView, hasMore, postsLoading, trigger]);
 
-  // Show loading skeleton when initially loading
   if ((isLoading || postsLoading) && posts.length === 0) {
     return (
       <div className="space-y-4">
@@ -45,7 +43,6 @@ export const PostList = ({ isLoading }: PostListProps) => {
     );
   }
 
-  // Show empty state when no posts
   if (posts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -57,11 +54,9 @@ export const PostList = ({ isLoading }: PostListProps) => {
   return (
     <div className="space-y-4">
       {posts.map((post) => (
-        // Fixed: Remove the nested .post access since posts array contains Post objects directly
         <PostItem key={post._id} post={post} />
       ))}
       
-      {/* Show loading indicator when fetching more posts */}
       {hasMore && (
         <div ref={ref} className="text-center py-4">
           {postsLoading ? (

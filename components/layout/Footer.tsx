@@ -1,4 +1,3 @@
-// src/components/layout/Footer.tsx
 import Link from 'next/link';
 import { FaFutbol, FaTwitter, FaFacebook, FaInstagram } from 'react-icons/fa';
 

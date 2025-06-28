@@ -4,7 +4,6 @@ import { useDispatch } from "react-redux";
 import {  addPosts, addPost, addComment, toggleLike, setPostsWithPagination, PostsResponse, addReply, toggleCommentLike, removeReply, toggleReplyLike, setSearchResults, updatePost, updateComment, updateReply } from "@/libs/redux/postSlice";
 import { AppDispatch } from "@/libs/redux/store";
 
-// Validation schemas
 const createPostSchema = z.object({
   content: z.string().min(1, "Post content is required"),
   images: z.array(z.instanceof(File)).optional().default([])
@@ -18,7 +17,6 @@ const ReplySchema = z.object({
   content: z.string().min(1, "Comment is required").max(500, "Comment too long"),
 });
 
-// Get posts feed
 export const useGetPosts = (page: number = 1, options?: Partial<Omit<UseApiControllerOptions<Record<string, any>, PostsResponse>, 'method'>>): QueryResult<PostsResponse> => {  
 const dispatch: AppDispatch = useDispatch()
   const result = useApiController<PostsResponse>({
@@ -46,7 +44,6 @@ const dispatch: AppDispatch = useDispatch()
   return result;
 };
 
-// Get user posts
 export const useGetUserPosts = (userId?: string) => {
   return useApiController({
     method: "GET",
@@ -58,10 +55,9 @@ export const useGetUserPosts = (userId?: string) => {
   });
 };
 
-// Post creation types - matching your backend
 interface CreatePostData extends Record<string, any> {
   content: string;
-  images?: File[]; // Array of File objects
+  images?: File[]; 
 }
 
 interface CreatePostResponse {
@@ -84,7 +80,6 @@ interface CreatePostResponse {
   };
 }
 
-// Create Post Hook
 export const useCreatePost = (
   onSuccess?: (data: CreatePostResponse) => void,
   options?: Partial<any>
@@ -96,7 +91,7 @@ export const useCreatePost = (
 
   return useApiController<CreatePostData, CreatePostResponse>({
     method: "POST",
-    url: "posts", // Adjust to your API endpoint
+    url: "posts", 
     schema: createPostSchema,
     successMessage: "Post created successfully!",
     onSuccess: (data: any) => {
@@ -112,8 +107,6 @@ export const useCreatePost = (
   } as any);
 };
 
-// File upload service
-// services/fileUploadService.ts
 export const fileUploadService = {
   validateFile: (file: File): { isValid: boolean; error?: string } => {
     const maxSize = 50 * 1024 * 1024; // 50MB for videos, 10MB for images
@@ -132,9 +125,9 @@ export const fileUploadService = {
       'video/mp4',
       'video/webm',
       'video/ogg',
-      'video/quicktime', // .mov files
-      'video/x-msvideo', // .avi files
-      'video/x-ms-wmv'   // .wmv files
+      'video/quicktime', 
+      'video/x-msvideo', 
+      'video/x-ms-wmv'   
     ];
     
     const allowedDocumentTypes = [
@@ -153,7 +146,6 @@ export const fileUploadService = {
       };
     }
     
-    // Different size limits for different file types
     if (allowedImageTypes.includes(file.type) && file.size > maxImageSize) {
       return {
         isValid: false,
@@ -213,7 +205,7 @@ export const fileUploadService = {
       video.onloadedmetadata = () => {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        video.currentTime = 1; // Seek to 1 second for thumbnail
+        video.currentTime = 1; 
       };
       
       video.onseeked = () => {

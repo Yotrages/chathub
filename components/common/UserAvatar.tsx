@@ -9,7 +9,6 @@ interface UserAvatarProps {
 }
 
 export const UserAvatar = ({ username, avatar, className }: UserAvatarProps) => {
-  // If avatar exists, show the image
   if (avatar) {
     return (
       <img
@@ -20,7 +19,6 @@ export const UserAvatar = ({ username, avatar, className }: UserAvatarProps) => 
     );
   }
 
-  // Generate initials from username
   let initials = '';
   if (username) {
     initials = username
@@ -29,11 +27,9 @@ export const UserAvatar = ({ username, avatar, className }: UserAvatarProps) => 
       .join('')
       .toUpperCase();
   } else {
-    // Fallback if no username
     initials = '?';
   }
 
-  // Return the initials in a styled div
   return (
     <div
       className={cn(

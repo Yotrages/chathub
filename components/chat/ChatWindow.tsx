@@ -1,4 +1,3 @@
-// File: src/frontend/components/chat/ChatWindow.tsx
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';

@@ -267,8 +267,7 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
       const authData = data as any;
       console.log(authData) // Type assertion for auth data
       dispatch(setUserCredentials({
-        user:  authData.user,
-        token:  authData.token
+        user:  authData.user
       }));
       setCookie("auth-token", authData.token);
     }

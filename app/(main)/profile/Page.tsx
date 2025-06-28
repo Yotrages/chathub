@@ -8,13 +8,11 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('posts');
 
-  // Get current user profile
   const { data: profile, isLoading: loadingProfile, refetch } = useApiController({
     method: 'GET',
     url: 'profile/',
   });
 
-  // Update profile
   const { register, handleSubmit, errors, isLoading: updatingProfile } = useApiController({
     method: 'PUT',
     url: 'profile/',
@@ -25,7 +23,6 @@ export default function ProfilePage() {
     },
   });
 
-  // Get user posts
   const { data: userPosts, isLoading: loadingPosts } = useApiController({
     method: 'GET',
     url: 'profile/posts/',

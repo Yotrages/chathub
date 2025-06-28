@@ -50,9 +50,7 @@ export const PostItem = ({ post }: PostItemProps) => {
 
   const { _id, authorId, content, createdAt, likes, comments, images } = post;
 
-  // Process media files
   const mediaFiles: MediaFile[] = (images || []).map((url) => {
-    // Determine file type based on URL or extension
     const extension = url.split(".").pop()?.toLowerCase();
     let type: "image" | "video" | "document" = "image";
 
@@ -65,7 +63,6 @@ export const PostItem = ({ post }: PostItemProps) => {
     return { url, type, name: url.split("/").pop() };
   });
 
-  // Check if current user liked the post
   const isLiked = user ? likes.some((like) => like._id === user.id) : false;
   const isContentLong = content && content.length > 200;
   const displayContent =

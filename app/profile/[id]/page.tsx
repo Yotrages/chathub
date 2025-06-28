@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
-import { UserPosts as UserPostsList } from '@/components/profile/UserProfile'; // Your existing component
+import { UserPosts as UserPostsList } from '@/components/profile/UserProfile'; 
 import { 
   MapPin, 
   Calendar, 
@@ -36,7 +36,6 @@ interface ProfileUser {
   online?: boolean;
   lastSeen?: string;
   createdAt?: string;
-  // Extended fields (will be null/undefined initially)
   bio?: string;
   location?: string;
   website?: string;
@@ -63,13 +62,11 @@ export const UserProfilePage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  // Fetch user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
       setIsLoading(true);
       
       try {
-        // If viewing own profile, use current user data
         if (!userId || userId === currentUser?.id) {
           const profile: ProfileUser = {
             _id: currentUser?.id || '',
@@ -77,10 +74,9 @@ export const UserProfilePage = () => {
             name: currentUser?.name || '',
             email: currentUser?.email || '',
             avatar: currentUser?.avatar || '',
-            online: true, // Current user is online
+            online: true, 
             lastSeen: new Date().toISOString(),
             createdAt: currentUser?.createdAt || new Date().toISOString(),
-            // Default values for extended fields
             bio: '',
             location: '',
             website: '',
@@ -94,12 +90,10 @@ export const UserProfilePage = () => {
           setProfileUser(profile);
           setIsOwnProfile(true);
         } else {
-          // Fetch other user's profile from API
           const response = await fetch(`/api/users/${userId}`);
           if (response.ok) {
             const userData = await response.json();
             
-            // Transform backend data to match ProfileUser interface
             const profile: ProfileUser = {
               _id: userData._id,
               username: userData.username,
@@ -109,7 +103,6 @@ export const UserProfilePage = () => {
               online: userData.online || false,
               lastSeen: userData.lastSeen,
               createdAt: userData.createdAt,
-              // Extended fields (will be empty initially)
               bio: userData.bio || '',
               location: userData.location || '',
               website: userData.website || '',

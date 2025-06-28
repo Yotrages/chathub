@@ -14,7 +14,6 @@ const Header: React.FC = () => {
     }
   }, [isAuthenticated, router]);
 
-  // Show loading state while redirecting
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

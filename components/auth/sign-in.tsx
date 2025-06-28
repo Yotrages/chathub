@@ -13,14 +13,12 @@ const SignIn = () => {
   const handleOAuthLogin = (provider: string, intent = 'login') => {
     setLoading(provider);
     
-    // Create state parameter with intent and redirect info
     const state = btoa(JSON.stringify({ 
-      intent: intent, // 'login' or 'register'
+      intent: intent, 
       redirectUrl: intent === 'register' ? '/login' : '/',
-      timestamp: Date.now() // for additional security
+      timestamp: Date.now()
     }));
     
-    // Redirect to OAuth endpoint with state
     window.location.href = `http://localhost:5000/api/users/auth/${provider}?state=${state}`;
   };
   return (

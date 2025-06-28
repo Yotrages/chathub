@@ -1,7 +1,6 @@
 import { WebStorage } from "redux-persist/es/types";
 
 export function createPersistStorage(): WebStorage {
-  // Return noop (dummy) storage during SSR
   if (typeof window === "undefined") {
     return {
       getItem: () => Promise.resolve(null),

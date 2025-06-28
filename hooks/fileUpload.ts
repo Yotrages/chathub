@@ -23,7 +23,7 @@ export interface UploadOptions {
 }
 
 class FileUploadService {
-  private maxFileSize = 50 * 1024 * 1024; // 50MB
+  private maxFileSize = 50 * 1024 * 1024; 
   private allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   private allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
   private allowedFileTypes = [
@@ -38,7 +38,6 @@ class FileUploadService {
   ];
 
   validateFile(file: File): { isValid: boolean; error?: string } {
-    // Check file size
     if (file.size > this.maxFileSize) {
       return {
         isValid: false,
@@ -46,7 +45,6 @@ class FileUploadService {
       };
     }
 
-    // Check file type
     const allAllowedTypes = [
       ...this.allowedImageTypes,
       ...this.allowedVideoTypes,
@@ -115,7 +113,6 @@ class FileUploadService {
   async uploadMultiple(files: File[], options?: UploadOptions): Promise<UploadedFile[]> {
     const validFiles: File[] = [];
     
-    // Validate all files first
     for (const file of files) {
       const validation = this.validateFile(file);
       if (!validation.isValid) {
@@ -154,7 +151,7 @@ class FileUploadService {
       });
 
       const uploadedFiles: UploadedFile[] = response.data.data;
-      options?.onSuccess?.(uploadedFiles[0]); // For compatibility
+      options?.onSuccess?.(uploadedFiles[0]); 
       return uploadedFiles;
     } catch (error) {
       const uploadError = new Error('Upload failed');
@@ -163,7 +160,6 @@ class FileUploadService {
     }
   }
 
-  // Upload for chat messages
   async uploadForChat(file: File, conversationId: string, options?: UploadOptions): Promise<UploadedFile> {
     const validation = this.validateFile(file);
     if (!validation.isValid) {
@@ -204,7 +200,6 @@ class FileUploadService {
     }
   }
 
-  // Upload for posts
   async uploadForPost(files: File[], postId?: string, options?: UploadOptions): Promise<UploadedFile[]> {
     const validFiles: File[] = [];
     
@@ -258,7 +253,6 @@ class FileUploadService {
     }
   }
 
-  // Create image preview/thumbnail
   createImagePreview(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       if (!this.allowedImageTypes.includes(file.type)) {
@@ -277,7 +271,6 @@ class FileUploadService {
     });
   }
 
-  // Get file size string
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     
@@ -288,7 +281,6 @@ class FileUploadService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
-  // Get file icon based on type
   getFileIcon(fileType: string): string {
     if (this.allowedImageTypes.includes(fileType)) {
       return '🖼️';

@@ -21,13 +21,11 @@ export default function GroupsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch groups
   const { data: groupsData, isLoading: loadingGroups, refetch } = useApiController({
     method: 'GET',
     url: 'groups/',
   });
 
-  // Create group
   const { register, handleSubmit, errors, isLoading: creatingGroup } = useApiController({
     method: 'POST',
     url: 'groups/',

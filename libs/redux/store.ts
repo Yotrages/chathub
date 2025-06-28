@@ -1,6 +1,6 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
-import { createPersistStorage } from "./storage"; // 👈 Use custom storage
+import { createPersistStorage } from "./storage";
 import authReducer from "./authSlice";
 import chatReducer from "./chatSlice";
 import postReducer from "./postSlice";
