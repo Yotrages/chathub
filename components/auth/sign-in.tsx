@@ -15,11 +15,11 @@ const SignIn = () => {
     
     const state = btoa(JSON.stringify({ 
       intent: intent, 
-      redirectUrl: intent === 'register' ? '/login' : '/',
+      redirectUrl: intent === 'register' ? '/login' : '/oauth-success',
       timestamp: Date.now()
     }));
     
-    window.location.href = `http://localhost:5000/api/users/auth/${provider}?state=${state}`;
+    window.location.href = `http://localhost:5000/api/auth/${provider}?state=${state}`;
   };
   return (
     <div className="qy:w-[500px] w-full px-7 flex flex-col items-center justify-center">

@@ -1,7 +1,7 @@
 'use client';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
-import { X, Users, Edit, Trash2, LogOut } from 'lucide-react';
+import { X, Edit, Trash2, LogOut } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
 
 interface ChatProfileProps {
@@ -10,9 +10,8 @@ interface ChatProfileProps {
 
 export const ChatProfile = ({ onClose }: ChatProfileProps) => {
   const { activeChat, chats } = useSelector((state: RootState) => state.chat);
-  const { user } = useSelector((state: RootState) => state.auth);
-  const { updateChat, deleteChat, leaveChat } = useChat();
-  const currentChat = chats.find((chat) => chat.id === activeChat);
+  const { deleteChat, leaveChat } = useChat();
+  const currentChat = chats.find((chat) => chat._id === activeChat);
 
   if (!currentChat) return null;
 
@@ -23,14 +22,14 @@ export const ChatProfile = ({ onClose }: ChatProfileProps) => {
 
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this chat?')) {
-      deleteChat(currentChat.id);
+      deleteChat(currentChat._id);
       onClose();
     }
   };
 
   const handleLeave = () => {
     if (confirm('Are you sure you want to leave this group?')) {
-      leaveChat(currentChat.id);
+      leaveChat(currentChat._id);
       onClose();
     }
   };
@@ -39,7 +38,7 @@ export const ChatProfile = ({ onClose }: ChatProfileProps) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">{currentChat.isGroup ? 'Group Details' : 'User Profile'}</h2>
+          <h2 className="text-lg font-semibold">{currentChat.type === 'group' ? 'Group Details' : 'User Profile'}</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full">
             <X size={20} />
           </button>
@@ -53,20 +52,20 @@ export const ChatProfile = ({ onClose }: ChatProfileProps) => {
             </div>
             <div>
               <h3 className="text-xl font-semibold">{currentChat.name || 'Unknown'}</h3>
-              {currentChat.isGroup && (
+              {currentChat.type === 'group' && (
                 <p className="text-sm text-gray-500">{currentChat.participants.length} members</p>
               )}
             </div>
           </div>
-          {currentChat.isGroup && (
+          {currentChat.type === 'group' && (
             <>
               <div className="mb-4">
                 <h4 className="font-medium">Participants</h4>
                 <ul className="mt-2 space-y-2">
                   {currentChat.participants.map((participantId) => (
-                    <li key={participantId} className="flex items-center">
+                    <li key={participantId._id} className="flex items-center">
                       <div className="w-8 h-8 bg-gray-200 rounded-full mr-2" />
-                      <span className="text-sm">User {participantId}</span>
+                      <span className="text-sm">User {participantId.username}</span>
                     </li>
                   ))}
                 </ul>

@@ -1,30 +1,61 @@
-"use client"
-import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/libs/redux/store';
-import { validateTokenStart, validateTokenSuccess, validateTokenFailure } from '@/libs/redux/authSlice';
-import { PostList } from '../components/post/PostList';
-import { CreatePost } from '../components/post/CreatePost';
-import { getCookie } from 'cookies-next';
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/libs/redux/store";
+
+import { PostList } from "../components/post/PostList";
+import { CreatePost } from "../components/post/CreatePost";
+import { getCookie } from "cookies-next";
+import Header from "@/components/layout/Header";
+import StorySection from "@/components/story/StorySection";
+import SideBar from "@/components/layout/SideBar";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import SuggestedFollow from "@/components/layout/SuggestedFollow";
 
 const HomePage: React.FC = () => {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { user, isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const { isAuthenticated, isLoading } = useSelector(
+    (state: RootState) => state.auth
+  );
 
   useEffect(() => {
     const validateAuth = async () => {
-      const token = getCookie('auth-token');
-      
+      const token = getCookie("auth-token");
+
       if (!token || !isAuthenticated) {
-        router.push('/login');
+        router.push("/login");
         return;
       }
     };
 
     validateAuth();
   }, [isAuthenticated, router, dispatch]);
+
+  // Handle scroll to show/hide header
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down and past 100px
+        setIsHeaderVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up
+        setIsHeaderVisible(true);
+      }
+
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   if (isLoading) {
     return (
@@ -50,59 +81,62 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">SocialChat</h1>
+      {/* Full Width Header */}
+      <div
+        className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-sm transition-transform duration-300 ${
+          isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
+        <Header />
+      </div>
+
+      {/* Main Layout Container */}
+      <div className="flex">
+        {/* Left Sidebar - Adaptive positioning */}
+        <div
+          className={`fixed sm:flex hidden left-0 bottom-0 sm:w-[250px] z-40 overflow-y-auto bg-white border-r border-gray-200 transition-all duration-300 ${
+            isHeaderVisible ? "top-[88px]" : "top-0"
+          }`}
+        >
+          <SideBar />
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 sm:ml-[250px] max-w-full overflow-hidden lg:mr-80 min-h-screen pt-20">
+          {/* Main Content */}
+          <div className="md:py-6 sm:px-6 max-w-full overflow-hidden space-y-6">
+            {/* Create Post Section */}
+            <div className="bg-white px-2 rounded-lg shadow-sm p-6">
+              <CreatePost />
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/chat')}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                Messages
-              </button>
-              <button
-                onClick={() => router.push('/profile')}
-                className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
-              >
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                  {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt="user avatar"
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <span>{user?.username?.charAt(0).toUpperCase() || 'U'}</span>
-                  )}
-                </div>
-                <span className="font-medium">{user?.username}</span>
-              </button>
+
+            {/* Stories/Reels Section */}
+            <div className="max-w-full overflow-auto">
+              <StorySection />
+            </div>
+
+            <div className="max-w-full overflow-auto">
+              <SuggestedFollow />
+            </div>
+
+            {/* Posts Feed */}
+            <div className="space-y-4">
+              <PostList />
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
-        <div className="space-y-6">
-          {/* Create Post Section */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <CreatePost />
-          </div>
-
-          {/* Posts Feed */}
-          <div className="space-y-4">
-            <PostList />
-          </div>
+        {/* Right Chat Sidebar - Adaptive positioning */}
+        <div
+          className={`fixed right-0 bottom-0 w-80 z-40 overflow-y-auto bg-white border-l border-gray-200 hidden lg:flex flex-col transition-all duration-300 ${
+            isHeaderVisible ? "top-[88px]" : "top-0"
+          }`}
+        >
+          <ChatSidebar isHomepage={true} />
         </div>
-      </main>
+      </div>
     </div>
   );
 };
 
 export default HomePage;
-

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Globe, MessageSquare, Search, Shield, Star, Users, Zap } from 'lucide-react';
+import { Globe, MessageSquare, Shield, Star, Users, X, Zap, SearchIcon } from 'lucide-react';
 import { useFetch } from '@/hooks/useFetch';
 import { useChat } from '@/hooks/useChat';
 import { useSelector } from 'react-redux';
@@ -28,13 +28,13 @@ export const UserDiscovery = ({ onClose }: UserDiscoveryProps) => {
 
   const handleStartChat = async (userId: string) => {
     if (!user?.id) return;
-    await createChat([userId], false);
+    await createChat([userId], 'direct');
     onClose();
   };
 
   const filteredUsers = users?.filter((u: any) => {
     if (!u || u._id === user?.id) return false; 
-    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =
       selectedCategory === 'all' ||
@@ -58,19 +58,20 @@ export const UserDiscovery = ({ onClose }: UserDiscoveryProps) => {
             onClick={onClose}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-lg transition-all"
           >
-            ×
+            <X />
           </button>
         </div>
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <SearchIcon className="absolute left-4 top-1/2 transform  -translate-y-1/2 text-black" size={20} />
           <input
+          id='search'
             type="text"
             placeholder="Find people..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:bg-white transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-white/70 backdrop-blur-[0.5px] border border-gray-200/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
           />
         </div>
 

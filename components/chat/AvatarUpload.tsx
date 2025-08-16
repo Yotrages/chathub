@@ -1,6 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
-import { X, Upload, User } from 'lucide-react';
+import { X, User } from 'lucide-react';
 
 interface AvatarUploadProps {
   label?: string;

@@ -1,4 +1,3 @@
-// tailwind.config.js
 module.exports = {
     darkMode: ["class"],
     content: [
@@ -146,6 +145,9 @@ module.exports = {
   		letterSpacing: {
   			normal: '-4%'
   		},
+		aspectRatio: {
+        '9/16': '9 / 16',
+      },
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

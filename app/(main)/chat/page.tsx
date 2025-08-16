@@ -15,10 +15,10 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
-      <div className="w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200/50 flex flex-col shadow-xl">
+      <div className="w-full sm:w-80 bg-white/80 backdrop-blur-sm border-r border-gray-200/50 flex flex-col shadow-xl">
         <ChatSidebar />
       </div>
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 hidden sm:flex flex-col">
         {activeChat ? (
           <ChatWindow onShowProfile={() => setShowProfile(true)} />
         ) : (

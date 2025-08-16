@@ -13,6 +13,7 @@ import { successNotification } from "@/libs/feedback/notification";
 import { api } from "@/libs/axios/config";
 import { useEffect } from "react";
 
+
 // ============================================================================
 // TYPES AND INTERFACES
 // ============================================================================
@@ -35,15 +36,11 @@ export interface UseApiControllerOptions<TFormData extends Record<string, any> =
   onError?: (error: any) => void;
   successMessage?: string;
   redirectTo?: string;
-  // For React Query
   queryOptions?: Omit<UseQueryOptions<TResponse>, 'queryKey' | 'queryFn'>;
-  // For auth-specific endpoints
   isAuthEndpoint?: boolean;
 }
 
-// Return types for different HTTP methods
 export interface QueryResult<TResponse> {
-  // Form methods (not available for GET)
   register: undefined;
   handleSubmit: undefined;
   errors: undefined;
@@ -74,11 +71,10 @@ export interface QueryResult<TResponse> {
 }
 
 export interface MutationResult<TFormData, TResponse> {
-  // Form methods (available for mutations)
   register: any;
   handleSubmit: {
-    (e?: React.FormEvent<HTMLFormElement>): Promise<void>; // Default usage: handleSubmit
-    (onSubmit: (data: TFormData) => void): (e?: React.FormEvent<HTMLFormElement>) => Promise<void>; // Custom usage: handleSubmit(customOnSubmit)
+    (e?: React.FormEvent<HTMLFormElement>): Promise<void>; 
+    (onSubmit: (data: TFormData) => void): (e?: React.FormEvent<HTMLFormElement>) => Promise<void>; 
   };
   errors: any;
   reset: () => void;
@@ -165,7 +161,6 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
   
   console.log('API Call Data:', data);
   
-  // Check if data contains File objects
   const hasFiles = data && Object.values(data).some(value => 
     value instanceof File || 
     (Array.isArray(value) && value.some(item => item instanceof File))
@@ -175,19 +170,15 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
     let requestData = data;
     let headers = {};
     
-    // If we have files, convert to FormData
     if (hasFiles) {
       const formData = new FormData();
       
       Object.entries(data as Record<string, any>).forEach(([key, value]) => {
         if (value instanceof File) {
-          // Single file
           formData.append(key, value);
           console.log(`Appended single file: ${key}`, value.name);
         } else if (Array.isArray(value) && value.length > 0) {
-          // Handle array of files
           if (value[0] instanceof File) {
-            // ✅ Correct format for upload.array('images') - same key for all files
             value.forEach((file) => {
               if (file instanceof File) {
                 formData.append(key, file); // Multiple files with same key "images"
@@ -195,17 +186,14 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
               }
             });
           } else {
-            // Non-file array, send as JSON or individual values
             formData.append(key, JSON.stringify(value));
           }
         } else if (value !== undefined && value !== null) {
-          // Regular form field
           formData.append(key, String(value));
           console.log(`Appended regular field: ${key} = ${value}`);
         }
       });
       
-      // Debug: Log all FormData entries
       console.log('FormData entries:');
       for (let [key, value] of formData.entries()) {
         if (value instanceof File) {
@@ -216,13 +204,11 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
       }
       
       requestData = formData as any;
-      // Don't set Content-Type header - let browser set it with boundary
       headers = {};
     } else {
       headers = { 'Content-Type': 'application/json' };
     }
 
-    // ... rest of your switch statement remains the same
     switch (method) {
       case "GET":
         response = await api.get<TResponse>(url, { params: data });
@@ -256,33 +242,28 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
   // ============================================================================
 
   const handleSuccess = (data: TResponse) => {
-    // Reset form if it's a mutation
     if (needsForm) {
       reset();
     }
 
     console.log('Handling success for', url)
-    // Handle auth endpoint success
     if (isAuthEndpoint && data) {
       const authData = data as any;
-      console.log(authData) // Type assertion for auth data
+      console.log(authData) 
       dispatch(setUserCredentials({
-        user:  authData.user
+        user: authData.user,
       }));
       setCookie("auth-token", authData.token);
     }
 
-    // Show success message
     if (successMessage) {
       successNotification(successMessage);
     }
 
-    // Custom success handler
     if (onSuccess) {
       onSuccess(data);
     }
 
-    // Handle redirect
     if (redirectTo) {
       router.push(redirectTo);
     }
@@ -334,22 +315,18 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
   // SUBMIT HANDLERS
   // ============================================================================
 
-  // Default internal submit handler
   const defaultOnSubmit = (data: TFormData) => {
     console.log('Default Form Submit Data:', data);
     mutation.mutate(data);
   };
 
-  // ✅ Overloaded handleSubmit function for both default and custom usage
   const handleSubmit = ((customOnSubmitOrEvent?: ((data: TFormData) => void) | React.FormEvent<HTMLFormElement>) => {
-    // If it's a form event (default usage), handle it directly
     if (customOnSubmitOrEvent && 'preventDefault' in customOnSubmitOrEvent) {
       const e = customOnSubmitOrEvent as React.FormEvent<HTMLFormElement>;
       e.preventDefault();
       return rhfHandleSubmit(defaultOnSubmit)(e);
     }
     
-    // If it's a custom function or undefined, return a handler
     const submitHandler = (customOnSubmitOrEvent as (data: TFormData) => void) || defaultOnSubmit;
     
     return (e?: React.FormEvent<HTMLFormElement>) => {
@@ -361,7 +338,6 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
     (onSubmit: (data: TFormData) => void): (e?: React.FormEvent<HTMLFormElement>) => Promise<void>;
   };
 
-  // Manual trigger for GET requests or programmatic calls
   const trigger = (data?: TFormData) => {
     if (method === "GET") {
       queryResult.refetch();
@@ -377,7 +353,6 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
   // For GET requests
   if (method === "GET") {
     return {
-      // Form methods (not applicable for GET)
       register: undefined,
       handleSubmit: undefined,
       errors: undefined,
@@ -408,11 +383,9 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
     } as QueryResult<TResponse>;
   }
 
-  // For mutation requests (POST, PUT, PATCH, DELETE)
   return {
-    // Form methods (for forms)
     register,
-    handleSubmit, // ✅ Now properly accepts optional onSubmit parameter
+    handleSubmit,
     errors,
     reset,
     formMethods,
@@ -477,18 +450,15 @@ export const useLogin = (options?: Partial<Omit<UseApiControllerOptions<LoginDat
     successMessage: "Login successful!",
         onSuccess: (data) => {
       console.log('🎉 Login onSuccess called with:', data);
-      // Custom success logic here if needed
     },
     onError: (error) => {
       console.error('❌ Login onError called with:', error);
-      // Custom error logic here if needed
     },
     redirectTo: "/",
     ...options,
   } as UseApiControllerOptions<LoginData, AuthResponse> & { method: "POST" });
 };
 
-// Register types
 interface RegisterData extends Record<string, any> {
   email: string;
   password: string;

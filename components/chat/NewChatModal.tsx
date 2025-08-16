@@ -23,7 +23,7 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
   const { user } = useSelector((state: RootState) => state.auth);
 
   const filteredUsers = users?.filter((userItem: any) =>
-    (userItem.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (userItem.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
      userItem.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
     userItem._id !== user?.id
   ) || [];
@@ -50,9 +50,9 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
 
       if (chatType === 'group') {
         if (!groupName.trim()) return;
-        await createChat(selectedUsers, true, groupName, avatarUrl);
+        await createChat(selectedUsers, 'group', groupName, avatarUrl);
       } else {
-        await createChat(selectedUsers, false);
+        await createChat(selectedUsers, 'direct');
       }
 
       onClose();
@@ -155,15 +155,15 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                   type="checkbox"
                   checked={selectedUsers.includes(userItem._id)}
                   onChange={() => handleUserToggle(userItem._id)}
-                  className="mr-3"
+                  className="mr-3 accent-pink-500"
                 />
                 <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
                   <span className="text-white font-semibold">
-                    {userItem.name?.charAt(0) || 'U'}
+                    {userItem.username?.charAt(0) || 'U'}
                   </span>
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{userItem.name || 'Unknown User'}</p>
+                  <p className="text-sm font-medium">{userItem.username || 'Unknown User'}</p>
                   <p className="text-xs text-gray-500">{userItem.email}</p>
                 </div>
               </div>

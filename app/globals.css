@@ -170,11 +170,301 @@ box-shadow: 0px 5px 13px -5px #1019280D;
 
 
 
-@layer base {
-  * {
-    @apply border-border;
+
+
+.snap-x {
+  scroll-snap-type: x mandatory;
+}
+
+.snap-start {
+  scroll-snap-align: start;
+}
+
+
+/* Hide scrollbar for horizontal reel scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling for reel navigation */
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Reel card hover effects */
+.reel-card-hover {
+  transition: transform 0.2s ease-in-out;
+}
+
+.reel-card-hover:hover {
+  transform: scale(1.05);
+}
+
+/* Custom scrollbar for reel section */
+.reel-section-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.reel-section-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.reel-section-scroll::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 3px;
+}
+
+.reel-section-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.reel-section-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Reel fullscreen overlay */
+.reel-overlay {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Animation for reel loading */
+@keyframes reelPulse {
+  0%, 100% {
+    opacity: 1;
   }
-  body {
-    @apply bg-background text-foreground;
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.reel-loading {
+  animation: reelPulse 1.5s ease-in-out infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .reel-section-mobile {
+    padding: 0.5rem;
+  }
+  
+  .reel-card-mobile {
+    width: 120px;
+    height: 180px;
+  }
+}
+
+/* Create reel button gradient animation */
+.create-reel-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: all 0.3s ease;
+}
+
+.create-reel-gradient:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Add this CSS to your global styles or component-specific CSS */
+
+/* Base comment container */
+.comment-container {
+  position: relative;
+}
+
+/* Main vertical line for comment threads */
+.comment-thread-line {
+  position: absolute;
+  left: 20px; /* Adjust based on your avatar size */
+  top: 60px; /* Start below the main comment */
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #e5e7eb 0%, rgba(229, 231, 235, 0.5) 100%);
+  z-index: 1;
+}
+
+/* Horizontal connector lines */
+.reply-connector {
+  position: absolute;
+  left: 20px;
+  top: 24px; /* Center with avatar */
+  width: 24px;
+  height: 2px;
+  background-color: #e5e7eb;
+  z-index: 2;
+}
+
+/* Curved connector for better visual flow */
+.reply-connector-curved {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  width: 24px;
+  height: 8px;
+  border-left: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
+  border-bottom-left-radius: 8px;
+  z-index: 2;
+}
+
+/* Nested reply indentation with connecting lines */
+.nested-reply {
+  position: relative;
+  margin-left: 2rem;
+}
+
+.nested-reply::before {
+  content: '';
+  position: absolute;
+  left: -32px;
+  top: 24px;
+  width: 24px;
+  height: 2px;
+  background-color: #e5e7eb;
+  z-index: 1;
+}
+
+/* Vertical line for nested replies */
+.nested-reply-line {
+  position: absolute;
+  left: -32px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #e5e7eb 0%, rgba(229, 231, 235, 0.3) 100%);
+  z-index: 1;
+}
+
+/* Reply form connecting line */
+.reply-form-connector {
+  position: absolute;
+  left: -20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #3b82f6;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+/* Hover effects for interactive elements */
+.comment-item:hover .comment-thread-line {
+  background: linear-gradient(to bottom, #3b82f6 0%, rgba(59, 130, 246, 0.3) 100%);
+}
+
+.reply-item:hover .reply-connector {
+  background-color: #3b82f6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .comment-thread-line {
+    left: 16px;
+  }
+  
+  .reply-connector {
+    left: 16px;
+    width: 20px;
+  }
+  
+  .nested-reply {
+    margin-left: 1.5rem;
+  }
+  
+  .nested-reply::before {
+    left: -28px;
+    width: 20px;
+  }
+  
+  .nested-reply-line {
+    left: -28px;
+  }
+}
+
+/* Animation for expanding/collapsing replies */
+.replies-expand-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.replies-expand-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms ease-in, transform 200ms ease-in;
+}
+
+.replies-expand-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.replies-expand-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms ease-out, transform 200ms ease-out;
+}
+
+/* Special styling for the last reply to end the connecting line properly */
+.last-reply .comment-thread-line {
+  bottom: auto;
+  height: 60px; /* Adjust based on your reply height */
+}
+
+/* Dotted line style for a softer look (alternative) */
+.dotted-connector {
+  border-left: 2px dotted #d1d5db;
+  border-bottom: 2px dotted #d1d5db;
+  background: none;
+}
+
+/* Thread depth indicators with different colors */
+.thread-depth-0 .comment-thread-line {
+  background-color: #e5e7eb;
+}
+
+.thread-depth-1 .comment-thread-line {
+  background-color: #d1d5db;
+}
+
+.thread-depth-2 .comment-thread-line {
+  background-color: #9ca3af;
+}
+
+/* Smooth transitions for all connecting elements */
+.comment-thread-line,
+.reply-connector,
+.nested-reply-line {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focus states for accessibility */
+.comment-item:focus-within .comment-thread-line,
+.reply-item:focus-within .reply-connector {
+  background-color: #3b82f6;
+  opacity: 0.8;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .comment-thread-line,
+  .reply-connector,
+  .nested-reply-line {
+    background-color: #374151;
+  }
+  
+  .nested-reply::before {
+    background-color: #374151;
+  }
+  
+  .dotted-connector {
+    border-color: #4b5563;
   }
 }

@@ -4,11 +4,15 @@ import { createPersistStorage } from "./storage";
 import authReducer from "./authSlice";
 import chatReducer from "./chatSlice";
 import postReducer from "./postSlice";
+import storyReducer from './storySlice'
+import reelsReducer from './reelsSlice'
 
 const rootReducer = combineReducers({
   auth: authReducer,
   chat: chatReducer,
   post: postReducer,
+  stories: storyReducer,
+  reels: reelsReducer
 });
 
 const persistConfig = {

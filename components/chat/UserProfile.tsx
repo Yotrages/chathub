@@ -12,7 +12,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const { activeChat, chats } = useSelector((state: RootState) => state.chat);
   
-  const currentChat = chats.find(chat => chat.id === activeChat);
+  const currentChat = chats.find(chat => chat._id === activeChat);
 
   if (!currentChat) return null;
 
@@ -59,7 +59,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
           {currentChat.name || 'Unknown Chat'}
         </h3>
         <p className="text-gray-500">
-          {currentChat.isGroup 
+          {currentChat.type === 'group' 
             ? `Group • ${currentChat.participants.length} members`
             : 'Online'
           }
@@ -108,7 +108,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
           </button>
 
           {/* Group Members (if group chat) */}
-          {currentChat.isGroup && (
+          {currentChat.type === 'group' && (
             <div className="border-t border-gray-200 pt-4">
               <h4 className="text-sm font-medium text-gray-900 mb-3">
                 Members ({currentChat.participants.length})
@@ -116,7 +116,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
               {/* Render members list here */}
               <div className="space-y-2">
                 {currentChat.participants.map((participantId, index) => (
-                  <div key={participantId} className="flex items-center space-x-3 p-2">
+                  <div key={participantId._id} className="flex items-center space-x-3 p-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-pink-500 rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-semibold">
                         {index + 1}
@@ -133,7 +133,7 @@ export const UserProfile = ({ onClose }: UserProfileProps) => {
 
       {/* Danger Zone */}
       <div className="border-t border-gray-200 p-4 space-y-2">
-        {currentChat.isGroup ? (
+        {currentChat.type === 'group' ? (
           <button
             onClick={handleLeaveGroup}
             className="w-full flex items-center space-x-3 p-3 text-red-600 hover:bg-red-50 rounded-lg"

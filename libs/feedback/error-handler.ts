@@ -1,5 +1,6 @@
-import { deleteCookie } from "cookies-next";
+import { deleteCookie, getCookie } from "cookies-next";
 import { errorNotification } from "./notification";
+import { refreshAuthToken } from "@/utils/formatter";
 
 export type ErrorType = {
   response?: {
@@ -8,11 +9,18 @@ export type ErrorType = {
   };
   message: string;
 };
-export const errorMessageHandler = (obj: ErrorType) => {
+export const errorMessageHandler = async (obj: ErrorType) => {
   if (obj.response) {
     if (obj.response.status === 401) {
-      deleteCookie("auth-token");
-      return (location.href = "/");
+      try {
+        const token = getCookie("auth-token");
+        await refreshAuthToken(token as string);
+      } catch (error) {
+        console.log(error);
+        deleteCookie("auth-token");
+        errorNotification("session expired, login again");
+        return (location.href = "/login");
+      }
     }
     if (obj.response.status === 500) {
       if (

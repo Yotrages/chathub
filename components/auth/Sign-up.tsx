@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { PasswordInput } from "../ui/PasswordInput";
-import { AvatarUpload } from "../chat/FileUpload"; // Import your custom component
+import { AvatarUpload } from "../chat/AvatarUpload";
 import { useRegister } from "@/hooks/useFetch";
 
 const SignUp = () => {
@@ -16,13 +16,13 @@ const SignUp = () => {
     
     const state = btoa(JSON.stringify({ 
       intent: intent, 
-      redirectUrl: intent === 'register' ? '/welcome' : '/dashboard',
+      redirectUrl: intent === 'register' ? 'login' : 'oauth-success',
       timestamp: Date.now()
     }));
     
-    window.location.href = `http://localhost:5000/api/users/auth/${provider}?state=${state}`;
+    window.location.href = `http://localhost:5000/api/auth/${provider}?state=${state}`;
   };
-  const { errors, register, handleSubmit, isLoading, isPending, formMethods } = useRegister();
+  const { mutate, errors, register, handleSubmit, isLoading, isPending, formMethods } = useRegister();
 
   const handleAvatarSelect = (file: File | null) => {
     setAvatarFile(file);
@@ -38,7 +38,7 @@ const SignUp = () => {
 
       console.log('Submitting:', submitData);
       
-      await handleSubmit?.(submitData);
+      mutate(submitData)
     } catch (error) {
       console.error('Submit error:', error);
     }
@@ -47,7 +47,7 @@ const SignUp = () => {
   return (
     <div className="qy:w-[500px] w-full px-7 flex flex-col items-center justify-center">
       <form
-        onSubmit={formMethods.handleSubmit(onSubmit)}
+        onSubmit={handleSubmit(onSubmit)}
         className="w-full px-8 flex flex-col gap-8 items-center"
       >
         <div className="flex gap-6 flex-col items-center w-full">
@@ -101,7 +101,7 @@ const SignUp = () => {
               )}
             </span>
 
-             <div className="space-y-2">
+             <div className="space-y-2 w-full items-center">
           <Button 
             onClick={() => handleOAuthLogin('google', 'register')}
             className="w-full"

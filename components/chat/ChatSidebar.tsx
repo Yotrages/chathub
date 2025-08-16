@@ -1,33 +1,41 @@
 'use client';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Search, Plus, Users, MessageSquare, Pin, Trash2 } from 'lucide-react';
-import { RootState } from '@/libs/redux/store';
+import { Search, Plus, Users, MessageSquare, Trash2 } from 'lucide-react';
+import { AppDispatch, RootState } from '@/libs/redux/store';
 import { setActiveChat } from '@/libs/redux/chatSlice';
 import { useChat } from '@/hooks/useChat';
 import { NewChatModal } from './NewChatModal';
+import { UserAvatar } from '../constant/UserAvatar';
+import { useRouter } from 'next/navigation';
 
-export const ChatSidebar = () => {
-  const dispatch = useDispatch();
+export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
+  const dispatch: AppDispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'groups'>('all');
+  const router = useRouter()
 
   const { chats, isLoading } = useSelector((state: RootState) => state.chat);
-  const { user } = useSelector((state: RootState) => state.auth);
   const { deleteChat } = useChat();
 
   const filteredChats = chats.filter(chat => {
     const matchesSearch = chat.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      chat.participants.some(p => p.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesTab = activeTab === 'all' || (activeTab === 'groups' && chat.isGroup);
+      chat.participants.some(p => p.username.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesTab = activeTab === 'all' || (activeTab === 'groups' && chat.type === 'group');
     return matchesSearch && matchesTab;
   });
 
   const handleChatSelect = (chatId: string) => {
     dispatch(setActiveChat(chatId));
+    if (isHomepage) {
+      router.push(`/chat`)
+    }
   };
 
+  const messageWindow = () => {
+     router.push("/message")
+  }
   const handleDeleteChat = async (chatId: string) => {
     if (confirm('Are you sure you want to delete/leave this chat?')) {
       await deleteChat(chatId);
@@ -50,7 +58,7 @@ export const ChatSidebar = () => {
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col w-full h-full">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
@@ -113,26 +121,48 @@ export const ChatSidebar = () => {
           ) : (
             filteredChats.map((chat) => (
               <div
-                key={chat.id}
-                className="flex items-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors relative group"
+                key={chat._id}
+                onClick={() => {
+                  handleChatSelect(chat._id)
+                  if (screen.width < 768) {
+                    messageWindow()
+                  }
+                }}
+                className="flex items-center justify-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors relative group"
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0 mr-3">
-                  {chat.isGroup ? (
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                  {chat.type === 'group' ? (
+                    <>
+                    {chat?.avatar ? (
+                      <div className='w-12 h-12'>
+                        <UserAvatar username={chat.name} avatar={chat.avatar} className='w-12 h-12'/>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
                       <Users className="text-white" size={20} />
                     </div>
+                    )}
+                    </>
                   ) : (
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                    <>
+                    {chat?.avatar ? (
+                      <div className='w-12 h-12'>
+                        <UserAvatar username={chat.name} avatar={chat.avatar} className='w-12 h-12'/>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">
                         {chat.name?.charAt(0) || 'U'}
                       </span>
                     </div>
+                    )}
+                    </>
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0" onClick={() => handleChatSelect(chat.id)}>
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-gray-900 truncate">
                       {chat.name || 'Unknown Chat'}
@@ -158,7 +188,7 @@ export const ChatSidebar = () => {
                 {/* Chat Actions */}
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={() => handleDeleteChat(chat.id)}
+                    onClick={() => handleDeleteChat(chat._id)}
                     className="p-2 text-gray-500 hover:text-red-500"
                   >
                     <Trash2 size={16} />

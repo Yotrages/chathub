@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+'use client';
+import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSocket } from '@/hooks/useSocket'; 
-import { RootState } from '@/libs/redux/store';
+import { useSocket } from '@/context/socketContext';
+import { AppDispatch, RootState } from '@/libs/redux/store';
 import {
   addMessage,
   incrementUnreadCount,
@@ -12,71 +13,102 @@ import {
   removeChat,
   updateMessage,
   removeMessage,
+  markMessageAsRead,
+  addPinnedMessage,
+  removePinnedMessage,
+  addStarredMessage,
+  removeStarredMessage,
+  setActiveChat,
 } from '@/libs/redux/chatSlice';
 import { useFetch, useMutate } from '@/hooks/useFetch';
 import { api } from '@/libs/axios/config';
 import { errorMessageHandler } from '@/libs/feedback/error-handler';
-import { AxiosProgressEvent } from 'axios'; 
-
-export interface Chat {
-  id: string;
-  name?: string;
-  isGroup: boolean;
-  participants: string[];
-  lastMessage?: Message;
-  lastMessageTime?: string;
-  unreadCount: number;
-  avatar?: string;
-  isPinned?: boolean;
-  isMuted?: boolean;
-  isArchived?: boolean;
-}
-
-export interface Message {
-  id: string;
-  content: string;
-  senderId: string;
-  chatId: string;
-  timestamp: string;
-  messageType: 'text' | 'image' | 'file';
-  fileUrl?: string;
-  fileName?: string;
-  isRead?: boolean;
-  edited?: boolean;
-  editedAt?: string;
-  reactions?: { userId: string; emoji: string }[];
-}
+import { AxiosProgressEvent } from 'axios';
+import { Chat, Message } from '@/types';
 
 interface UploadOptions {
   onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 }
 
 export const useChat = () => {
-  const dispatch = useDispatch();
-  const { socket } = useSocket();
-  const { activeChat } = useSelector((state: RootState) => state.chat);
+  const dispatch: AppDispatch = useDispatch();
+  const { socket, isConnected } = useSocket();
+  const { activeChat, messages, chats } = useSelector((state: RootState) => state.chat);
   const { user } = useSelector((state: RootState) => state.auth);
-
   const { data: conversations, isLoading } = useFetch('/chat/conversations');
+  const [socketInitialized, setSocketInitialized] = useState(false);
+  const connectionAttempted = useRef(false); // Track connection attempts
+
+  const isSocketReady = () => {
+    return socket && socket.connected && isConnected && user?.id;
+  };
+
+  useEffect(() => {
+    if (socket && isConnected && user?.id && !socketInitialized && !connectionAttempted.current) {
+      console.log('Socket connected, initializing...');
+      connectionAttempted.current = true;
+      const initTimer = setTimeout(() => {
+        console.log('Emitting new_connection event...');
+        socket.emit('new_connection');
+        setSocketInitialized(true);
+      }, 500);
+      return () => clearTimeout(initTimer);
+    }
+  }, [socket, isConnected, user?.id, socketInitialized]);
+
+  useEffect(() => {
+    console.log('useChat - Connection Status:', {
+      hasSocket: !!socket,
+      isConnected,
+      socketInitialized,
+      userId: user?.id,
+      isReady: isSocketReady(),
+      connectionAttempted: connectionAttempted.current,
+    });
+  }, [socket, isConnected, socketInitialized, user?.id]);
 
   const createChatMutation = useMutate('POST', '/chat/conversations', {
     onSuccess: (conversation: any) => {
       const transformedChat: Chat = {
-        id: conversation._id,
+        _id: conversation._id,
         name: conversation.type === 'direct'
           ? conversation.participants.find((p: any) => p._id !== user?.id)?.username || 'Unknown User'
           : conversation.name || 'Group Chat',
-        isGroup: conversation.type === 'group',
-        participants: conversation.participants.map((p: any) => p._id),
-        lastMessage: undefined,
-        lastMessageTime: undefined,
+        type: conversation.type,
+        participants: conversation.participants.map((p: any) => ({
+          _id: p._id,
+          username: p.username,
+          avatar: p.avatar,
+        })),
+        lastMessage: conversation.lastMessage ? {
+          _id: conversation.lastMessage._id,
+          conversationId: conversation._id,
+          senderId: conversation.lastMessage.senderId,
+          content: conversation.lastMessage.content,
+          messageType: conversation.lastMessage.messageType || 'text',
+          isRead: conversation.lastMessage.isRead,
+          edited: conversation.lastMessage.edited,
+          editedAt: conversation.lastMessage.editedAt,
+          reactions: conversation.lastMessage.reactions || [],
+          createdAt: conversation.lastMessage.createdAt,
+          updatedAt: conversation.lastMessage.updatedAt,
+          fileUrl: conversation.lastMessage.fileUrl,
+          fileName: conversation.lastMessage.fileName,
+          replyTo: conversation.lastMessage.replyTo,
+          postId: conversation.lastMessage.postId,
+        } : undefined,
+        lastMessageTime: conversation.lastMessage?.createdAt,
         unreadCount: 0,
         avatar: conversation.avatar || conversation.participants.find((p: any) => p._id !== user?.id)?.avatar,
         isPinned: conversation.isPinned,
         isMuted: conversation.isMuted,
         isArchived: conversation.isArchived,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+        pinnedMessages: conversation.pinnedMessages || [],
       };
       dispatch(addChat(transformedChat));
+      dispatch(setActiveChat(transformedChat._id))
     },
     onError: (error: any) => {
       console.error('Error creating chat:', error);
@@ -87,28 +119,40 @@ export const useChat = () => {
   const updateChatMutation = useMutate('PUT', '/chat/conversations/:conversationId', {
     onSuccess: (conversation: any) => {
       const transformedChat: Chat = {
-        id: conversation._id,
+        _id: conversation._id,
         name: conversation.name || 'Group Chat',
-        isGroup: conversation.type === 'group',
-        participants: conversation.participants.map((p: any) => p._id),
+        type: conversation.type,
+        participants: conversation.participants.map((p: any) => ({
+          _id: p._id,
+          username: p.username,
+          avatar: p.avatar,
+        })),
         lastMessage: conversation.lastMessage ? {
-          id: conversation.lastMessage._id,
-          content: conversation.lastMessage.content,
+          _id: conversation.lastMessage._id,
+          conversationId: conversation._id,
           senderId: conversation.lastMessage.senderId,
-          chatId: conversation._id,
-          timestamp: conversation.lastMessage.timestamp,
+          content: conversation.lastMessage.content,
           messageType: conversation.lastMessage.messageType || 'text',
           isRead: conversation.lastMessage.isRead,
           edited: conversation.lastMessage.edited,
           editedAt: conversation.lastMessage.editedAt,
-          reactions: conversation.lastMessage.reactions,
+          reactions: conversation.lastMessage.reactions || [],
+          createdAt: conversation.lastMessage.createdAt,
+          updatedAt: conversation.lastMessage.updatedAt,
+          fileUrl: conversation.lastMessage.fileUrl,
+          fileName: conversation.lastMessage.fileName,
+          replyTo: conversation.lastMessage.replyTo,
+          postId: conversation.lastMessage.postId,
         } : undefined,
-        lastMessageTime: conversation.lastMessage?.timestamp,
+        lastMessageTime: conversation.lastMessage?.createdAt,
         unreadCount: 0,
         avatar: conversation.avatar,
         isPinned: conversation.isPinned,
         isMuted: conversation.isMuted,
         isArchived: conversation.isArchived,
+        createdAt: conversation.createdAt,
+        updatedAt: conversation.updatedAt,
+        pinnedMessages: conversation.pinnedMessages || [],
       };
       dispatch(updateChat(transformedChat));
     },
@@ -119,15 +163,23 @@ export const useChat = () => {
   });
 
   const deleteChatMutation = useMutate('DELETE', '/chat/conversations/:conversationId', {
-    onSuccess: (data: any) => {
-      // Extract conversationId from the mutation variables or data
-      // This assumes your useMutate hook provides access to variables in some way
-      // You may need to adjust this based on your useMutate implementation
-      console.log('Chat deleted successfully:', data);
+    onSuccess: () => {
+      console.log('Chat deleted successfully');
     },
     onError: (error: any) => {
       console.error('Error deleting chat:', error);
       errorMessageHandler(error);
+    },
+  });
+
+  const sendMessageMutation = useMutate('POST', '/chat/conversations/:conversationId/messages', {
+    onSuccess: (data: any) => {
+      console.log('Message sent via HTTP:', data);
+    },
+    onError: (error: any) => {
+      console.error('Error sending message:', error);
+      errorMessageHandler(error);
+      throw error;
     },
   });
 
@@ -144,193 +196,294 @@ export const useChat = () => {
   useEffect(() => {
     if (conversations) {
       const transformedChats: Chat[] = conversations.map((conv: any) => ({
-        id: conv._id,
+        _id: conv._id,
         name: conv.type === 'direct'
           ? conv.participants.find((p: any) => p._id !== user?.id)?.username || 'Unknown User'
           : conv.name || 'Group Chat',
-        isGroup: conv.type === 'group',
-        participants: conv.participants.map((p: any) => p._id),
+        type: conv.type,
+        participants: conv.participants.map((p: any) => ({
+          _id: p._id,
+          username: p.username,
+          avatar: p.avatar,
+        })),
         lastMessage: conv.lastMessage ? {
-          id: conv.lastMessage._id,
-          content: conv.lastMessage.content,
+          _id: conv.lastMessage._id,
+          conversationId: conv._id,
           senderId: conv.lastMessage.senderId,
-          chatId: conv._id,
-          timestamp: conv.lastMessage.timestamp,
+          content: conv.lastMessage.content,
           messageType: conv.lastMessage.messageType || 'text',
           isRead: conv.lastMessage.isRead,
           edited: conv.lastMessage.edited,
           editedAt: conv.lastMessage.editedAt,
-          reactions: conv.lastMessage.reactions,
+          reactions: conv.lastMessage.reactions || [],
+          createdAt: conv.lastMessage.createdAt,
+          updatedAt: conv.lastMessage.updatedAt,
+          fileUrl: conv.lastMessage.fileUrl,
+          fileName: conv.lastMessage.fileName,
+          replyTo: conv.lastMessage.replyTo,
+          postId: conv.lastMessage.postId,
         } : undefined,
-        lastMessageTime: conv.lastMessage?.timestamp,
+        lastMessageTime: conv.lastMessage?.createdAt,
         unreadCount: 0,
         avatar: conv.avatar || conv.participants.find((p: any) => p._id !== user?.id)?.avatar,
         isPinned: conv.isPinned,
         isMuted: conv.isMuted,
         isArchived: conv.isArchived,
+        createdAt: conv.createdAt,
+        updatedAt: conv.updatedAt,
+        pinnedMessages: conv.pinnedMessages || [],
       }));
       dispatch(setChats(transformedChats));
     }
   }, [conversations, dispatch, user?.id]);
 
   useEffect(() => {
-    if (socket) {
-      socket.on('new_message', (message: any) => {
-        const transformedMessage: Message = {
-          id: message._id,
-          content: message.content,
-          senderId: message.senderId._id || message.senderId,
-          chatId: message.conversationId,
-          timestamp: message.timestamp,
-          messageType: message.messageType || 'text',
-          fileUrl: message.fileUrl,
-          fileName: message.fileName,
-          isRead: message.isRead,
-          edited: message.edited,
-          editedAt: message.editedAt,
-          reactions: message.reactions,
-        };
-        dispatch(addMessage(transformedMessage));
-        if (message.conversationId !== activeChat) {
-          dispatch(incrementUnreadCount(message.conversationId));
-        }
-      });
+    if (!socket) return;
 
-      socket.on('new_conversation', (conversation: any) => {
-        const transformedChat: Chat = {
-          id: conversation._id,
-          name: conversation.type === 'direct'
-            ? conversation.participants.find((p: any) => p._id !== user?.id)?.username || 'Unknown User'
-            : conversation.name || 'Group Chat',
-          isGroup: conversation.type === 'group',
-          participants: conversation.participants.map((p: any) => p._id),
-          lastMessage: undefined,
-          lastMessageTime: undefined,
-          unreadCount: 0,
-          avatar: conversation.avatar,
-          isPinned: conversation.isPinned,
-          isMuted: conversation.isMuted,
-          isArchived: conversation.isArchived,
-        };
-        dispatch(addChat(transformedChat));
-      });
-
-      socket.on('message_edited', (message: any) => {
-        const transformedMessage: Message = {
-          id: message._id,
-          content: message.content,
-          senderId: message.senderId._id || message.senderId,
-          chatId: message.conversationId,
-          timestamp: message.timestamp,
-          messageType: message.messageType || 'text',
-          fileUrl: message.fileUrl,
-          fileName: message.fileName,
-          isRead: message.isRead,
-          edited: message.edited,
-          editedAt: message.editedAt,
-          reactions: message.reactions,
-        };
-        dispatch(updateMessage(transformedMessage));
-      });
-
-      socket.on('message_deleted', (data: { messageId: string }) => {
-        dispatch(removeMessage(data.messageId));
-      });
-
-      socket.on('reaction_added', (message: any) => {
-        const transformedMessage: Message = {
-          id: message._id,
-          content: message.content,
-          senderId: message.senderId._id || message.senderId,
-          chatId: message.conversationId,
-          timestamp: message.timestamp,
-          messageType: message.messageType || 'text',
-          fileUrl: message.fileUrl,
-          fileName: message.fileName,
-          isRead: message.isRead,
-          edited: message.edited,
-          editedAt: message.editedAt,
-          reactions: message.reactions,
-        };
-        dispatch(updateMessage(transformedMessage));
-      });
-
-      socket.on('reaction_removed', (message: any) => {
-        const transformedMessage: Message = {
-          id: message._id,
-          content: message.content,
-          senderId: message.senderId._id || message.senderId,
-          chatId: message.conversationId,
-          timestamp: message.timestamp,
-          messageType: message.messageType || 'text',
-          fileUrl: message.fileUrl,
-          fileName: message.fileName,
-          isRead: message.isRead,
-          edited: message.edited,
-          editedAt: message.editedAt,
-          reactions: message.reactions,
-        };
-        dispatch(updateMessage(transformedMessage));
-      });
-
-      socket.on('messages_read', (data: { conversationId: string; userId: string }) => {
-        // Fixed: Properly handle messages read event
-        const currentMessages = (window as any).__REDUX_STATE__?.chat?.messages?.[data.conversationId] || [];
-        const updatedMessages = currentMessages.map((msg: Message) => ({
-          ...msg,
-          isRead: true,
-        }));
-        dispatch(setMessages({ chatId: data.conversationId, messages: updatedMessages }));
-      });
-
-      socket.on('user_typing', (data: { userId: string; conversationId: string }) => {
-        // Handle typing indicators (to be implemented in ChatWindow)
-      });
-
-      socket.on('user_stop_typing', (data: { userId: string; conversationId: string }) => {
-        // Handle stop typing (to be implemented in ChatWindow)
-      });
-
-      return () => {
-        socket.off('new_message');
-        socket.off('new_conversation');
-        socket.off('message_edited');
-        socket.off('message_deleted');
-        socket.off('reaction_added');
-        socket.off('reaction_removed');
-        socket.off('messages_read');
-        socket.off('user_typing');
-        socket.off('user_stop_typing');
+    const handleNewMessage = (response: any) => {
+      const message = response.message || response;
+      const transformedMessage: Message = {
+        _id: message._id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        content: message.content,
+        messageType: message.messageType || 'text',
+        fileUrl: message.fileUrl,
+        fileName: message.fileName,
+        isRead: message.isRead,
+        edited: message.edited,
+        editedAt: message.editedAt,
+        reactions: message.reactions || [],
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        replyTo: message.replyTo,
+        postId: message.postId,
       };
-    }
-  }, [socket, dispatch, activeChat, user?.id]);
+      dispatch(addMessage(transformedMessage));
+      if (message.conversationId !== activeChat) {
+        dispatch(incrementUnreadCount(message.conversationId));
+      }
+    };
+
+    socket.on('new_message', handleNewMessage);
+    socket.on('message_edited', (response: any) => {
+      const message = response.message || response;
+      dispatch(updateMessage({
+        _id: message._id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        content: message.content,
+        messageType: message.messageType || 'text',
+        fileUrl: message.fileUrl,
+        fileName: message.fileName,
+        isRead: message.isRead,
+        edited: message.edited,
+        editedAt: message.editedAt,
+        reactions: message.reactions || [],
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        replyTo: message.replyTo,
+        postId: message.postId,
+      }));
+    });
+
+    socket.on('message_deleted', (data: { messageId: string }) => {
+      dispatch(removeMessage(data.messageId));
+    });
+
+    socket.on('reaction_added', (response: any) => {
+      const message = response.message || response;
+      dispatch(updateMessage({
+        _id: message._id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        content: message.content,
+        messageType: message.messageType || 'text',
+        fileUrl: message.fileUrl,
+        fileName: message.fileName,
+        isRead: message.isRead,
+        edited: message.edited,
+        editedAt: message.editedAt,
+        reactions: message.reactions || [],
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        replyTo: message.replyTo,
+        postId: message.postId,
+      }));
+    });
+
+    socket.on('reaction_removed', (response: any) => {
+      const message = response.message || response;
+      dispatch(updateMessage({
+        _id: message._id,
+        conversationId: message.conversationId,
+        senderId: message.senderId,
+        content: message.content,
+        messageType: message.messageType || 'text',
+        fileUrl: message.fileUrl,
+        fileName: message.fileName,
+        isRead: message.isRead,
+        edited: message.edited,
+        editedAt: message.editedAt,
+        reactions: message.reactions || [],
+        createdAt: message.createdAt,
+        updatedAt: message.updatedAt,
+        replyTo: message.replyTo,
+        postId: message.postId,
+      }));
+    });
+
+    socket.on('messages_read', (data: { conversationId: string; userId: string }) => {
+      const currentMessages = messages[data.conversationId] || [];
+      const updatedMessages = currentMessages.map((msg: Message) => ({
+        ...msg,
+        isRead: true,
+      }));
+      dispatch(setMessages({ chatId: data.conversationId, messages: updatedMessages }));
+    });
+
+    socket.on('message_pinned', (data: { conversationId: string; messageId: string }) => {
+      const message = messages[data.conversationId]?.find((m: Message) => m._id === data.messageId);
+      if (message) {
+        dispatch(addPinnedMessage({ chatId: data.conversationId, message }));
+      }
+    });
+
+    socket.on('message_unpinned', (data: { conversationId: string; messageId: string }) => {
+      dispatch(removePinnedMessage({ chatId: data.conversationId, messageId: data.messageId }));
+    });
+
+    return () => {
+      socket.off('new_message', handleNewMessage);
+      socket.off('message_edited');
+      socket.off('message_deleted');
+      socket.off('reaction_added');
+      socket.off('reaction_removed');
+      socket.off('messages_read');
+      socket.off('message_pinned');
+      socket.off('message_unpinned');
+    };
+  }, [socket, dispatch, activeChat, user?.id, messages]);
 
   const sendMessage = async (
-    chatId: string,
+    conversationId: string,
     content: string,
-    messageType: 'text' | 'image' | 'file' = 'text',
+    messageType: 'text' | 'image' | 'file' | 'audio' | 'video' | 'post' = 'text',
     fileUrl?: string,
-    fileName?: string
+    fileName?: string,
+    replyTo?: string,
+    postId?: string
   ) => {
-    if (socket) {
-      socket.emit('send_message', {
-        conversationId: chatId,
+    if (!user?.id) return;
+
+    const optimisticMessage: Message = {
+      _id: `temp-${Date.now()}-${Math.random()}`,
+      conversationId,
+      senderId: {
+        _id: user.id,
+        username: user.username || user.name || 'Unknown',
+        avatar: user.avatar,
+      },
+      content,
+      messageType,
+      fileUrl,
+      fileName,
+      replyTo: replyTo ? { _id: replyTo, content: '', senderId: '', messageType: 'text' } : undefined,
+      isRead: false,
+      edited: false,
+      reactions: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      postId,
+    };
+
+    dispatch(addMessage(optimisticMessage));
+
+    if (socket && isSocketReady()) {
+      try {
+        console.log('🔌 Attempting to send via socket...');
+        const socketResult = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Socket timeout'));
+          }, 2000);
+
+          const messageHandler = (data: any) => {
+            clearTimeout(timeout);
+            socket.off('message_sent', messageHandler);
+            socket.off('message_error', errorHandler);
+            resolve(data);
+          };
+
+          const errorHandler = (error: any) => {
+            clearTimeout(timeout);
+            socket.off('message_sent', messageHandler);
+            socket.off('message_error', errorHandler);
+            reject(error);
+          };
+
+          socket.on('message_sent', messageHandler);
+          socket.on('message_error', errorHandler);
+
+          socket.emit('send_message', {
+            conversationId,
+            content,
+            messageType,
+            fileUrl,
+            fileName,
+            replyTo,
+            postId,
+          });
+        });
+
+        console.log('✅ Message sent successfully via socket');
+        dispatch(removeMessage(optimisticMessage._id));
+        return socketResult;
+      } catch (socketError: any) {
+        console.log('❌ Socket sending failed, falling back to HTTP:', socketError.message);
+      }
+    }
+
+    try {
+      console.log('🌐 Sending message via HTTP API...');
+      const response = await api.post(`/chat/conversations/${conversationId}/messages`, {
         content,
         messageType,
         fileUrl,
         fileName,
+        replyTo,
+        postId,
       });
+
+      const messageData = response.data.message || response;
+      dispatch(removeMessage(optimisticMessage._id));
+      dispatch(addMessage({
+        _id: messageData._id,
+        conversationId: messageData.conversationId,
+        senderId: messageData.senderId,
+        content: messageData.content,
+        messageType: messageData.messageType || 'text',
+        fileUrl: messageData.fileUrl,
+        fileName: messageData.fileName,
+        isRead: messageData.isRead ?? false,
+        edited: messageData.edited,
+        editedAt: messageData.editedAt,
+        reactions: messageData.reactions || [],
+        createdAt: messageData.createdAt,
+        updatedAt: messageData.updatedAt,
+        replyTo: messageData.replyTo,
+        postId: messageData.postId,
+      }));
+
+      return response;
+    } catch (error: any) {
+      dispatch(removeMessage(optimisticMessage._id));
+      errorMessageHandler(error);
+      throw error;
     }
   };
 
-  const createChat = async (participantIds: string[], isGroup: boolean = false, name?: string, avatar?: string) => {
-    const chatData = {
-      participantIds,
-      type: isGroup ? 'group' : 'direct',
-      name,
-      avatar,
-    };
-    createChatMutation.mutate(chatData);
+  const createChat = async (participantIds: string[], type: 'direct' | 'group' = 'direct', name?: string, avatar?: string) => {
+    createChatMutation.mutate({ participantIds, type, name, avatar });
     return createChatMutation;
   };
 
@@ -339,10 +492,8 @@ export const useChat = () => {
     return updateChatMutation;
   };
 
-  // Fixed: Store conversationId to use in onSuccess callback
   const deleteChat = async (conversationId: string) => {
     deleteChatMutation.mutate({ conversationId });
-    // Optimistically remove from UI or handle in onSuccess with proper state management
     dispatch(removeChat(conversationId));
     return deleteChatMutation;
   };
@@ -352,83 +503,262 @@ export const useChat = () => {
       const response = await api.get(`/chat/conversations/${chatId}/messages`);
       const messages = response.data;
       const transformedMessages: Message[] = messages.map((msg: any) => ({
-        id: msg._id,
+        _id: msg._id,
+        conversationId: msg.conversationId,
+        senderId: msg.senderId,
         content: msg.content,
-        senderId: msg.senderId._id || msg.senderId,
-        chatId,
-        timestamp: msg.timestamp,
         messageType: msg.messageType || 'text',
         fileUrl: msg.fileUrl,
         fileName: msg.fileName,
         isRead: msg.isRead,
         edited: msg.edited,
         editedAt: msg.editedAt,
-        reactions: msg.reactions,
+        reactions: msg.reactions || [],
+        createdAt: msg.createdAt,
+        updatedAt: msg.updatedAt,
+        replyTo: msg.replyTo,
+        postId: msg.postId,
       }));
       dispatch(setMessages({ chatId, messages: transformedMessages }));
+      return transformedMessages;
     } catch (error: any) {
-      console.error('Error loading messages:', error);
       errorMessageHandler(error);
+      throw error;
     }
   };
 
   const editMessage = async (messageId: string, content: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
+      console.log('🔌 Editing message via socket...');
       socket.emit('edit_message', { messageId, content });
+    } else {
+      console.log('🌐 Socket not ready, implementing HTTP fallback for edit message');
+      try {
+        const response = await api.put(`/chat/messages/${messageId}`, { content });
+        const messageData = response.data;
+        dispatch(updateMessage({
+          _id: messageData._id,
+          conversationId: messageData.conversationId,
+          senderId: messageData.senderId,
+          content: messageData.content,
+          messageType: messageData.messageType || 'text',
+          fileUrl: messageData.fileUrl,
+          fileName: messageData.fileName,
+          isRead: messageData.isRead,
+          edited: messageData.edited,
+          editedAt: messageData.editedAt,
+          reactions: messageData.reactions || [],
+          createdAt: messageData.createdAt,
+          updatedAt: messageData.updatedAt,
+          replyTo: messageData.replyTo,
+          postId: messageData.postId,
+        }));
+      } catch (error: any) {
+        console.error('❌ Failed to edit message via HTTP:', error);
+        errorMessageHandler(error);
+      }
     }
   };
 
   const deleteMessage = async (messageId: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
+      console.log('🔌 Deleting message via socket...');
       socket.emit('delete_message', { messageId });
+    } else {
+      console.log('🌐 Socket not ready, implementing HTTP fallback for delete message');
+      try {
+        await api.delete(`/chat/messages/${messageId}`);
+        dispatch(removeMessage(messageId));
+      } catch (error: any) {
+        console.error('❌ Failed to delete message via HTTP:', error);
+        errorMessageHandler(error);
+      }
     }
   };
 
   const addReaction = async (messageId: string, emoji: string) => {
-    if (socket) {
+    console.log('Add reaction called', { socketExists: !!socket, isConnected: socket?.connected });
+    if (socket && isSocketReady()) {
+      console.log('🔌 Adding reaction via socket...');
       socket.emit('add_reaction', { messageId, emoji });
+    } else {
+      console.log('🌐 Socket not ready, implementing HTTP fallback for add reaction');
+      try {
+        const response = await api.post(`/chat/messages/${messageId}/reactions`, { emoji });
+        const messageData = response.data;
+        dispatch(updateMessage({
+          _id: messageData._id,
+          conversationId: messageData.conversationId,
+          senderId: messageData.senderId,
+          content: messageData.content,
+          messageType: messageData.messageType || 'text',
+          fileUrl: messageData.fileUrl,
+          fileName: messageData.fileName,
+          isRead: messageData.isRead,
+          edited: messageData.edited,
+          editedAt: messageData.editedAt,
+          reactions: messageData.reactions || [],
+          createdAt: messageData.createdAt,
+          updatedAt: messageData.updatedAt,
+          replyTo: messageData.replyTo,
+          postId: messageData.postId,
+        }));
+      } catch (error: any) {
+        console.error('❌ Failed to add reaction via HTTP:', error);
+        errorMessageHandler(error);
+      }
     }
   };
 
   const removeReaction = async (messageId: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
+      console.log('🔌 Removing reaction via socket...');
       socket.emit('remove_reaction', { messageId });
+    } else {
+      console.log('🌐 Socket not ready, implementing HTTP fallback for remove reaction');
+      try {
+        const response = await api.delete(`/chat/messages/${messageId}/reactions`);
+        const messageData = response.data;
+        dispatch(updateMessage({
+          _id: messageData._id,
+          conversationId: messageData.conversationId,
+          senderId: messageData.senderId,
+          content: messageData.content,
+          messageType: messageData.messageType || 'text',
+          fileUrl: messageData.fileUrl,
+          fileName: messageData.fileName,
+          isRead: messageData.isRead,
+          edited: messageData.edited,
+          editedAt: messageData.editedAt,
+          reactions: messageData.reactions || [],
+          createdAt: messageData.createdAt,
+          updatedAt: messageData.updatedAt,
+          replyTo: messageData.replyTo,
+          postId: messageData.postId,
+        }));
+      } catch (error: any) {
+        console.error('❌ Failed to remove reaction via HTTP:', error);
+        errorMessageHandler(error);
+      }
+    }
+  };
+
+  const pinMessage = async (conversationId: string, messageId: string) => {
+    try {
+      const response = await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/pin`);
+      const message = messages[conversationId]?.find((m: Message) => m._id === messageId);
+      if (message) {
+        dispatch(addPinnedMessage({ chatId: conversationId, message }));
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to pin message:', error);
+      errorMessageHandler(error);
+    }
+  };
+
+  const unpinMessage = async (conversationId: string, messageId: string) => {
+    try {
+      await api.post(`/chat/conversations/${conversationId}/messages/${messageId}/unpin`);
+      dispatch(removePinnedMessage({ chatId: conversationId, messageId }));
+    } catch (error: any) {
+      console.error('❌ Failed to unpin message:', error);
+      errorMessageHandler(error);
+    }
+  };
+
+  const forwardMessage = async (messageId: string, targetConversationId: string) => {
+    try {
+      const response = await api.post(`/chat/messages/${messageId}/forward`, { targetConversationId });
+      const forwardedMessage = response.data.forwardedMessage;
+      dispatch(addMessage(forwardedMessage));
+    } catch (error: any) {
+      console.error('❌ Failed to forward message:', error);
+      errorMessageHandler(error);
+    }
+  };
+
+  const starMessage = async (messageId: string) => {
+    try {
+      await api.post(`/chat/messages/${messageId}/star`);
+      const message = Object.values(messages)
+        .flat()
+        .find((m: Message) => m._id === messageId);
+      if (message) {
+        dispatch(addStarredMessage(message));
+      }
+    } catch (error: any) {
+      console.error('❌ Failed to star message:', error);
+      errorMessageHandler(error);
+    }
+  };
+
+  const unstarMessage = async (messageId: string) => {
+    try {
+      await api.post(`/chat/messages/${messageId}/unstar`);
+      dispatch(removeStarredMessage(messageId));
+    } catch (error: any) {
+      console.error('❌ Failed to unstar message:', error);
+      errorMessageHandler(error);
+    }
+  };
+
+  const getMessageInfo = async (messageId: string) => {
+    try {
+      const response = await api.get(`/chat/messages/${messageId}/info`);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Failed to get message info:', error);
+      errorMessageHandler(error);
+      throw error;
     }
   };
 
   const markMessagesAsRead = async (chatId: string) => {
-    if (socket) {
+    console.log('markMessagesAsRead called', { socketExists: !!socket, isConnected: socket?.connected });
+    if (socket && isSocketReady()) {
+      console.log('🔌 Marking messages as read via socket...');
       socket.emit('mark_read', { conversationId: chatId });
+    }
+
+    try {
+      const res = await api.post(`/chat/conversations/${chatId}/read`);
+      console.log('✅ Messages marked as read via HTTP');
+      const read = res.data;
+      dispatch(markMessageAsRead(read.conversationId));
+    } catch (error) {
+      console.error('❌ Failed to mark messages as read via HTTP:', error);
     }
   };
 
   const joinChat = (chatId: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
+      console.log('🔌 Joining chat via socket...', chatId);
       socket.emit('join_conversation', chatId);
     }
   };
 
   const leaveChat = (chatId: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
+      console.log('🔌 Leaving chat via socket...');
       socket.emit('leave_conversation', chatId);
     }
   };
 
   const startTyping = (chatId: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
       socket.emit('typing', { conversationId: chatId });
     }
   };
 
   const stopTyping = (chatId: string) => {
-    if (socket) {
+    if (socket && isSocketReady()) {
       socket.emit('stop_typing', { conversationId: chatId });
     }
   };
 
   const uploadFile = async (formData: FormData, options?: UploadOptions) => {
     try {
-      const response = await api.post('/files/upload', formData, {
+      const response = await api.post('/chat/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -445,7 +775,7 @@ export const useChat = () => {
   return {
     sendMessage,
     createChat,
-    updateChat: updateChatFn, // Fixed naming conflict
+    updateChat: updateChatFn,
     deleteChat,
     joinChat,
     leaveChat,
@@ -454,11 +784,17 @@ export const useChat = () => {
     deleteMessage,
     addReaction,
     removeReaction,
+    pinMessage,
+    unpinMessage,
+    forwardMessage,
+    starMessage,
+    unstarMessage,
+    getMessageInfo,
     markMessagesAsRead,
     startTyping,
     stopTyping,
-    uploadFile, // Fixed function signature
-    conversations,
+    uploadFile,
+    conversations: chats,
     isLoading,
     isCreatingChat: createChatMutation.isPending,
     createChatError: createChatMutation.error,
@@ -466,7 +802,15 @@ export const useChat = () => {
     updateChatError: updateChatMutation.error,
     isDeletingChat: deleteChatMutation.isPending,
     deleteChatError: deleteChatMutation.error,
+    isSendingMessage: sendMessageMutation.isPending,
+    sendMessageError: sendMessageMutation.error,
     isUploadingFile: uploadFileMutation.isPending,
     uploadFileError: uploadFileMutation.error,
+    socketStatus: {
+      hasSocket: !!socket,
+      isConnected,
+      socketInitialized,
+      isReady: isSocketReady(),
+    },
   };
 };

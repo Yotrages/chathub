@@ -1,3 +1,4 @@
+'use client'
 import { setUserCredentials } from '@/libs/redux/authSlice';
 import { AppDispatch } from '@/libs/redux/store';
 import { setCookie } from 'cookies-next';
@@ -25,11 +26,11 @@ const OAuthSuccess = () => {
     if (token && name && email && id) {
       setCookie('auth-token', token);
     dispatch(setUserCredentials({
-        token: token,
         user: {
             id: id,
             email: email,
-            name: name
+            name: name,
+            online: true
         }
     }))
       router.push('/')
@@ -37,7 +38,7 @@ const OAuthSuccess = () => {
       console.error('OAuth data missing from URL');
       router.push('/login');
     }
-  }, [router]);
+  }, [router, dispatch]);
 
   return <p>Logging you in...</p>;
 };

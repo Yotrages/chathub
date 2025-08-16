@@ -18,7 +18,7 @@ interface ButtonProps {
   text_shadow: string;
   font_family: string;
   font_weight: string;
-  background: string;
+  background?: string;
   opacity: string;
   text: ReactNode;
   variant: "filled" | "white" | "orange" | "gray";
@@ -63,7 +63,6 @@ export const Button = ({
   py = "12px",
   px = "16px",
   color,
-  background,
   font = "14px",
   children,
   font_family,

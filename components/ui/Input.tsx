@@ -1,4 +1,4 @@
-import React from "react";
+import React, { RefObject } from "react";
 import { UseFormRegisterReturn } from "react-hook-form";
 import { FaSearch } from "react-icons/fa";
 
@@ -17,8 +17,16 @@ interface InputProps {
   gap?: string;
   right_content?: boolean;
   register?: UseFormRegisterReturn<any>;
-  children?: React.ReactNode
+  icon?: React.ReactNode
   readyMade?: boolean
+  className?: string
+  value?: any
+  disabled?: boolean;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  maxLength?: number;
+  ref?: RefObject<HTMLInputElement | null>
 }
 
 export const Input = ({
@@ -33,11 +41,19 @@ export const Input = ({
   border_radius = "8px",
   register,
   readyMade,
-  children,
+  icon,
+  className,
+  value,
+  onBlur,
+  onChange,
+  onFocus,
+  disabled,
+  maxLength,
+  ref,
   ...props
 }: InputProps) => {
   return (
-    <div className="flex flex-col gap-1 items-start w-full">
+    <div className={`flex ${className} flex-col gap-1 items-start w-full`}>
       <label
         htmlFor={label}
         id={label}
@@ -52,7 +68,14 @@ export const Input = ({
             <FaSearch className="absolute top-4 left-3" />
           </span>
           <input
+          ref={ref}
+          maxLength={maxLength}
+          disabled={disabled}
+          onChange={onChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
             type={type}
+            value={value}
             style={{
               width: width ?? "100%",
               paddingBlock: py,
@@ -65,19 +88,51 @@ export const Input = ({
               paddingRight: props.right_content ? "10px" : px,
             }}
             placeholder={placeholder}
-            className={`focus:outline-none ${
-              props.left_content && "placeholder:pl-7"
-            }`}
+            className={`focus:outline-none`}
             {...register}
           />
         </div>
         ) : (
-          children
+          <div className="flex relative">
+          <span className="absolute top-4 left-3">
+            {icon}
+          </span>
+          <input
+          ref={ref}
+          maxLength={maxLength}
+          disabled={disabled}
+           onChange={onChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
+            type={type}
+            value={value}
+            style={{
+              width: width ?? "100%",
+              paddingBlock: py,
+              paddingInline: px,
+              border: border,
+              height: height,
+              maxWidth: props.max_width,
+              borderRadius: border_radius,
+              paddingLeft: props.left_content ? "35px" : px,
+              paddingRight: props.right_content ? "20px" : px,
+            }}
+            placeholder={placeholder}
+            className={`focus:outline-none`}
+            {...register}
+          />
+        </div>
         )
       ) : props.right_content ? (
         readyMade ? (
           <div className="flex relative">
           <input
+          ref={ref}
+          maxLength={maxLength}
+          disabled={disabled}
+           onChange={onChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
             type={type}
             style={{
               width: width ?? "100%",
@@ -95,11 +150,18 @@ export const Input = ({
           <FaSearch className="absolute top-4 right-5" />
         </div>
         ) : (
-          children
+          icon
         )
       ) : (
         <input
+        ref={ref}
+        maxLength={maxLength}
+        disabled={disabled}
+         onChange={onChange}
+          onBlur={onBlur}
+          onFocus={onFocus}
           type={type}
+          value={value}
           style={{
             width: width ?? "100%",
             paddingBlock: py,
