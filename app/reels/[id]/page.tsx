@@ -16,7 +16,7 @@ const ReelsPage: React.FC = () => {
   const { reels, pagination, isLoading: reelsLoading } = useSelector((state: RootState) => state.reels);
   const [currentIndex, setCurrentIndex] = useState(-1); // Start with -1 to indicate not set
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const { trigger } = useGetReels(pagination?.currentPage || 1); 
+  const { trigger } = useGetReels(pagination.reels?.currentPage || 1); 
   const { mutate: reactToReel } = useReactReel(reels[currentIndex >= 0 ? currentIndex : 0]?._id || "");
 
   useEffect(() => {

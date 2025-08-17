@@ -14,6 +14,7 @@ import { useSocket } from "@/context/socketContext"
 // import { setUserOnlineStatus } from '@/utils/formatter';
 import { updateUserOnlineStatus } from '@/libs/redux/authSlice';
 import { api } from '@/libs/axios/config';
+import { Analytics } from "@vercel/analytics/next"
 
 function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const { user} = useSelector((state: RootState) => state.auth);
@@ -128,6 +129,7 @@ export default function MainLayout({
               <SocketProvider>
                 <NotificationWrapper>
                   <Toaster />
+                  <Analytics />
                   <div className={`min-h-screen overflow-hidden bg-gray-50`}>
                     <main>{children}</main>
                   </div>

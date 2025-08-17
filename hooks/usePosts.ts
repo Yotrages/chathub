@@ -29,11 +29,10 @@ import {
   addLikedPosts,
   addSavedPosts,
 } from "@/libs/redux/postSlice";
-import { AppDispatch, RootState } from "@/libs/redux/store";
+import { AppDispatch } from "@/libs/redux/store";
 import { IComment, Post, ReactedUser } from "@/types";
 import { errorMessageHandler } from "@/libs/feedback/error-handler";
 import { useState } from "react";
-import { store } from "@/libs/redux/store";
 import { successNotification } from "@/libs/feedback/notification";
 
 const createPostSchema = z.object({
@@ -324,7 +323,6 @@ export const useAddComment = (
     method: "POST",
     url: `/posts/${postId}/comment`,
     schema: commentSchema,
-    successMessage: "Comment added successfully!",
     onSuccess: (data: CommentResponse) => {
       console.log(`Adding comment for postId ${postId}:`, data.comment); // Debug log
       dispatch(addComment({ postId, comment: { ...data.comment, dynamicId: postId } }));

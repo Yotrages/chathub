@@ -23,8 +23,8 @@ const SuggestedFollow = () => {
           {/* Horizontal scrollable users */}
           <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
             {suggestedUsers && suggestedUsers.map((user, index) => (
-              <Link key={index} className='flex flex-col gap-2 items-start' href={user.id}>
-                <UserAvatar username={user.username || user.name} avatar={user.avatar}/>
+              <Link href={`/profile/${user?.id}`} key={index} className='flex flex-col gap-2 items-start'>
+                <UserAvatar username={user.username || user.name} avatar={user.avatar} className='w-10 h-10'/>
                 <p className='text-gray-600 font-inter font-semibold'>{user.username || user.name}</p>
               </Link>
             ))}

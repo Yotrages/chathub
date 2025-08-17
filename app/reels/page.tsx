@@ -19,10 +19,10 @@ const ReelsPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
-  const { trigger } = useGetReels(pagination?.currentPage || 1);
+  const { trigger } = useGetReels(pagination.reels?.currentPage || 1);
   const { mutate: reactToReel } = useReactReel(reels[currentIndex]?._id || "");
 
-  const hasMore = pagination?.hasNextPage ?? false;
+  const hasMore = pagination.reels?.hasNextPage ?? false;
 
   useEffect(() => {
     if (reels.length > 0 && !reelsLoading && currentIndex >= reels.length) {

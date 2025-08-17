@@ -21,18 +21,18 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({
     pagination,
     isLoading: reelsLoading,
   } = useSelector((state: RootState) => state.reels);
-  const { trigger } = useGetUserReels(pagination?.currentPage || 1, userId);
+  const { trigger } = useGetUserReels(pagination.userReels?.currentPage || 1, userId);
   const { ref } = useInView({
     threshold: 0.3,
     triggerOnce: false,
   });
-  const hasMore = pagination?.hasNextPage ?? false;
+  const hasMore = pagination.userReels?.hasNextPage ?? false;
 
   useEffect(() => {
-    if (!reelsLoading && pagination?.hasNextPage) {
+    if (!reelsLoading && pagination.userReels?.hasNextPage) {
       trigger();
     }
-  }, [reelsLoading, pagination?.hasNextPage, trigger]);
+  }, [reelsLoading, pagination.userReels?.hasNextPage, trigger]);
 
   if (reelsLoading && userReels.length === 0) {
     return (

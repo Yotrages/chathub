@@ -60,7 +60,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   }, []);
 
   return (
-    <div className="group relative">
+    <div id={`comment-${comment._id}`} className="group relative">
       <div className="flex gap-3 relative">
         <UserAvatar
           username={comment.authorId.username}

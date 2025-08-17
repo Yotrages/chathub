@@ -158,9 +158,12 @@ export const useGetSingleReel = (
 export const useGetComments = (
   reelId: string,
   options?: Partial<UseApiControllerOptions<Record<string, any>, CommentsResponse>>
-): QueryResult<CommentsResponse> & { loadMoreComments: () => void } => {
+): QueryResult<CommentsResponse> & { loadMoreComments: () => void; refetchComments: () => void} => {
   const dispatch: AppDispatch = useDispatch();
   const [page, setPage] = useState(1);
+
+    const existingComments = useSelector(selectComments(reelId));
+  
 
   const result = useApiController<CommentsResponse>({
     method: "GET",
@@ -171,14 +174,18 @@ export const useGetComments = (
       ...options?.queryOptions,
     },
     onSuccess: (data: CommentsResponse) => {
-      dispatch(
-        setComments({
-          reelId,
-          comments: page === 1 ? data.comments : [...(selectComments(reelId)({ reels: store.getState().reels }) || []), ...data.comments],
-        })
-      );
-      dispatch(setPagination(data.pagination));
-    },
+      const updatedComments = page === 1 
+              ? data.comments 
+              : [...(existingComments || []), ...data.comments];
+            
+            dispatch(
+              setComments({
+                reelId,
+                comments: updatedComments,
+              })
+            );
+            dispatch(setPagination({ reelId, pagination: data.pagination }));
+          },
   });
 
   const loadMoreComments = () => {
@@ -187,7 +194,12 @@ export const useGetComments = (
     }
   };
 
-  return { ...result, loadMoreComments };
+   const refetchComments = () => {
+    setPage(1);
+    result.refetch();
+  };
+
+  return { ...result, loadMoreComments, refetchComments };
 };
 
 export const useGetSingleReelComment = (

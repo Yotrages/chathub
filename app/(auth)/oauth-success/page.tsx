@@ -36,7 +36,7 @@ const OAuthSuccess = () => {
       router.push('/')
     } else {
       console.error('OAuth data missing from URL');
-      router.push('/login');
+      router.push(`/login?error=${encodeURIComponent("OAuth data missing from URL")}`);
     }
   }, [router, dispatch]);
 
