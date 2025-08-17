@@ -27,7 +27,7 @@ const OAuthSuccess = () => {
       setCookie('auth-token', token);
     dispatch(setUserCredentials({
         user: {
-            id: id,
+            _id: id,
             email: email,
             name: name,
             online: true

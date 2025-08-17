@@ -42,7 +42,7 @@ const authSlice = createSlice({
     },
 
     addSuggestedUsers: (state, action: PayloadAction<User[]>) => {
-      const newSuggestedUsers = action.payload.filter(suggestedUser => !state.suggestedUsers?.some((user) => user.id === suggestedUser.id))
+      const newSuggestedUsers = action.payload.filter(suggestedUser => !state.suggestedUsers?.some((user) => user._id === suggestedUser._id))
       state.suggestedUsers?.push(...newSuggestedUsers)
     },
 

@@ -14,7 +14,7 @@ const ConnectionsPage = () => {
   const tab = searchParams.get('tab') || 'followers';
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<'followers' | 'following' | 'pending'>(tab as any || 'followers');
-  const isOwnProfile = id === currentUser?.id;
+  const isOwnProfile = id === currentUser?._id;
 
   const { data: followersData, isLoading: followersLoading } = useGetFollowers(id as string);
   const { data: followingData, isLoading: followingLoading } = useGetFollowing(id as string);
@@ -108,7 +108,7 @@ const UserList = ({ users, title }: { users: User[]; title: string }) => {
   return (
     <div className="space-y-4">
       {users.map((user) => (
-        <Link key={user.id} href={`/profile/${user.id}`} className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
+        <Link key={user._id} href={`/profile/${user._id}`} className="flex items-center space-x-4 p-4 hover:bg-gray-50 rounded-lg transition-colors">
           <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
             {user.avatar ? (
               <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
@@ -137,7 +137,7 @@ const PendingRequestsList = ({
   onAccept: (followId: string) => void;
   onReject: (followId: string) => void;
 }) => {
-  
+
   if (requests.length === 0) {
     return (
       <div className="text-center py-12">
@@ -150,7 +150,7 @@ const PendingRequestsList = ({
     <div className="space-y-4">
       {requests && requests?.map((request) => (
         <div key={request._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-          <Link href={`/profile/${request.followerId.id}`} className="flex items-center space-x-4">
+          <Link href={`/profile/${request.followerId._id}`} className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
               {request.followerId.avatar ? (
                 <img src={request.followerId.avatar} alt={request.followerId.username} className="w-full h-full object-cover" />

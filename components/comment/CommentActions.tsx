@@ -37,7 +37,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
   const [longPressActive, setLongPressActive] = useState(false);
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const isLiked = user && comment.reactions?.some((r) => r.userId._id === user.id);
+  const isLiked = user && comment.reactions?.some((r) => r.userId._id === user._id);
 
   const handleReaction = (emoji: string, name: string) => {
     if (type === "post") {
@@ -81,7 +81,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
 
   const userReactionEmoji = comment.reactions?.find((r) => {
     const reactionUserId = r.userId._id || r.userId;
-    return reactionUserId === user?.id;
+    return reactionUserId === user?._id;
   })?.emoji || null;
 
   const groupedReactions = comment.reactions?.reduce((acc, reaction) => {

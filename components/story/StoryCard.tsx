@@ -27,7 +27,7 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
   const [isMuted, setIsMuted] = useState(isCompact);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // const isOwner = user?.id === story.authorId._id;
+  // const isOwner = user?._id === story.authorId._id;
 
   useEffect(() => {
     const video = videoRef.current;

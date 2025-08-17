@@ -106,7 +106,7 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <NotificationProvider userId={user.id} token={token}>
+    <NotificationProvider userId={user._id} token={token}>
       {children}
       <NotificationPopup />
     </NotificationProvider>

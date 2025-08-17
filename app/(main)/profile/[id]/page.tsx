@@ -70,9 +70,9 @@ const UserProfilePage = () => {
     const fetchUserProfile = async () => {
       setIsLoading(true);
       try {
-        if (id && id === currentUser?.id) {
+        if (id && id === currentUser?._id) {
           setProfileUser({
-            _id: currentUser?.id || '',
+            _id: currentUser?._id || '',
             username: currentUser?.username || '',
             name: currentUser?.name || '',
             email: currentUser?.email || '',
@@ -126,7 +126,7 @@ const UserProfilePage = () => {
 
   const handleMessage = async () => {
     if (!currentUser || !profileUser) return;
-    await createChat([currentUser?.id, profileUser?._id], "direct");
+    await createChat([currentUser?._id, profileUser?._id], "direct");
     router.push(window.innerWidth < 768 ? '/message' : '/chat');
   };
 
@@ -146,7 +146,7 @@ const UserProfilePage = () => {
   }
 
   const isFollowing = profileUser.followers?.some((follower) => {
-    return follower.id === currentUser?.id
+    return follower._id === currentUser?._id
   })
   return (
     <div className="min-h-screen bg-gray-50">

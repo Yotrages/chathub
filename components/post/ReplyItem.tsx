@@ -38,7 +38,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const isLiked =
-    user && reply.reactions?.some((r) => r.userId._id === user.id);
+    user && reply.reactions?.some((r) => r.userId._id === user._id);
 
   const handleReaction = (emoji: string, name: string) => {
     if (type === "post") {
@@ -52,7 +52,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
   const userReactionEmoji =
     reply.reactions?.find((r) => {
       const reactionUserId = r.userId._id || r.userId;
-      return reactionUserId === user?.id;
+      return reactionUserId === user?._id;
     })?.emoji || null;
 
   const formatTimeAgo = (date?: Date | string): string => {
@@ -192,6 +192,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
               </span>
             </button>
           </div>
+        </div>
           {showReplyForm && (
             <div className="relative mt-3">
               <ReplyForm
@@ -239,7 +240,6 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
               )}
             </div>
           )}
-        </div>
       </div>
     </div>
   );

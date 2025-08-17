@@ -40,11 +40,11 @@ export const useChat = () => {
   const connectionAttempted = useRef(false); // Track connection attempts
 
   const isSocketReady = () => {
-    return socket && socket.connected && isConnected && user?.id;
+    return socket && socket.connected && isConnected && user?._id;
   };
 
   useEffect(() => {
-    if (socket && isConnected && user?.id && !socketInitialized && !connectionAttempted.current) {
+    if (socket && isConnected && user?._id && !socketInitialized && !connectionAttempted.current) {
       console.log('Socket connected, initializing...');
       connectionAttempted.current = true;
       const initTimer = setTimeout(() => {
@@ -54,25 +54,25 @@ export const useChat = () => {
       }, 500);
       return () => clearTimeout(initTimer);
     }
-  }, [socket, isConnected, user?.id, socketInitialized]);
+  }, [socket, isConnected, user?._id, socketInitialized]);
 
   useEffect(() => {
     console.log('useChat - Connection Status:', {
       hasSocket: !!socket,
       isConnected,
       socketInitialized,
-      userId: user?.id,
+      userId: user?._id,
       isReady: isSocketReady(),
       connectionAttempted: connectionAttempted.current,
     });
-  }, [socket, isConnected, socketInitialized, user?.id]);
+  }, [socket, isConnected, socketInitialized, user?._id]);
 
   const createChatMutation = useMutate('POST', '/chat/conversations', {
     onSuccess: (conversation: any) => {
       const transformedChat: Chat = {
         _id: conversation._id,
         name: conversation.type === 'direct'
-          ? conversation.participants.find((p: any) => p._id !== user?.id)?.username || 'Unknown User'
+          ? conversation.participants.find((p: any) => p._id !== user?._id)?.username || 'Unknown User'
           : conversation.name || 'Group Chat',
         type: conversation.type,
         participants: conversation.participants.map((p: any) => ({
@@ -99,7 +99,7 @@ export const useChat = () => {
         } : undefined,
         lastMessageTime: conversation.lastMessage?.createdAt,
         unreadCount: 0,
-        avatar: conversation.avatar || conversation.participants.find((p: any) => p._id !== user?.id)?.avatar,
+        avatar: conversation.avatar || conversation.participants.find((p: any) => p._id !== user?._id)?.avatar,
         isPinned: conversation.isPinned,
         isMuted: conversation.isMuted,
         isArchived: conversation.isArchived,
@@ -198,7 +198,7 @@ export const useChat = () => {
       const transformedChats: Chat[] = conversations.map((conv: any) => ({
         _id: conv._id,
         name: conv.type === 'direct'
-          ? conv.participants.find((p: any) => p._id !== user?.id)?.username || 'Unknown User'
+          ? conv.participants.find((p: any) => p._id !== user?._id)?.username || 'Unknown User'
           : conv.name || 'Group Chat',
         type: conv.type,
         participants: conv.participants.map((p: any) => ({
@@ -225,7 +225,7 @@ export const useChat = () => {
         } : undefined,
         lastMessageTime: conv.lastMessage?.createdAt,
         unreadCount: 0,
-        avatar: conv.avatar || conv.participants.find((p: any) => p._id !== user?.id)?.avatar,
+        avatar: conv.avatar || conv.participants.find((p: any) => p._id !== user?._id)?.avatar,
         isPinned: conv.isPinned,
         isMuted: conv.isMuted,
         isArchived: conv.isArchived,
@@ -235,7 +235,7 @@ export const useChat = () => {
       }));
       dispatch(setChats(transformedChats));
     }
-  }, [conversations, dispatch, user?.id]);
+  }, [conversations, dispatch, user?._id]);
 
   useEffect(() => {
     if (!socket) return;
@@ -363,7 +363,7 @@ export const useChat = () => {
       socket.off('message_pinned');
       socket.off('message_unpinned');
     };
-  }, [socket, dispatch, activeChat, user?.id, messages]);
+  }, [socket, dispatch, activeChat, user?._id, messages]);
 
   const sendMessage = async (
     conversationId: string,
@@ -374,13 +374,13 @@ export const useChat = () => {
     replyTo?: string,
     postId?: string
   ) => {
-    if (!user?.id) return;
+    if (!user?._id) return;
 
     const optimisticMessage: Message = {
       _id: `temp-${Date.now()}-${Math.random()}`,
       conversationId,
       senderId: {
-        _id: user.id,
+        _id: user._id,
         username: user.username || user.name || 'Unknown',
         avatar: user.avatar,
       },

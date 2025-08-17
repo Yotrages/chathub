@@ -212,7 +212,7 @@ const router = useRouter();
                 </div>
               {/* User Profile Button */}
               <button
-                onClick={() => router.push(`/profile/${user?.id}`)}
+                onClick={() => router.push(`/profile/${user?._id}`)}
                 className="flex items-center space-x-1 xs:space-x-2 text-gray-700 hover:text-gray-900 p-1 xs:p-2 rounded-lg hover:bg-gray-100 transition-colors min-w-0"
               >
                 <div className="w-7 h-7 xs:w-8 xs:h-8 bg-gray-300 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">

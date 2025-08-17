@@ -40,7 +40,7 @@ export const MessageReactions = ({
     try {
       const userReaction = message.reactions?.find((r) => {
         const reactionUserId = typeof r.userId === 'string' ? r.userId : r.userId?._id;
-        return reactionUserId === user?.id;
+        return reactionUserId === user?._id;
       });
 
       if (userReaction) {
@@ -98,7 +98,7 @@ export const MessageReactions = ({
           {Object.entries(groupedReactions).map(([emoji, reactions]) => {
             const userHasReacted = reactions.some((r) => {
               const userId = typeof r.userId === "string" ? r.userId : r.userId?._id;
-              return userId === user?.id;
+              return userId === user?._id;
             });
 
             return (

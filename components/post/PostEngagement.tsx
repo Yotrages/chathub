@@ -44,7 +44,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
     user && reactions.length > 0
       ? reactions.some((r) => {
           const reactionUserId = r.userId?._id || r.userId;
-          return reactionUserId === user?.id;
+          return reactionUserId === user?._id;
         })
       : false;
       localStorage.setItem("press", JSON.stringify(longPressActive))
@@ -52,7 +52,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
   const userReactionEmoji =
     reactions.find((r) => {
       const reactionUserId = r.userId?._id || r.userId;
-      return reactionUserId === user?.id;
+      return reactionUserId === user?._id;
     })?.emoji || null;
 
   const reactionsIcon = [

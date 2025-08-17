@@ -1,7 +1,7 @@
 import { PaginationInfo } from "@/libs/redux/postSlice";
 
 export interface User {
-  id: string;
+  _id: string;
   email: string;
   avatar?: string;
   username?: string;

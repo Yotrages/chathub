@@ -63,7 +63,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
     const newSocket = io(socketUrl, {
-      auth: { token: token, userId: user.id },
+      auth: { token: token, userId: user._id },
       transports: ['websocket', 'polling'],
       timeout: 10000,
       reconnectionAttempts: maxReconnectAttempts,
@@ -96,7 +96,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       reconnectAttempts.current = 0;
       try {
         const refreshedToken = await refreshAuthToken(token as string);
-        newSocket.auth = { token: refreshedToken, userId: user.id };
+        newSocket.auth = { token: refreshedToken, userId: user._id };
       } catch (error) {
         console.error('Reconnect token refresh failed:', error);
       }
@@ -122,7 +122,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       setConnectionError(null);
       setOnlineUsers([]);
     };
-  }, [user?.id, token]);
+  }, [user?._id, token]);
 
   useEffect(() => {
     console.log('Socket Provider State:', {
@@ -130,10 +130,10 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       isConnected,
       connectionError,
       onlineUsersCount: onlineUsers.length,
-      userId: user?.id,
+      userId: user?._id,
       hasToken: !!token,
     });
-  }, [socket, isConnected, connectionError, onlineUsers.length, user?.id, token]);
+  }, [socket, isConnected, connectionError, onlineUsers.length, user?._id, token]);
 
   return (
     <SocketContext.Provider value={{ socket, isConnected, connectionError, onlineUsers, forceReconnect }}>

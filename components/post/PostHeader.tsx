@@ -52,7 +52,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
     blockPost({postId})
   }
 
-  const isOwner = user?.id === authorId._id
+  const isOwner = user?._id === authorId._id
 
   return (
     <div className="flex items-center justify-between p-6 pb-4">

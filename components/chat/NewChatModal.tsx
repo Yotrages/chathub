@@ -25,7 +25,7 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
   const filteredUsers = users?.filter((userItem: any) =>
     (userItem.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
      userItem.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    userItem._id !== user?.id
+    userItem._id !== user?._id
   ) || [];
 
   const handleUserToggle = (userId: string) => {

@@ -27,13 +27,13 @@ export const UserDiscovery = ({ onClose }: UserDiscoveryProps) => {
   ];
 
   const handleStartChat = async (userId: string) => {
-    if (!user?.id) return;
+    if (!user?._id) return;
     await createChat([userId], 'direct');
     onClose();
   };
 
   const filteredUsers = users?.filter((u: any) => {
-    if (!u || u._id === user?.id) return false; 
+    if (!u || u._id === user?._id) return false; 
     const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory =

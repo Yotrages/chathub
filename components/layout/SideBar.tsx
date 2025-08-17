@@ -12,7 +12,7 @@ const SideBar = () => {
     {
       icon: <Users size={36}/>,
       title: 'friends',
-      route: `/profile/${user?.id}/connections`
+      route: `/profile/${user?._id}/connections`
     },
     {
       icon: <Save size={36}/>,
@@ -46,7 +46,7 @@ const SideBar = () => {
       <div className='flex flex-col items-center w-full px-2 gap-3 py-4'>
         {/* User Profile Link */}
         <Link 
-          href={`/profile/${user?.id}`} 
+          href={`/profile/${user?._id}`} 
           className='flex items-center gap-2 w-full py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 pl-2'
         >
           <UserAvatar 

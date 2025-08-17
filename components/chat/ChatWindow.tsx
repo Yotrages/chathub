@@ -131,7 +131,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         socket.emit('ice-candidate', { 
           candidate: event.candidate, 
           to: currentChat._id,
-          callId: `${user?.id}-${currentChat._id}-${Date.now()}`
+          callId: `${user?._id}-${currentChat._id}-${Date.now()}`
         });
       }
     };
@@ -182,7 +182,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     };
 
     return peerConnectionRef.current;
-  }, [socket, currentChat, user?.id]);
+  }, [socket, currentChat, user?._id]);
 
   // Initialize peer connection
   useEffect(() => {
@@ -277,7 +277,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
     // Fetch initial statuses (existing code...)
     currentChat.participants.forEach(async (p) => {
-      if (p._id !== user.id) {
+      if (p._id !== user._id) {
         try {
           const response = await api.get(`/api/status/user/${p._id}`);
           setUserStatuses((prev) => {
@@ -355,7 +355,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   useEffect(() => {
     if (!socket || !activeChat || !isUserOnline) return;
     const handleTyping = (data: { userId: string; conversationId: string }) => {
-      if (data.conversationId === activeChat && data.userId !== user?.id) {
+      if (data.conversationId === activeChat && data.userId !== user?._id) {
         setTypingUsers((prev) => [...new Set([...prev, data.userId])]);
       }
     };
@@ -370,7 +370,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       socket.off('user_typing', handleTyping);
       socket.off('user_stop_typing', handleStopTyping);
     };
-  }, [socket, activeChat, user?.id, isUserOnline]);
+  }, [socket, activeChat, user?._id, isUserOnline]);
 
   // Enhanced call signaling
   useEffect(() => {
@@ -502,7 +502,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       return;
     }
 
-    const validPeer = currentChat.participants.find((p) => p._id !== user?.id);
+    const validPeer = currentChat.participants.find((p) => p._id !== user?._id);
     if (!validPeer) {
       toast.error('No valid peer to call');
       return;
@@ -766,7 +766,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                     {currentChat.participants.length} members
                     <span className="ml-2">
                       {currentChat.participants.map((p) => (
-                        p._id !== user?.id && (
+                        p._id !== user?._id && (
                           <span key={p._id} className="ml-2">
                             {userStatuses.get(p._id)?.isOnline ? (
                               <span className="flex items-center">
@@ -786,7 +786,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                   </span>
                 ) : (
                   (() => {
-                    const peer = currentChat.participants.find((p) => p._id !== user?.id);
+                    const peer = currentChat.participants.find((p) => p._id !== user?._id);
                     if (!peer) return <span>Click to view profile</span>;
                     const status = userStatuses.get(peer._id);
                     return status?.isOnline ? (
@@ -812,12 +812,12 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                 <button
                   disabled={
                     !isUserOnline ||
-                    !currentChat.participants.some((p) => p._id !== user?.id && userStatuses.get(p._id)?.isOnline)
+                    !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
                   }
                   onClick={() => startCall(false)}
                   className={`p-2 rounded-full transition-colors ${
                     isUserOnline &&
-                    currentChat.participants.some((p) => p._id !== user?.id && userStatuses.get(p._id)?.isOnline)
+                    currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
                       ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                       : 'text-gray-300 cursor-not-allowed'
                   }`}
@@ -828,12 +828,12 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                 <button
                   disabled={
                     !isUserOnline ||
-                    !currentChat.participants.some((p) => p._id !== user?.id && userStatuses.get(p._id)?.isOnline)
+                    !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
                   }
                   onClick={() => startCall(true)}
                   className={`p-2 rounded-full transition-colors ${
                     isUserOnline &&
-                    currentChat.participants.some((p) => p._id !== user?.id && userStatuses.get(p._id)?.isOnline)
+                    currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
                       ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                       : 'text-gray-300 cursor-not-allowed'
                   }`}
@@ -1074,8 +1074,8 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
               message={msg}
               isOwn={
                 typeof msg.senderId === 'string'
-                  ? msg.senderId === user?.id
-                  : msg.senderId._id === user?.id
+                  ? msg.senderId === user?._id
+                  : msg.senderId._id === user?._id
               }
               showAvatar={
                 index === 0 ||

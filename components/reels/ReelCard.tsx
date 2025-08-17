@@ -44,7 +44,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(({
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
 
   console.log(longPressActive)
-  // const isOwner = user?.id === reel.authorId._id;
+  // const isOwner = user?._id === reel.authorId._id;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -72,7 +72,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(({
       }
     };
   // const isLiked = user && reel.reactions.length > 0
-  //   ? reel.reactions.some((r) => (r.userId?._id || r.userId) === user?.id)
+  //   ? reel.reactions.some((r) => (r.userId?._id || r.userId) === user?._id)
   //   : false;
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -157,7 +157,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(({
     return acc;
   }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) || {};
 
-  const userReactionEmoji = reel.reactions.find((r) => r.userId?._id === user?.id)?.emoji || null;
+  const userReactionEmoji = reel.reactions.find((r) => r.userId?._id === user?._id)?.emoji || null;
 
   const containerClasses = isFullscreen
     ? "w-full h-full max-w-3xl mx-auto bg-black rounded-lg overflow-hidden relative"

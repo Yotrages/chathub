@@ -46,7 +46,7 @@ const StoriesPage: React.FC = () => {
     if (reelId) {
       dispatch(setStoryViewers(reelId));
       // Fetch viewers for the owner
-      if (currentStory && user?.id === currentStory.authorId._id) {
+      if (currentStory && user?._id === currentStory.authorId._id) {
         dispatch(getStoryViewers(reelId));
       }
     }
@@ -150,7 +150,7 @@ const StoriesPage: React.FC = () => {
     );
   }
   
-  const isOwner = user?.id === currentStory.authorId._id;
+  const isOwner = user?._id === currentStory.authorId._id;
   const handleViewersClick = () => {
     if (isOwner && currentStory.viewers) {
       setShowViewers(true);
