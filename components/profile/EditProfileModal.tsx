@@ -5,19 +5,6 @@ import { useApiController } from '@/hooks/useFetch';
 import { setUserCredentials } from '@/libs/redux/authSlice';
 import { User } from '@/types';
 
-interface ProfileUser {
-  _id: string;
-  username: string;
-  name?: string;
-  email?: string;
-  avatar?: string;
-  coverImage?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  isPrivate?: boolean;
-}
-
 interface EditProfileModalProps {
   user: User;
   onClose: () => void;

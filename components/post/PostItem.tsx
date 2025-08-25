@@ -10,7 +10,7 @@ import PostEngagement from "./PostEngagement";
 import PostComments from "./PostComments";
 import EditModal from "./Editmodal";
 import { ReactionsModal } from "./LikesModal";
-import { removePost, selectComments, selectPagination } from "@/libs/redux/postSlice";
+import { removePost, selectComments } from "@/libs/redux/postSlice";
 import { useRouter } from "next/navigation";
 import { useGetComments } from "@/hooks/usePosts";
 

@@ -205,7 +205,6 @@ const storiesSlice = createSlice({
         const reel = state.stories.find((r) => r._id === reelId);
         if (reel) {
           reel.reactions = data.reactions;
-          reel.likesCount = data.likesCount;
           reel.isLiked = data.isLiked;
         }
       })
@@ -222,7 +221,6 @@ const storiesSlice = createSlice({
         const { reelId, data } = action.payload;
         const reel = state.stories.find((r) => r._id === reelId);
         if (reel) {
-          reel.viewersCount = data.viewersCount;
           reel.viewers = data.viewers;
         }
       })
@@ -236,7 +234,6 @@ const storiesSlice = createSlice({
         const reel = state.stories.find((r) => r._id === reelId);
         if (reel) {
           reel.reactions = data.reactions;
-          reel.likesCount = data.likesCount;
         }
       })
       .addCase(addReactionToStory.rejected, (state, action) => {
@@ -249,7 +246,6 @@ const storiesSlice = createSlice({
         const reel = state.stories.find((r) => r._id === reelId);
         if (reel) {
           reel.viewers = data.viewers;
-          reel.viewersCount = data.viewersCount;
         }
       })
       .addCase(setStoryViewers.rejected, (state, action) => {

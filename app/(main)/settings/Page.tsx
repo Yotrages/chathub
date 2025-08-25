@@ -23,7 +23,6 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { getCookie } from 'cookies-next';
 import { api } from '@/libs/axios/config';
 
 interface UserSettings {
@@ -113,10 +112,10 @@ interface Report {
   reportedCommentId?: string;
 }
 
-interface BlockedUser {
-  _id: string;
-  username: string;
-}
+// interface BlockedUser {
+//   _id: string;
+//   username: string;
+// }
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
@@ -124,7 +123,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
+  // const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportForm, setReportForm] = useState({
     reportType: 'spam' as 'spam' | 'harassment' | 'inappropriate_content' | 'fake_account' | 'copyright' | 'other',
@@ -144,7 +143,7 @@ export default function SettingsPage() {
     { id: 'account', label: 'Account', icon: User },
     { id: 'reports', label: 'Reports', icon: Flag }
   ];
-  console.log(blockedUsers)
+  // console.log(blockedUsers)
 
   useEffect(() => {
     fetchSettings();
