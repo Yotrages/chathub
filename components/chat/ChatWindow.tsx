@@ -810,10 +810,10 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             {callState === 'idle' && (
               <>
                 <button
-                  disabled={
-                    !isUserOnline ||
-                    !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
-                  }
+                  // disabled={
+                  //   !isUserOnline ||
+                  //   !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
+                  // }
                   onClick={() => startCall(false)}
                   className={`p-2 rounded-full transition-colors ${
                     isUserOnline &&
@@ -826,10 +826,10 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                   <Phone size={20} />
                 </button>
                 <button
-                  disabled={
-                    !isUserOnline ||
-                    !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
-                  }
+                  // disabled={
+                  //   !isUserOnline ||
+                  //   !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
+                  // }
                   onClick={() => startCall(true)}
                   className={`p-2 rounded-full transition-colors ${
                     isUserOnline &&

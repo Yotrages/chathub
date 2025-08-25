@@ -78,7 +78,7 @@ const ConnectionsPage = () => {
 
         <div className="p-6">
           {activeTab === 'followers' && (
-            <UserList users={followersData?.followers || []} title="No followers yet" />
+            <UserList users={followersData.data?.followers || []} title="No followers yet" />
           )}
           {activeTab === 'following' && (
             <UserList users={followingData?.following || []} title="Not following anyone yet" />
@@ -119,7 +119,7 @@ const UserList = ({ users, title }: { users: User[]; title: string }) => {
             )}
           </div>
           <div>
-            <p className="font-medium text-gray-900">{user.name || user.username}</p>
+            <p className="font-medium text-gray-900">{user.username}</p>
             <p className="text-sm text-gray-500">@{user.username}</p>
           </div>
         </Link>
@@ -161,7 +161,7 @@ const PendingRequestsList = ({
               )}
             </div>
             <div>
-              <p className="font-medium text-gray-900">{request.followerId.name || request.followerId.username}</p>
+              <p className="font-medium text-gray-900">{request.followerId.username}</p>
               <p className="text-sm text-gray-500">@{request.followerId.username}</p>
             </div>
           </Link>

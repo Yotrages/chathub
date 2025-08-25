@@ -39,7 +39,7 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
         '/auth/online-status',
         { status: 'heartbeat', device: navigator.userAgent },
       ).catch((err) => console.error('HTTP heartbeat error:', err));
-    }, 30000);
+    }, 120000);
 
     // Handle network changes
     const handleOnline = () => {

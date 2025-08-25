@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import { Smile, Reply, Copy, Trash } from "lucide-react";
+import { Smile, Reply, Copy, Trash, Edit } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteComment } from "@/hooks/usePosts";
 import { useDeleteReelComment } from "@/hooks/useReels";
@@ -13,6 +13,7 @@ interface ContextMenuProps {
   onReply: () => void;
   dynamicId: string;
   commentId: string;
+  setIsEditing: (isEditing: boolean) => void;
   type: "post" | "reel";
 }
 
@@ -26,6 +27,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
   dynamicId,
   commentId,
   type,
+  setIsEditing,
 }) => {
   const contextMenuRef = useRef<HTMLDivElement>(null);
   const { mutate: deleteComment } = useDeleteComment(dynamicId, commentId);
@@ -72,6 +74,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       >
         <Smile size={16} />
         <span>React</span>
+      </button>
+      <button
+        onClick={() => setIsEditing(true)}
+        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+      >
+        <Edit size={16} />
+        <span>Edit</span>
       </button>
       <button
         onClick={onReply}

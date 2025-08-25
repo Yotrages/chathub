@@ -342,6 +342,7 @@ export const useAddComment = (
 export const useUpdateComment = (
   postId: string,
   commentId: string,
+  onSuccess: (data: CommentResponse) => void,
   options?: Partial<UseApiControllerOptions<Partial<CommentPayload>, CommentResponse>>
 ) => {
   const dispatch: AppDispatch = useDispatch();
@@ -352,6 +353,7 @@ export const useUpdateComment = (
     successMessage: "Comment updated successfully!",
     onSuccess: (data: CommentResponse) => {
       dispatch(updateComment({ comment: data.comment, _id: data.comment._id, postId }));
+      onSuccess(data)
     },
     ...options,
   }as any);

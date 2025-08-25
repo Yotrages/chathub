@@ -51,11 +51,11 @@ const SideBar = () => {
         >
           <UserAvatar 
             avatar={user?.avatar} 
-            username={user?.username || user?.name} 
+            username={user?.username} 
             className='w-9 h-9'
           />
           <p className="font-medium text-gray-800 truncate">
-            {user?.username || user?.name}
+            {user?.username}
           </p>
         </Link>
 

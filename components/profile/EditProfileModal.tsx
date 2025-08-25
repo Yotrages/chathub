@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { useApiController } from '@/hooks/useFetch';
 import { setUserCredentials } from '@/libs/redux/authSlice';
+import { User } from '@/types';
 
 interface ProfileUser {
   _id: string;
@@ -18,15 +19,15 @@ interface ProfileUser {
 }
 
 interface EditProfileModalProps {
-  user: ProfileUser;
+  user: User;
   onClose: () => void;
-  onSave: (user: ProfileUser) => void;
+  onSave: (user: User) => void;
 }
 
 const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
   // const { user: currentUser } = useSelector((state: RootState) => state.auth);
   const [formData, setFormData] = useState({
-    name: user.name || '',
+    name: user.username || '',
     bio: user.bio || '',
     location: user.location || '',
     website: user.website || '',
@@ -104,7 +105,7 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
                   <img src={avatarFile ? URL.createObjectURL(avatarFile) : formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-500">
-                    {user.username.charAt(0).toUpperCase()}
+                    {user.username && user.username.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>

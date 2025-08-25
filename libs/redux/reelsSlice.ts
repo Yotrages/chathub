@@ -371,7 +371,7 @@ export const selectComments = (reelId: string) => (state: { reels: ReelsState })
   state.reels?.comments[reelId] || [];
 export const selectIsLoading = (state: { reels: ReelsState }) => state.reels.isLoading;
 export const selectIsCreating = (state: { reels: ReelsState }) => state.reels.isCreating;
-export const selectPagination = (type: 'reels' | 'userReels' | 'likedReels' | 'savedReels' | 'comment', reelId?: string) => (
+export const selectReelPagination = (type: 'reels' | 'userReels' | 'likedReels' | 'savedReels' | 'comment', reelId?: string) => (
   state: { reels: ReelsState }
 ) => (type === 'comment' && reelId ? state.reels?.pagination.comment?.[reelId] : state.reels.pagination[type]);
 export const selectSearchResults = (state: { reels: ReelsState }) => state.reels.searchResults;

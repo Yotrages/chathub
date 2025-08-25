@@ -106,6 +106,10 @@ else if (reels.length === 0) {
           Create Reel
         </button>
       </div>
+      <CreateReelModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
@@ -126,7 +130,7 @@ else if (reels.length === 0) {
       <div className="flex justify-center">
         {reels.map((reel, index) => (
           <div
-            key={reel._id}
+            key={reel?._id}
             className={`w-full max-w-3xl mx-auto ${
               index === currentIndex ? "block" : "hidden"
             }`}

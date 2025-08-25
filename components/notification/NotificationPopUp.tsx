@@ -26,7 +26,7 @@ const NotificationPopup: React.FC = () => {
           <div className="flex-shrink-0">
             <img
               src={popupNotification.senderId.avatar || '/default-avatar.png'}
-              alt={popupNotification.senderId.name}
+              alt={popupNotification.senderId.username}
               className="w-10 h-10 rounded-full object-cover"
             />
           </div>
@@ -35,7 +35,7 @@ const NotificationPopup: React.FC = () => {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {popupNotification.senderId.name}
+                  {popupNotification.senderId.username}
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {popupNotification.message}

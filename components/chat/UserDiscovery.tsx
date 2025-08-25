@@ -119,7 +119,7 @@ export const UserDiscovery = ({ onClose }: UserDiscoveryProps) => {
                 <div className="relative mr-4">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-400 via-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
                     <span className="text-white font-semibold">
-                      {u.username?.charAt(0) || u.name?.charAt(0) || 'U'}
+                      {u.username?.charAt(0) || 'U'}
                     </span>
                   </div>
                   <div
@@ -133,7 +133,7 @@ export const UserDiscovery = ({ onClose }: UserDiscoveryProps) => {
                   ></div>
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{u.username || u.name}</p>
+                  <p className="font-semibold text-gray-900">{u.username}</p>
                   <p className="text-sm text-gray-500">{u.email}</p>
                 </div>
                 <button

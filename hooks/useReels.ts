@@ -155,7 +155,7 @@ export const useGetSingleReel = (
   });
 };
 
-export const useGetComments = (
+export const useGetReelComments = (
   reelId: string,
   options?: Partial<UseApiControllerOptions<Record<string, any>, CommentsResponse>>
 ): QueryResult<CommentsResponse> & { loadMoreComments: () => void; refetchComments: () => void} => {
@@ -163,7 +163,6 @@ export const useGetComments = (
   const [page, setPage] = useState(1);
 
     const existingComments = useSelector(selectComments(reelId));
-  
 
   const result = useApiController<CommentsResponse>({
     method: "GET",
@@ -323,6 +322,7 @@ export const useAddReelComment = (
 export const useUpdateReelComment = (
   reelId: string,
   commentId: string,
+  onSuccess: (data: any) => void,
   options?: Partial<UseApiControllerOptions<Partial<CommentPayload>, CommentResponse>>
 ) => {
   const dispatch: AppDispatch = useDispatch();
@@ -333,6 +333,7 @@ export const useUpdateReelComment = (
     successMessage: "Comment updated successfully!",
     onSuccess: (data: CommentResponse) => {
       dispatch(updateComment({ comment: data.comment, _id: data.comment._id, reelId }));
+      onSuccess(data)
     },
     ...options,
   }as any);

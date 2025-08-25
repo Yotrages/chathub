@@ -17,10 +17,12 @@ import StoryNavigation from "@/components/story/StoryNavigation";
 import ReelViewers from "@/components/story/ViewersModal";
 import EmojiReactions from "@/components/story/EmojiReactions";
 import toast from "react-hot-toast";
-import { EyeIcon } from "lucide-react";
+import { EyeIcon, MoreHorizontal } from "lucide-react";
+import { StoriesContextMenu } from "@/components/story/StoriesContextMenu";
 
 const StoriesPage: React.FC = () => {
   const router = useRouter();
+  const [showDropdown, setShowDropdown] = useState(false)
   const params = useParams();
   const { id } = params || {};
   const dispatch: AppDispatch = useDispatch();
@@ -184,9 +186,19 @@ const StoriesPage: React.FC = () => {
               {currentIndex + 1} / {stories.length}
             </span>
           </div>
-          <Link href="/" className="text-white hover:text-gray-300">
+          <div className="flex flex-col items-center justify-center relative">
+          <button
+          onClick={() => setShowDropdown((prev) => !prev)}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <MoreHorizontal size={20} className="text-gray-500"/>
+          </button>
+          {showDropdown && (
+            <StoriesContextMenu showDropdown={showDropdown} setShowDropdown={setShowDropdown} authorId={currentStory.authorId} storyId={currentStory._id}/>
+          )}
+          </div>
+          <button onClick={() => router.back()} className="text-white hover:text-gray-300">
             <XMarkIcon className="h-6 w-6" />
-          </Link>
+          </button>
         </div>
       </div>
 
@@ -218,7 +230,7 @@ const StoriesPage: React.FC = () => {
           className="flex items-center space-x-2 bg-black bg-opacity-40 backdrop-blur-sm rounded-full px-3 py-2 hover:bg-opacity-60 transition-all"
         >
           <EyeIcon className="text-white h-4 w-4" />
-          <span className="text-white text-sm font-medium">{currentStory.viewersCount}</span>
+          <span className="text-white text-sm font-medium">{currentStory.viewers?.length}</span>
         </button>
 
         {/* Right side - Emoji Reactions */}
@@ -231,7 +243,7 @@ const StoriesPage: React.FC = () => {
         <ReelViewers
           reelId={currentStory._id}
           viewers={currentStory.viewers}
-          viewersCount={currentStory.viewersCount}
+          viewersCount={currentStory.viewers?.length}
           isOwner={isOwner}
           onClose={() => setShowViewers(false)}
         />

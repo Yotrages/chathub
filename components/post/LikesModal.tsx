@@ -178,9 +178,9 @@ export const ReactionsModal: React.FC<ReactionModalProps> = ({
                     />
                     {/* Emoji badge */}
                     <div
-                      className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-sm border-2 border-white bg-white shadow-sm ${emojiColors[reaction.emoji.category]}`}
+                      className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-sm border-2 border-white bg-white shadow-sm ${emojiColors[reaction.emoji.name]}`}
                     >
-                      {emojiMap[reaction.emoji.category]}
+                      {emojiMap[reaction.emoji.name]}
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">

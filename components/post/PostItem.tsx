@@ -33,17 +33,17 @@ export const PostItem = ({ post }: PostItemProps) => {
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const comments = useSelector(selectComments(post._id));
-  const commentPagination = useSelector(selectPagination('comment', post._id));
+  // const commentPagination = useSelector(selectPagination('comment', post._id));
   const { trigger: fetchComments, isLoading: isFetchingComments } = useGetComments(post._id);
 
   useEffect(() => {
-    console.log(`PostItem mounted for postId ${post._id}, comments:`, comments); // Debug log
-    console.log(`Fetching comments for postId ${post._id}`); // Debug log
+    console.log(`PostItem mounted for postId ${post._id}, comments:`, comments); 
+    console.log(`Fetching comments for postId ${post._id}`); 
     fetchComments();
-  }, [fetchComments, post._id]);
+  }, [post._id]);
 
   useEffect(() => {
-    console.log(`Comments updated for postId ${post._id}:`, comments); // Debug log
+    console.log(`Comments updated for postId ${post._id}:`, comments); 
   }, [comments, post._id]);
 
   const toggleComments = () => {
@@ -100,7 +100,7 @@ export const PostItem = ({ post }: PostItemProps) => {
         post={post}
       />
       {showComments && (
-        <div className="p-2">
+        <div className="p-2 w-full max-w-full">
           {isFetchingComments ? (
             <p className="text-gray-500 text-center">Loading comments...</p>
           ) : (
@@ -113,7 +113,7 @@ export const PostItem = ({ post }: PostItemProps) => {
               setCommentContent={setCommentContent}
             />
           )}
-          {commentPagination?.hasNextPage && (
+          {/* {commentPagination?.hasNextPage && (
             <button
               onClick={() => fetchComments()}
               className="text-blue-500 mt-2 text-center"
@@ -121,7 +121,7 @@ export const PostItem = ({ post }: PostItemProps) => {
             >
               Load more comments
             </button>
-          )}
+          )} */}
         </div>
       )}
       {isOpen && (

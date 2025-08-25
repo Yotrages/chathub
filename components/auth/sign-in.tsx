@@ -31,6 +31,7 @@ const SignIn = () => {
           <div className="flex w-full flex-col gap-4">
             <span className="w-full flex flex-col items-start gap-2">
               <Input
+               width="100%"
                 label="Email"
                 placeholder="Enter email address"
                 register={register("email")}
@@ -44,6 +45,7 @@ const SignIn = () => {
 
             <span className="w-full flex flex-col items-start gap-2">
               <PasswordInput
+              width="100%"
                 label="Password"
                 placeholder="****************"
                 register={register("password")}

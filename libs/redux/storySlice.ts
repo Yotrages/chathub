@@ -47,6 +47,7 @@ export const createStory = createAsyncThunk(
       formData.append('fileType', payload.fileType);
       formData.append('textPosition', JSON.stringify(payload.textPosition));
       formData.append('background', payload.background || '');
+      formData.append('textStyle', payload.textStyle)
       let onSuccess: () => void;
       const response = await api.post('/stories', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -123,6 +124,18 @@ export const getStoryViewers = createAsyncThunk(
   }
 );
 
+export const deleteStory = createAsyncThunk(
+  'stories/deleteStory',
+  async (storyId: string, { rejectWithValue } ) => {
+    try {
+      const response = await api.delete(`/stories/delete/${storyId}`);
+      return { storyId, data: response.data }
+    } catch (error : any) {
+      return rejectWithValue(error.response?.data.message)
+    }
+  }
+)
+
 const storiesSlice = createSlice({
   name: 'stories',
   initialState,
@@ -198,6 +211,10 @@ const storiesSlice = createSlice({
       })
       .addCase(likeStory.rejected, (state, action) => {
         state.error = action.payload as string;
+      })
+
+      .addCase(deleteStory.fulfilled, (state, action) => {
+        state.stories = state.stories.filter((story) => story._id !== action.payload.storyId )
       })
       
       // Add view to reel

@@ -24,34 +24,33 @@ import Link from 'next/link';
 import { User } from '@/types';
 import UserReelsComponent from '@/components/reels/UserReels';
 
-interface ProfileUser {
-  _id: string;
-  username: string;
-  name?: string;
-  email?: string;
-  avatar?: string;
-  coverImage?: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  online?: boolean;
-  lastSeen?: string;
-  createdAt?: string;
-  isVerified?: boolean;
-  followers?: User[];
-  following?: User[]
-  isPrivate?: boolean;
-  followersCount?: number;
-  followingCount?: number;
-  postsCount?: number;
-  isFollowing?: boolean;
-}
+// interface ProfileUser {
+//   _id: string;
+//   username: string;
+//   email?: string;
+//   avatar?: string;
+//   coverImage?: string;
+//   bio?: string;
+//   location?: string;
+//   website?: string;
+//   online?: boolean;
+//   lastSeen?: string;
+//   createdAt?: string;
+//   isVerified?: boolean;
+//   followers?: User[];
+//   following?: User[]
+//   isPrivate?: boolean;
+//   followersCount?: number;
+//   followingCount?: number;
+//   postsCount?: number;
+//   isFollowing?: boolean;
+// }
 
 const UserProfilePage = () => {
   const { id } = useParams();
   const router = useRouter();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-  const [profileUser, setProfileUser] = useState<ProfileUser | null>(null);
+  const [profileUser, setProfileUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'posts' | 'reels' | 'likes' | 'saved'>('posts');
   const [showEditModal, setShowEditModal] = useState(false);
@@ -74,12 +73,11 @@ const UserProfilePage = () => {
           setProfileUser({
             _id: currentUser?._id || '',
             username: currentUser?.username || '',
-            name: currentUser?.name || '',
             email: currentUser?.email || '',
             avatar: currentUser?.avatar || '',
             coverImage: currentUser?.coverImage || '',
             online: currentUser.online,
-            lastSeen: new Date().toISOString(),
+            lastSeen: currentUser.lastSeen,
             createdAt: currentUser?.createdAt,
             bio: currentUser?.bio || '',
             location: currentUser?.location || '',
@@ -89,7 +87,6 @@ const UserProfilePage = () => {
             followersCount: currentUser?.followersCount || 0,
             followingCount: currentUser?.followingCount || 0,
             postsCount: currentUser?.postsCount || 0,
-            isFollowing: false,
             followers: currentUser.followers,
             following: currentUser.following
           });
@@ -187,7 +184,7 @@ const UserProfilePage = () => {
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold">
-                      {profileUser.name ? profileUser?.name.charAt(0).toUpperCase() : profileUser?.username.charAt(0).toUpperCase()}
+                      {profileUser.username && profileUser?.username.charAt(0).toUpperCase()}
                     </div>
                   )}
                 </div>
@@ -209,7 +206,7 @@ const UserProfilePage = () => {
                   <div>
                     <div className="flex items-center space-x-2 mb-2">
                       <h1 className="text-3xl font-bold text-gray-900 truncate">
-                        {profileUser.name || profileUser.username}
+                        {profileUser.username && profileUser.username}
                       </h1>
                       {profileUser.isVerified && (
                         <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">

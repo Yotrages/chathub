@@ -32,7 +32,7 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({
     if (!reelsLoading && pagination.userReels?.hasNextPage) {
       trigger();
     }
-  }, [reelsLoading, pagination.userReels?.hasNextPage, trigger]);
+  }, [reelsLoading, pagination.userReels?.hasNextPage]);
 
   if (reelsLoading && userReels.length === 0) {
     return (
@@ -47,13 +47,13 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({
     );
   }
 
-  if (userReels.length === 0) {
+  if (userReels?.length === 0) {
     return <p className="text-center text-gray-500">No reels available.</p>;
   }
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
-      {userReels.map((reel) => (
+      {userReels?.map((reel) => (
         <Link href={`/reels/${reel._id}`} key={reel._id}>
           <ReelCard reel={reel} />
         </Link>
@@ -84,7 +84,7 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({
           )}
         </div>
       )}
-      {!hasMore && userReels.length > 0 && (
+      {!hasMore && userReels?.length > 0 && (
         <p className="text-center text-gray-400 py-4">No more reels to load</p>
       )}
     </div>

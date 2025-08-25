@@ -6,6 +6,8 @@ import { MessageCircle, Loader2 } from "lucide-react";
 import { useGetComments } from "@/hooks/usePosts";
 import { useSelector } from "react-redux";
 import { selectPagination } from "@/libs/redux/postSlice";
+import { selectReelPagination } from "@/libs/redux/reelsSlice";
+import { useGetReelComments } from "@/hooks/useReels";
 
 export const CommentList: React.FC<CommentListProps> = ({
   type,
@@ -17,14 +19,25 @@ export const CommentList: React.FC<CommentListProps> = ({
     reactions: IComment["reactions"];
     type: string;
   }>({ isOpen: false, reactions: [], type: "comment" });
-  const commentPagination = useSelector(selectPagination('comment', dynamicId));
+  const commentPagination = useSelector(selectPagination("comment", dynamicId));
+  const reelCommentPagination = useSelector(
+    selectReelPagination("comment", dynamicId)
+  );
   const { isLoading, loadMoreComments } = useGetComments(dynamicId);
+  const { isLoading: commentLoading, loadMoreComments: loadMore } =
+    useGetReelComments(dynamicId);
 
   useEffect(() => {
-    console.log(`CommentList rendered for dynamicId ${dynamicId}, comments:`, comments); // Debug log
+    console.log(
+      `CommentList rendered for dynamicId ${dynamicId}, comments:`,
+      comments
+    ); // Debug log
   }, [comments, dynamicId]);
 
-  const handleShowLikes = (reactions: IComment["reactions"], type: string): void => {
+  const handleShowLikes = (
+    reactions: IComment["reactions"],
+    type: string
+  ): void => {
     console.log(`Showing reactions for ${type}:`, reactions); // Debug log
     setLikesModal({ isOpen: true, reactions, type });
   };
@@ -48,23 +61,44 @@ export const CommentList: React.FC<CommentListProps> = ({
                 onShowReactions={handleShowLikes}
               />
             ))}
-            {commentPagination?.hasNextPage && (
-              <div className="text-center mt-4">
-                <button
-                  onClick={loadMoreComments}
-                  disabled={isLoading}
-                  className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Loading...
-                    </>
-                  ) : (
-                    "Load more comments"
-                  )}
-                </button>
-              </div>
+            {type === "post" ? (
+              commentPagination?.hasNextPage && (
+                <div className="text-center mt-4">
+                  <button
+                    onClick={loadMoreComments}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Load more comments"
+                    )}
+                  </button>
+                </div>
+              )
+            ) : (
+                reelCommentPagination?.hasNextPage && (
+                  <div className="text-center mt-4">
+                    <button
+                      onClick={loadMore}
+                      disabled={isLoading}
+                      className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                      {commentLoading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        "Load more comments"
+                      )}
+                    </button>
+                  </div>
+                )
             )}
           </>
         ) : (

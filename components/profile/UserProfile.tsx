@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/libs/redux/store';
 import { PostItem } from '../post/PostItem';
 import { useInView } from 'react-intersection-observer';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useGetUserPosts, useGetLikedPosts, useGetSavedPosts } from '@/hooks/usePosts';
 import { resetUserPosts, resetLikedPosts, resetSavedPosts } from '@/libs/redux/postSlice';
 import { selectPagination } from '@/libs/redux/postSlice';
@@ -23,45 +23,73 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
 
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Map post type to posts, trigger, and reset action
-  const postConfig = useMemo(
-    () => ({
-      posts: {
-        posts: userPosts,
-        trigger: useGetUserPosts,
-        resetAction: resetUserPosts,
-      },
-      likes: {
-        posts: likedPosts,
-        trigger: useGetLikedPosts,
-        resetAction: resetLikedPosts,
-      },
-      saved: {
-        posts: savedPosts,
-        trigger: useGetSavedPosts,
-        resetAction: resetSavedPosts,
-      },
-    }),
-    [userPosts, likedPosts, savedPosts]
-  );
+  // Get all hooks but only use the one we need
+  const { trigger: triggerUserPosts } = useGetUserPosts(1, userId);
+  const { trigger: triggerLikedPosts } = useGetLikedPosts(1, userId);
+  const { trigger: triggerSavedPosts } = useGetSavedPosts(1, userId);
 
-  const { posts, trigger: triggerHook } = postConfig[type];
-  const { trigger } = triggerHook( 1, userId);
+  // Use refs to track previous values to prevent unnecessary effects
+  const prevTypeRef = useRef(type);
+  const prevUserIdRef = useRef(userId);
+
+  // Get posts based on type
+  const posts = useMemo(() => {
+    switch (type) {
+      case 'likes':
+        return likedPosts;
+      case 'saved':
+        return savedPosts;
+      default:
+        return userPosts;
+    }
+  }, [type, userPosts, likedPosts, savedPosts]);
+
   const [ref, inView] = useInView();
   const hasMore = pagination?.hasNextPage ?? false;
 
-  // Reset posts and pagination when type or userId changes
+  // Reset posts and load initial data when type or userId changes
   useEffect(() => {
-    dispatch(postConfig[type].resetAction());
-    trigger(); // Load initial page
-  }, [type, userId, dispatch, trigger, postConfig]);
+    // Only run if type or userId actually changed
+    if (prevTypeRef.current !== type || prevUserIdRef.current !== userId) {
+      // Reset posts based on type
+      switch (type) {
+        case 'likes':
+          dispatch(resetLikedPosts());
+          triggerLikedPosts();
+          break;
+        case 'saved':
+          dispatch(resetSavedPosts());
+          triggerSavedPosts();
+          break;
+        default:
+          dispatch(resetUserPosts());
+          triggerUserPosts();
+          break;
+      }
+      
+      // Update refs
+      prevTypeRef.current = type;
+      prevUserIdRef.current = userId;
+    }
+  }, [type, userId, dispatch, triggerUserPosts, triggerLikedPosts, triggerSavedPosts]);
 
-  // Infinite scroll
+  // Infinite scroll - separate effect with minimal dependencies
   useEffect(() => {
     if (inView && hasMore && !postsLoading) {
-      trigger();
+      // Trigger the appropriate function based on current type
+      switch (type) {
+        case 'likes':
+          triggerLikedPosts();
+          break;
+        case 'saved':
+          triggerSavedPosts();
+          break;
+        default:
+          triggerUserPosts();
+          break;
+      }
     }
-  }, [inView, hasMore, postsLoading, trigger]);
+  }, [inView, hasMore, postsLoading, type, triggerUserPosts, triggerLikedPosts, triggerSavedPosts]);
 
   if ((isLoading || postsLoading) && posts.length === 0) {
     return (
@@ -91,11 +119,25 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
             ? 'No liked posts yet'
             : type === 'saved'
             ? 'No saved posts yet'
-            : `No posts yet from ${user?.username || user?.name}`}
+            : `No posts yet from ${user?.username}`}
         </p>
       </div>
     );
   }
+
+  const handleLoadMore = () => {
+    switch (type) {
+      case 'likes':
+        triggerLikedPosts();
+        break;
+      case 'saved':
+        triggerSavedPosts();
+        break;
+      default:
+        triggerUserPosts();
+        break;
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -114,7 +156,7 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
             </div>
           ) : (
             <button
-              onClick={() => trigger()}
+              onClick={handleLoadMore}
               className="text-gray-400 hover:text-blue-500 transition"
               aria-label="Load more posts"
             >

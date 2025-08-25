@@ -99,9 +99,9 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
           )}
 
           {/* Text Overlay */}
-          {/* {story.text && (
+          {isFullscreen && story.text && (
             <div
-              className={`absolute bg-black bg-opacity-70 text-white p-2 rounded-lg max-w-[80%] ${
+              className={`absolute bg-black ${story.textStyle} bg-opacity-70 p-2 rounded-lg max-w-[80%] ${
                 isCompact ? "text-xs" : "text-sm"
               }`}
               style={{
@@ -113,7 +113,7 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
                 ? `${story.text.slice(0, 30)}...`
                 : story.text}
             </div>
-          )} */}
+          )}
 
           {/* Volume Control for Video */}
           {story.fileType === "video" && !isCompact && (
@@ -153,7 +153,7 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
               <div className="flex items-center space-x-1">
                 <img
                   src={story.authorId.avatar}
-                  alt={story.authorId.username || story.authorId.name}
+                  alt={story.authorId.username}
                   className={`rounded-full ${
                     isCompact ? "w-5 h-5" : "w-8 h-8"
                   }`}

@@ -178,12 +178,13 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
       fileType,
       background: file ? undefined : background.gradient,
       textPosition,
+      textStyle: textStyle.style
     };
 
     try {
       await dispatch(createStory(payload));
       if (closeForm && resetForm) {
-        resetFormField();
+      resetFormField();
       onClose();
       }
     } catch (error) {

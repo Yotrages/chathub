@@ -381,7 +381,7 @@ export const useChat = () => {
       conversationId,
       senderId: {
         _id: user._id,
-        username: user.username || user.name || 'Unknown',
+        username: user.username || 'Unknown',
         avatar: user.avatar,
       },
       content,

@@ -24,8 +24,8 @@ const SuggestedFollow = () => {
           <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
             {suggestedUsers && suggestedUsers.map((user, index) => (
               <Link href={`/profile/${user?._id}`} key={index} className='flex flex-col gap-2 items-start'>
-                <UserAvatar username={user.username || user.name} avatar={user.avatar} className='w-10 h-10'/>
-                <p className='text-gray-600 font-inter font-semibold'>{user.username || user.name}</p>
+                <UserAvatar username={user.username} avatar={user.avatar} className='w-10 h-10'/>
+                <p className='text-gray-600 font-inter font-semibold'>{user.username}</p>
               </Link>
             ))}
             {hasMore && (

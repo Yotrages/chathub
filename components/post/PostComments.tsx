@@ -177,11 +177,11 @@ const PostComments: React.FC<PostCommentsProps> = ({
   };
 
   return (
-    <div className="border-t border-gray-50 bg-gray-50">
+    <div className="border-t border-gray-50 bg-gray-50 w-full">
       {preview && <span>{renderFilePreview(preview, previewType, originalFile)}</span>}
       {user && (
-        <div className="py-6 xs:px-6 pb-4">
-          <form onSubmit={handleAddComment} className="flex space-x-3">
+        <div className="py-6 xs:px-6 pb-4 w-full">
+          <form onSubmit={handleAddComment} className="flex space-x-3 w-full">
             <UserAvatar
               username={user?.username || "User"}
               avatar={user?.avatar}

@@ -5,7 +5,6 @@ export interface User {
   email: string;
   avatar?: string;
   username?: string;
-  name?: string;
   createdAt?: string;
   online: boolean;
   lastSeen?: Date;
@@ -272,6 +271,7 @@ export interface Story {
   fileType: "image" | "video";
   text?: string;
   fileUrl: string;
+  textStyle?: string;
   reactions: Array<{
     userId: {
       _id: string;
@@ -280,16 +280,15 @@ export interface Story {
     };
     emoji: string;
   }>;
-  likesCount: number;
   isLiked: boolean;
   viewers: Array<{ _id: string; username: string; avatar?: string }>;
-  viewersCount: number;
   authorId: {
     _id: string;
     username: string;
     name?: string;
     avatar?: string;
   };
+  viewedAt?: Date;
   textPosition?: { x: number; y: number };
   background?: string;
   createdAt: string;
@@ -313,6 +312,7 @@ export interface CreateStoryPayload {
   fileType: "image" | "video";
   background?: string;
   textPosition: { x: number; y: number };
+  textStyle: string;
 }
 
 export interface Reel {
@@ -337,7 +337,6 @@ export interface Reel {
     };
   }>;
   commentsCount: number;
-  comments: IComment[];
   fileUrl: string;
   title: string;
   __v?: number;

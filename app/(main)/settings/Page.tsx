@@ -24,6 +24,7 @@ import {
   X,
 } from 'lucide-react';
 import { getCookie } from 'cookies-next';
+import { api } from '@/libs/axios/config';
 
 interface UserSettings {
   _id: string;
@@ -150,29 +151,22 @@ export default function SettingsPage() {
     fetchReports();
   }, []);
 
+
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/settings', {
-        headers: {
-          'Authorization': `Bearer ${getCookie('auth-token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch settings');
-      const data = await response.json();
+      const response = await api.get('/settings/');
+      if (!response.data) throw new Error('Failed to fetch settings');
+      const data =  response.data;
       setSettings(data);
       // Fetch usernames for blocked users
-      if (data.security.blockedUsers.length > 0) {
-        const usersResponse = await fetch(`/api/users?ids=${data.security.blockedUsers.join(',')}`, {
-          headers: {
-            'Authorization': `Bearer ${getCookie('auth-token')}`
-          }
-        });
-        if (usersResponse.ok) {
-          const users = await usersResponse.json();
-          setBlockedUsers(users);
-        }
-      }
+      // if (data.security.blockedUsers.length > 0) {
+      //   const usersResponse = await api.get(`/users?ids=${data.security.blockedUsers.join(',')}`);
+      //   if (usersResponse.status === 200) {
+      //     const users =  usersResponse.data;
+      //     setBlockedUsers(users);
+      //   }
+      // }
     } catch (error) {
       console.error('Error fetching settings:', error);
       setError('Failed to load settings. Please try again.');
@@ -183,13 +177,9 @@ export default function SettingsPage() {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('/api/settings/my-reports', {
-        headers: {
-          'Authorization': `Bearer ${getCookie('auth-token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to fetch reports');
-      const data = await response.json();
+      const response = await api.get('/settings/my-reports');
+      if (!response.data) throw new Error('Failed to fetch reports');
+      const data =  response.data;
       setReports(data);
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -201,16 +191,9 @@ export default function SettingsPage() {
     setSaving(true);
     setError(null);
     try {
-      const response = await fetch(`/api/settings/${section}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getCookie('auth-token')}`
-        },
-        body: JSON.stringify(data)
-      });
-      if (!response.ok) throw new Error(`Failed to update ${section} settings`);
-      const updatedSettings = await response.json();
+      const response = await api.put(`/api/settings/${section}`, {data});
+      if (!response.data) throw new Error(`Failed to update ${section} settings`);
+      const updatedSettings = response.data;
       setSettings(updatedSettings);
     } catch (error) {
       console.error(`Error updating ${section} settings:`, error);
@@ -226,15 +209,9 @@ export default function SettingsPage() {
     formData.append('background', file);
     
     try {
-      const response = await fetch('/api/settings/background', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${getCookie('auth-token')}`
-        },
-        body: formData
-      });
-      if (!response.ok) throw new Error('Failed to upload background');
-      const data = await response.json();
+      const response = await api.post('/api/settings/background', {formData});
+      if (!response.data) throw new Error('Failed to upload background');
+      const data = response.data;
       if (settings) {
         setSettings({
           ...settings,
@@ -257,20 +234,13 @@ export default function SettingsPage() {
     }
     setError(null);
     try {
-      const response = await fetch('/api/settings/report', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${getCookie('auth-token')}`
-        },
-        body: JSON.stringify({
-          ...reportForm,
+      const response = await api.post('/api/settings/report', {
+         ...reportForm,
           reportedUserId: reportForm.reportedUserId || undefined,
           reportedPostId: reportForm.reportedPostId || undefined,
-          reportedCommentId: reportForm.reportedCommentId || undefined
-        })
+          reportedCommentId: reportForm.reportedCommentId || undefined,
       });
-      if (!response.ok) throw new Error('Failed to submit report');
+      if (!response.data) throw new Error('Failed to submit report');
       setShowReportModal(false);
       setReportForm({ reportType: 'spam', description: '', reportedUserId: '', reportedPostId: '', reportedCommentId: '' });
       fetchReports();
@@ -333,13 +303,8 @@ export default function SettingsPage() {
     if (confirm('Are you sure you want to deactivate your account?')) {
       setError(null);
       try {
-        const response = await fetch('/api/settings/deactivate', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${getCookie('auth-token')}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to deactivate account');
+        const response = await api.post('/api/settings/deactivate');
+        if (!response.data) throw new Error('Failed to deactivate account');
         fetchSettings();
       } catch (error) {
         console.error('Error deactivating account:', error);
@@ -371,13 +336,8 @@ export default function SettingsPage() {
     if (confirm('Are you sure you want to schedule account deletion? This action cannot be undone after 30 days.')) {
       setError(null);
       try {
-        const response = await fetch('/api/settings/schedule-delete', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${getCookie('auth-token')}`
-          }
-        });
-        if (!response.ok) throw new Error('Failed to schedule deletion');
+        const response = await api.post('/api/settings/schedule-delete');
+        if (!response.data) throw new Error('Failed to schedule deletion');
         fetchSettings();
       } catch (error) {
         console.error('Error scheduling deletion:', error);
@@ -389,13 +349,8 @@ export default function SettingsPage() {
   const requestDataDownload = async () => {
     setError(null);
     try {
-      const response = await fetch('/api/settings/request-data', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${getCookie('auth-token')}`
-        }
-      });
-      if (!response.ok) throw new Error('Failed to request data download');
+      const response = await api.post('/api/settings/request-data');
+      if (!response.data) throw new Error('Failed to request data download');
       alert('Data download request submitted. You will receive an email when ready.');
     } catch (error) {
       console.error('Error requesting data download:', error);
@@ -747,12 +702,7 @@ export default function SettingsPage() {
                     });
                     
                     // Also make API call to unblock
-                    fetch(`/api/settings/unblock-user/${userId}`, {
-                      method: 'DELETE',
-                      headers: {
-                        'Authorization': `Bearer ${getCookie('auth-token')}`
-                      }
-                    }).catch(console.error);
+                    api.delete(`/api/settings/unblock-user/${userId}`).catch(console.error);
                   }}
                   className="text-red-600 hover:text-red-800 text-sm"
                 >
@@ -928,12 +878,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => {
                 try {
-                  await fetch('/api/settings/reactivate', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${getCookie('auth-token')}`
-                    }
-                  });
+                  await api.post('/settings/reactivate');
                   fetchSettings();
                 } catch (error) {
                   console.error('Error reactivating account:', error);
@@ -964,12 +909,7 @@ export default function SettingsPage() {
             <button
               onClick={async () => {
                 try {
-                  await fetch('/api/settings/cancel-delete', {
-                    method: 'POST',
-                    headers: {
-                      'Authorization': `Bearer ${getCookie('auth-token')}`
-                    }
-                  });
+                  await api.post('/api/settings/cancel-delete');
                   fetchSettings();
                 } catch (error) {
                   console.error('Error canceling deletion:', error);

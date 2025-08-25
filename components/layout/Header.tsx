@@ -79,7 +79,7 @@ const router = useRouter();
     {
       icon: <Users size={18} />,
       name: "Network",
-      route: "/connections",
+      route: `/profile/${user?._id}/connections`
     },
     {
           icon: <Video size={18}/>,
@@ -111,7 +111,6 @@ const router = useRouter();
 
   return (
     <div className="bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-2 xs:px-4 py-3 xs:py-4">
           <div className="sm:flex items-center xs:gap-4 justify-between">

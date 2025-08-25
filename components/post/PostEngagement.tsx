@@ -225,7 +225,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
               window.screen.availWidth > 768 && setShowReactions(true)
             }
             onClick={() => handleLike("👍", "Like")}
-            className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-200 ${
+            className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-xl transition-all duration-200 ${
               isLiked
                 ? "text-red-500 bg-red-50 hover:bg-red-100"
                 : "text-gray-600 hover:bg-gray-50 hover:text-red-500"
@@ -257,7 +257,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           </button>
           <button
             onClick={onShowComments}
-            className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl transition-all duration-200 ${
+            className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-xl transition-all duration-200 ${
               showComments
                 ? "text-blue-500 bg-blue-50 hover:bg-blue-100"
                 : "text-gray-600 hover:bg-gray-50 hover:text-blue-500"
@@ -269,7 +269,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           </button>
           <button
             onClick={() => setShowShareModal(true)}
-            className="flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-green-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-2 py-2 px-4 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-green-500 transition-all duration-200"
           >
             <Share2 size={20} />
             <span className="font-medium hidden qy:flex">Share</span>

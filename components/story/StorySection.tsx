@@ -19,7 +19,7 @@ const StorySection: React.FC = () => {
   useEffect(() => {
     // Fetch reels when component mounts
     dispatch(fetchStory({ page: 1, limit: 50 }));
-  }, [dispatch]);
+  }, []);
 
   // // Open modal when there's an error
   // useEffect(() => {

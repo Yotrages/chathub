@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { Post } from "@/types";
+import { Post, User } from "@/types";
 import { PostItem } from "@/components/post/PostItem";
 
 interface SearchResult {
@@ -15,16 +15,7 @@ interface SearchResult {
     authorId: { _id: string; username: string; name: string; avatar?: string };
     createdAt: string;
   }>;
-  users: Array<{
-    _id: string;
-    username: string;
-    name: string;
-    avatar?: string;
-    bio?: string;
-    followersCount?: number;
-    followingCount?: number;
-    postsCount?: number;
-  }>;
+  users: Array<User>;
   stories: Array<{
     _id: string;
     fileUrl: string;
@@ -84,15 +75,15 @@ const SearchPage: React.FC = () => {
                     className="flex items-center p-4 bg-white rounded-lg shadow hover:shadow-md transition"
                   >
                     <Image
-                      src={user.avatar || "/default-avatar.png"}
-                      alt={user.username}
+                      src={user.avatar || ""}
+                      alt={user?.username || ""}
                       width={48}
                       height={48}
                       className="rounded-full mr-4"
                     />
                     <div>
                       <p className="font-semibold">{user.username}</p>
-                      <p className="text-sm text-gray-600">{user.name}</p>
+                      <p className="text-sm text-gray-600">{user.username}</p>
                       {user.bio && (
                         <p className="text-sm text-gray-500 truncate">
                           {user.bio}

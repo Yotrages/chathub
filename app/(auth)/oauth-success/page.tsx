@@ -29,7 +29,7 @@ const OAuthSuccess = () => {
         user: {
             _id: id,
             email: email,
-            name: name,
+            username: name,
             online: true
         }
     }))
