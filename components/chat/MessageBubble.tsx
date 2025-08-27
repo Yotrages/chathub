@@ -34,6 +34,41 @@ export const MessageBubble = ({
     ? { _id: message.senderId, username: "Unknown", avatar: "" }
     : message.senderId;
 
+  // Calculate smart context menu position
+  const calculateContextMenuPosition = (clientX: number, clientY: number) => {
+    const contextMenuWidth = 192; // min-w-48 = 192px
+    const contextMenuHeight = 300; // Approximate height
+    const padding = 16; // Safe padding from edges
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    let x = clientX;
+    let y = clientY;
+    
+    // Adjust X position if menu would overflow right edge
+    if (x + contextMenuWidth > viewportWidth - padding) {
+      x = viewportWidth - contextMenuWidth - padding;
+    }
+    
+    // Adjust X position if menu would overflow left edge
+    if (x < padding) {
+      x = padding;
+    }
+    
+    // Adjust Y position if menu would overflow bottom edge
+    if (y + contextMenuHeight > viewportHeight - padding) {
+      y = clientY - contextMenuHeight;
+    }
+    
+    // Adjust Y position if menu would overflow top edge
+    if (y < padding) {
+      y = padding;
+    }
+    
+    return { x, y };
+  };
+
   // Handle click outside for context menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -68,14 +103,28 @@ export const MessageBubble = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showReactions]);
 
+  // Close context menu on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showContextMenu) {
+        setShowContextMenu(false);
+      }
+    };
+
+    if (showContextMenu) {
+      window.addEventListener('scroll', handleScroll, true);
+    }
+
+    return () => window.removeEventListener('scroll', handleScroll, true);
+  }, [showContextMenu]);
+
   const handleLongPressStart = (e: React.TouchEvent): void => {
     e.preventDefault();
     const timer = setTimeout(() => {
+      const touch = e.touches[0];
+      const position = calculateContextMenuPosition(touch.clientX, touch.clientY);
+      setContextMenuPosition(position);
       setShowContextMenu(true);
-      setContextMenuPosition({
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      });
     }, 500);
     setLongPressTimer(timer);
   };
@@ -90,7 +139,9 @@ export const MessageBubble = ({
   const handleContextMenu = (e: React.MouseEvent): void => {
     e.preventDefault();
     e.stopPropagation();
-    setContextMenuPosition({ x: e.clientX, y: e.clientY });
+    
+    const position = calculateContextMenuPosition(e.clientX, e.clientY);
+    setContextMenuPosition(position);
     setShowContextMenu(true);
     setShowReactions(false); // Close reactions when context menu opens
   };
@@ -110,15 +161,10 @@ export const MessageBubble = ({
     setShowReactions(false);
   };
 
-  // const handleEditToggle = (): void => {
-  //   setIsEditing(!isEditing);
-  //   setShowContextMenu(false);
-  // };
-
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2`}>
       <div
-        className={`flex max-w-xs sm:max-w-sm md:max-w-md ${
+        className={`flex max-w-[280px] sm:max-w-sm md:max-w-md ${
           isOwn ? "flex-row-reverse" : "flex-row"
         } group`}
       >
@@ -178,7 +224,7 @@ export const MessageBubble = ({
       </div>
       
       <MessageContextMenu
-      ref={messageRef}
+        ref={contextMenuRef}
         setShowReaction={setShowReactions}
         setIsEditing={setIsEditing}
         message={message}

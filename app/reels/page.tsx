@@ -33,21 +33,64 @@ const ReelsPage: React.FC = () => {
     }
   }, [currentIndex, reelsLoading, hasMore, reels.length, trigger]);
 
-  useEffect(() => {
-    const handleSwipe = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      const deltaY =
-        touch.clientY - (e.target as HTMLElement).getBoundingClientRect().top;
-      if (deltaY > 100 && currentIndex > 0) {
-        setCurrentIndex((prev) => prev - 1); // Swipe up for previous
-      } else if (deltaY < -100 && currentIndex < reels.length - 1) {
-        setCurrentIndex((prev) => prev + 1); // Swipe down for next
-      }
-    };
+ useEffect(() => {
+  let startY = 0;
+  let startTime = 0;
 
-    document.addEventListener("touchmove", handleSwipe);
-    return () => document.removeEventListener("touchmove", handleSwipe);
-  }, [currentIndex, reels.length]);
+  const handleTouchStart = (e: TouchEvent) => {
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (!startY) return;
+    
+    const endY = e.changedTouches[0].clientY;
+    const deltaY = startY - endY;
+    const deltaTime = Date.now() - startTime;
+    
+    // Minimum swipe distance and maximum time for a valid swipe
+    const minSwipeDistance = 50;
+    const maxSwipeTime = 300;
+    
+    if (Math.abs(deltaY) > minSwipeDistance && deltaTime < maxSwipeTime) {
+      if (deltaY > 0 && currentIndex < reels.length - 1) {
+        // Swiped up (next reel)
+        setCurrentIndex((prev) => prev + 1);
+      } else if (deltaY < 0 && currentIndex > 0) {
+        // Swiped down (previous reel)
+        setCurrentIndex((prev) => prev - 1);
+      }
+    }
+    
+    // Reset
+    startY = 0;
+    startTime = 0;
+  };
+
+  document.addEventListener("touchstart", handleTouchStart, { passive: true });
+  document.addEventListener("touchend", handleTouchEnd, { passive: true });
+  
+  return () => {
+    document.removeEventListener("touchstart", handleTouchStart);
+    document.removeEventListener("touchend", handleTouchEnd);
+  };
+}, [currentIndex, reels.length]);
+
+// Optional: Add keyboard navigation
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "ArrowUp" && currentIndex > 0) {
+      setCurrentIndex((prev) => prev - 1);
+    } else if (e.key === "ArrowDown" && currentIndex < reels.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  };
+
+  document.addEventListener("keydown", handleKeyDown);
+  return () => document.removeEventListener("keydown", handleKeyDown);
+}, [currentIndex, reels.length]);
+
 
 
 // Inside the component

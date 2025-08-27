@@ -48,12 +48,13 @@ const SignUp = () => {
     <div className="qy:w-[500px] w-full px-7 flex flex-col items-center justify-center">
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-full px-8 flex flex-col gap-8 items-center"
+        className="w-full flex flex-col gap-8 items-center"
       >
         <div className="flex gap-6 flex-col items-center w-full">
           <div className="flex w-full flex-col gap-4">
             <span className="w-full flex flex-col items-start gap-2">
               <Input
+              width="100%"
                 label="Email"
                 placeholder="Enter email address"
                 register={register("email")}
@@ -78,6 +79,7 @@ const SignUp = () => {
             <span className="w-full flex flex-col items-start gap-2">
               <Input
                 label="Username"
+                width="100%"
                 placeholder="Enter username"
                 register={register("username")}
               />
@@ -90,6 +92,7 @@ const SignUp = () => {
 
             <span className="w-full flex flex-col items-start gap-2">
               <PasswordInput
+              width="100%"
                 label="Password"
                 placeholder="****************"
                 register={register("password")}
@@ -101,8 +104,9 @@ const SignUp = () => {
               )}
             </span>
 
-             <div className="space-y-2 w-full items-center">
+             <div className="space-y-2 w-full ">
           <Button 
+          width="100%"
             onClick={() => handleOAuthLogin('google', 'register')}
             className="w-full"
             variant="filled"
@@ -110,6 +114,7 @@ const SignUp = () => {
             {loading === 'google' ? 'Redirecting...' : 'Sign up with Google'}
           </Button>
           <Button 
+          width="100%"
             onClick={() => handleOAuthLogin('github', 'register')}
             className="w-full"
             variant="filled"
@@ -118,7 +123,7 @@ const SignUp = () => {
           </Button>
         </div>
 
-            <span className="text-end font-inter font-bold text-xs leading-[150%] text-[#EB5017]">
+            <span className="text-end font-inter font-bold text-sm leading-[150%] text-[#EB5017]">
               Forgot Password?
             </span>
           </div>
@@ -139,7 +144,7 @@ const SignUp = () => {
           </p>
           <Link
             href="/login"
-            className="font-bold text-xs font-inter leading-[150%] text-[#EB5017]"
+            className="font-bold text-sm font-inter leading-[150%] text-[#EB5017]"
           >
             Login
           </Link>

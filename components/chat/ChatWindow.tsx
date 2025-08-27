@@ -816,8 +816,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                   // }
                   onClick={() => startCall(false)}
                   className={`p-2 rounded-full transition-colors ${
-                    isUserOnline &&
-                    currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
+                    isUserOnline
                       ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                       : 'text-gray-300 cursor-not-allowed'
                   }`}
@@ -832,8 +831,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                   // }
                   onClick={() => startCall(true)}
                   className={`p-2 rounded-full transition-colors ${
-                    isUserOnline &&
-                    currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
+                    isUserOnline
                       ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                       : 'text-gray-300 cursor-not-allowed'
                   }`}

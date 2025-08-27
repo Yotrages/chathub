@@ -25,7 +25,7 @@ const SignIn = () => {
     <div className="qy:w-[500px] w-full px-7 flex flex-col items-center justify-center">
       <form
         onSubmit={handleSubmit}
-        className="w-full px-8 flex flex-col gap-8 items-center"
+        className="w-full flex flex-col gap-8 items-center"
       >
         <div className="flex gap-6 flex-col items-center w-full">
           <div className="flex w-full flex-col gap-4">
@@ -43,7 +43,7 @@ const SignIn = () => {
               )}
             </span>
 
-            <span className="w-full flex flex-col items-start gap-2">
+            <span className="w-full flex flex-col gap-2">
               <PasswordInput
               width="100%"
                 label="Password"
@@ -57,7 +57,7 @@ const SignIn = () => {
               )}
             </span>
 
-            <span className="text-end font-inter font-bold text-xs leading-[150%] text-[#EB5017]">
+            <span className="text-end font-inter font-bold text-sm leading-[150%] text-[#EB5017]">
               Forgot Password?
             </span>
           </div>
@@ -96,7 +96,7 @@ const SignIn = () => {
           </p>
           <Link
             href="/register"
-            className="font-bold text-xs font-inter leading-[150%] text-[#EB5017]"
+            className="font-bold text-sm font-inter leading-[150%] text-[#EB5017]"
           >
             Register
           </Link>
