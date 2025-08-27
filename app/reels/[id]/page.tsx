@@ -28,13 +28,13 @@ const ReelsPage: React.FC = () => {
 
   useEffect(() => {
     if (reels.length === 0 && !reelsLoading) {
-      trigger();
+      trigger(); // Fetch reels, prioritizing the id if provided
     }
     const initialIndex = reels.findIndex((reel) => reel._id === id);
     if (initialIndex !== -1 && currentIndex === -1) {
-      setCurrentIndex(initialIndex); 
+      setCurrentIndex(initialIndex); // Set to the id-matched reel if found
     } else if (reels.length > 0 && currentIndex === -1) {
-      setCurrentIndex(0); 
+      setCurrentIndex(0); // Default to first reel if id not found
     }
   }, [id, reels, reelsLoading, trigger, currentIndex]);
 
