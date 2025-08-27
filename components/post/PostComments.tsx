@@ -8,6 +8,8 @@ import { useAddReelComment } from "@/hooks/useReels";
 import { useEffect, useRef, useState } from "react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { CommentList } from "../comment/CommentList";
+import { useMemoryThreads } from "@/hooks/useMemoryThread";
+import { MemoryThreadsPanel } from "../memory/MemoryThreadsPanel";
 
 interface PostCommentsProps {
   type: "post" | "reel";
@@ -16,6 +18,7 @@ interface PostCommentsProps {
   user: User | null;
   commentContent: string;
   setCommentContent: (content: string) => void;
+  postAuthorId?: string; 
 }
 
 const PostComments: React.FC<PostCommentsProps> = ({
@@ -25,23 +28,82 @@ const PostComments: React.FC<PostCommentsProps> = ({
   user,
   commentContent,
   setCommentContent,
+  postAuthorId,
 }) => {
   const { mutate: addPostComment, errors: postErrors } = useAddComment(dynamicId, () => {
-      setCommentContent("");
-      setPreview("");
-      setOriginalFile(undefined);
+    setCommentContent("");
+    setPreview("");
+    setOriginalFile(undefined);
+    processNewComment();
   });
+  
   const { mutate: addReelComment, errors: reelErrors } = useAddReelComment(dynamicId, () => {
-      setCommentContent("");
-      setPreview("");
-      setOriginalFile(undefined);
+    setCommentContent("");
+    setPreview("");
+    setOriginalFile(undefined);
+    processNewComment();
   });
+
+  const {
+    memoryThreads,
+    isLoading: memoryLoading,
+    fetchMemoryThreads,
+    clearMemoryThreads,
+    processContent,
+  } = useMemoryThreads();
+
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [previewType, setPreviewType] = useState("");
   const [originalFile, setOriginalFile] = useState<File>();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showMemories, setShowMemories] = useState(false);
+
+  // Extract keywords from comment text
+  const extractKeywords = (text: string): string[] => {
+    const stopWords = new Set(['the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of', 'as', 'by']);
+    
+    return text
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter(word => word.length > 3 && !stopWords.has(word))
+      .slice(0, 8);
+  };
+
+  // Process new comment for memory thread creation
+  const processNewComment = () => {
+    if (user && postAuthorId && commentContent.trim()) {
+      const participants = [user._id, postAuthorId].filter(id => id);
+      if (participants.length === 2) {
+        processContent({
+          userId: user._id,
+          content: commentContent,
+          participants,
+          postId: dynamicId,
+        });
+      }
+    }
+  };
+
+  // Trigger memory search when comment content changes
+  useEffect(() => {
+    if (commentContent.length > 20 && user && postAuthorId && user._id !== postAuthorId) {
+      const keywords = extractKeywords(commentContent);
+      if (keywords.length > 0) {
+        fetchMemoryThreads({
+          userId: user._id,
+          participantId: postAuthorId,
+          keywords,
+        });
+        setShowMemories(true);
+      }
+    } else {
+      setShowMemories(false);
+      clearMemoryThreads();
+    }
+  }, [commentContent, user, postAuthorId, fetchMemoryThreads, clearMemoryThreads]);
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +119,12 @@ const PostComments: React.FC<PostCommentsProps> = ({
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     setCommentContent(commentContent + emojiData.emoji);
+  };
+
+  const handleExpandMemory = (memory: any) => {
+    // In a real implementation, this would open a detailed memory view
+    console.log('Expanding memory:', memory);
+    // You could open a modal, navigate to a detail page, etc.
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,9 +244,14 @@ const PostComments: React.FC<PostCommentsProps> = ({
     );
   };
 
+  // Find the post author's username for display
+  const postAuthor = comments.find(comment => comment.authorId._id === postAuthorId);
+  const participantUsername = postAuthor?.authorId?.username;
+
   return (
     <div className="border-t border-gray-50 bg-gray-50 w-full">
       {preview && <span>{renderFilePreview(preview, previewType, originalFile)}</span>}
+      
       {user && (
         <div className="py-6 xs:px-6 pb-4 w-full">
           <form onSubmit={handleAddComment} className="flex space-x-3 w-full">
@@ -229,6 +302,17 @@ const PostComments: React.FC<PostCommentsProps> = ({
               )}
             </div>
           </form>
+
+          {/* Memory Threads Panel */}
+          {showMemories && (
+            <MemoryThreadsPanel
+              memories={memoryThreads}
+              isLoading={memoryLoading}
+              onExpandMemory={handleExpandMemory}
+              participantUsername={participantUsername}
+            />
+          )}
+
           {(postErrors.content || reelErrors.content) && (
             <span className="text-red-500 mt-2 text-center">
               {postErrors.content?.message || reelErrors.content?.message}
@@ -236,6 +320,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
           )}
         </div>
       )}
+      
       <div className="sm:px-6 px-0 w-full pb-6">
         <CommentList type={type} dynamicId={dynamicId} comments={comments} />
       </div>

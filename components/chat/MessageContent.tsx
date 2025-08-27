@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Download, Eye, Image, File, Mic, Video, Share2 } from 'lucide-react';
+import { Download, Eye, Image, File, Mic, Video, Share2, Play, Pause } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
 import { Message } from '@/types';
 import Link from 'next/link';
@@ -26,6 +26,10 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
   const [mediaError, setMediaError] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content);
   const [postPreview, setPostPreview] = useState<PostPreview | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
   const { editMessage } = useChat();
 
   useEffect(() => {
@@ -46,12 +50,57 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
   const handleEdit = (): void => {
     if (isEditing && editedContent.trim()) {
       editMessage(message._id, editedContent);
-    onClose()
+      onClose();
     }
   };
 
   const formatTime = (timestamp: string): string => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleAudioPlay = () => {
+    if (audioRef) {
+      if (isPlaying) {
+        audioRef.pause();
+      } else {
+        audioRef.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleAudioTimeUpdate = () => {
+    if (audioRef) {
+      setCurrentTime(audioRef.currentTime);
+    }
+  };
+
+  const handleAudioLoadedMetadata = () => {
+    if (audioRef) {
+      setDuration(audioRef.duration);
+    }
+  };
+
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+    setCurrentTime(0);
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (audioRef) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const percentage = clickX / rect.width;
+      const newTime = percentage * duration;
+      audioRef.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
   };
 
   const renderReplyPreview = () => {
@@ -136,14 +185,63 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
         );
       case 'audio':
         return (
-          <div className="max-w-xs rounded-lg">
+          <div className="max-w-xs">
             {!mediaError ? (
-              <audio
-                src={message.fileUrl}
-                controls
-                onError={() => setMediaError(true)}
-                aria-label="Play audio message"
-              />
+              <div className={`p-3 rounded-lg ${isOwn ? 'bg-blue-400' : 'bg-white'} shadow-sm`}>
+                {/* Hidden native audio element for control */}
+                <audio
+                  ref={setAudioRef}
+                  src={message.fileUrl}
+                  onTimeUpdate={handleAudioTimeUpdate}
+                  onLoadedMetadata={handleAudioLoadedMetadata}
+                  onEnded={handleAudioEnded}
+                  onError={() => setMediaError(true)}
+                  preload="metadata"
+                  style={{ display: 'none' }}
+                />
+                
+                {/* Custom Audio Player UI */}
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={handleAudioPlay}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                      isOwn 
+                        ? 'bg-white text-blue-500 hover:bg-gray-100' 
+                        : 'bg-blue-500 text-white hover:bg-blue-600'
+                    }`}
+                    aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
+                  >
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+                  </button>
+                  
+                  <div className="flex-1">
+                    {/* Progress bar */}
+                    <div 
+                      className={`h-2 rounded-full cursor-pointer ${
+                        isOwn ? 'bg-blue-300' : 'bg-gray-200'
+                      }`}
+                      onClick={handleSeek}
+                    >
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          isOwn ? 'bg-white' : 'bg-blue-500'
+                        }`}
+                        style={{
+                          width: duration ? `${(currentTime / duration) * 100}%` : '0%'
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Time display */}
+                    <div className={`flex justify-between text-xs mt-1 ${
+                      isOwn ? 'text-blue-100' : 'text-gray-500'
+                    }`}>
+                      <span>{formatDuration(currentTime)}</span>
+                      <span>{formatDuration(duration)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="bg-gray-200 p-4 rounded-lg">
                 <Mic className="mx-auto mb-2 text-gray-400" size={24} />
@@ -160,7 +258,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
               <video
                 src={message.fileUrl}
                 controls
-                className="w-full h-50 object-cover"
+                className="w-full h-50 object-cover rounded-lg"
                 onError={() => setMediaError(true)}
                 aria-label="Play video message"
               />
@@ -195,7 +293,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
         );
       case 'post':
         return (
-          <div className="bg-gray-100 p-3 rounded-lg max-w-xs">
+          <div className="bg-gray-100 p-3 rounded-lg w-full overflow-hidden">
             {postPreview ? (
               <div className="flex items-start space-x-2">
                 {postPreview.images?.[0] && (
@@ -219,7 +317,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
               </div>
             ) : (
               <>
-                <p className="text-sm">{message.content}</p>
+                <p className="text-sm text-clip ">{message.content}</p>
                 {message.postId ? (
                   <Link
                     href={`/post/${message.postId}`}

@@ -341,3 +341,22 @@ export interface Reel {
   title: string;
   __v?: number;
 }
+
+export interface MemoryThread {
+  _id: string;
+  participants: string[];
+  keywords: string[];
+  relatedPosts: string[];
+  lastActivity: string;
+  context: string;
+  relevanceScore: number;
+  createdAt: string;
+}
+
+export interface MemoryContextData {
+  postId: string;
+  content: string;
+  authorUsername: string;
+  createdAt: string;
+  type: 'post' | 'comment' | 'reel';
+}

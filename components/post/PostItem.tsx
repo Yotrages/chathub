@@ -109,6 +109,7 @@ export const PostItem = ({ post }: PostItemProps) => {
               dynamicId={post._id}
               comments={comments}
               user={user}
+              postAuthorId={post.authorId._id}
               commentContent={commentContent}
               setCommentContent={setCommentContent}
             />

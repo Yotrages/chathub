@@ -1,5 +1,5 @@
 "use client";
-import {  RefObject, SetStateAction, useEffect, useState } from "react";
+import { forwardRef, SetStateAction, useEffect, useState } from "react";
 import {
   Smile,
   Reply,
@@ -26,7 +26,6 @@ interface MessageContextMenuProps {
   setShowReaction: React.Dispatch<SetStateAction<boolean>>;
   onClose: () => void;
   setIsEditing: React.Dispatch<SetStateAction<boolean>>;
-  ref: RefObject<HTMLDivElement | null>
 }
 
 interface MessageInfo {
@@ -39,11 +38,8 @@ interface MessageInfo {
   readBy: Array<{ user: { _id: string; username: string }; readAt: string }>;
 }
 
-export const MessageContextMenu: React.FC<
-  MessageContextMenuProps
-> = (
-    { message, isOwn, show, position, onClose, setIsEditing, setShowReaction, ref }
-  ) => {
+export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuProps>(
+  ({ message, isOwn, show, position, onClose, setIsEditing, setShowReaction }, ref) => {
     const dispatch = useDispatch();
     const {
       deleteMessage,
@@ -61,10 +57,23 @@ export const MessageContextMenu: React.FC<
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [messageInfo, setMessageInfo] = useState<MessageInfo | null>(null);
 
-         useEffect(() => {
-        window.addEventListener('scroll', onClose)
-        return () => window.removeEventListener('scroll', onClose)
-    }, [])
+    useEffect(() => {
+      const handleScroll = () => {
+        if (show) {
+          onClose();
+        }
+      };
+
+      if (show) {
+        window.addEventListener('scroll', handleScroll, true);
+        document.addEventListener('wheel', handleScroll, true);
+      }
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        document.removeEventListener('wheel', handleScroll, true);
+      };
+    }, [show, onClose]);
 
     if (!show) return null;
 
@@ -91,7 +100,7 @@ export const MessageContextMenu: React.FC<
         await forwardMessage(message._id, chatId);
         toast.success("Message forwarded successfully");
       } catch (error) {
-        console.log(error)
+        console.log(error);
         toast.error("Failed to forward message");
       }
       setShowForwardModal(false);
@@ -119,7 +128,7 @@ export const MessageContextMenu: React.FC<
         await deleteMessage(message._id);
         toast.success("Message deleted successfully");
       } catch (error) {
-        console.log(error)
+        console.log(error);
         toast.error("Failed to delete message");
       }
       onClose();
@@ -136,7 +145,7 @@ export const MessageContextMenu: React.FC<
           toast.success("Message starred");
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
         toast.error("Failed to star/unstar message");
       }
       onClose();
@@ -152,7 +161,7 @@ export const MessageContextMenu: React.FC<
           toast.success("Message pinned");
         }
       } catch (error) {
-        console.log(error)
+        console.log(error);
         toast.error("Failed to pin/unpin message");
       }
       onClose();
@@ -164,7 +173,7 @@ export const MessageContextMenu: React.FC<
         setMessageInfo(info);
         setShowInfoModal(true);
       } catch (error) {
-        console.log(error)
+        console.log(error);
         toast.error("Failed to get message info");
       }
       onClose();
@@ -176,37 +185,34 @@ export const MessageContextMenu: React.FC<
       modalSetter(false);
     };
 
-   
-
     return (
       <>
         <div
           ref={ref}
-          className="fixed z-50 bg-white rounded-lg shadow-lg border py-2 min-w-48"
+          className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-2 min-w-48 max-w-56"
           style={{
             left: position.x,
             top: position.y,
-            transform: "translate(-50%, -100%)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={handleReaction}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Smile size={16} />
             <span>React</span>
           </button>
           <button
             onClick={handleReply}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Reply size={16} />
             <span>Reply</span>
           </button>
           <button
             onClick={handleCopy}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Copy size={16} />
             <span>Copy</span>
@@ -214,47 +220,47 @@ export const MessageContextMenu: React.FC<
           <button
             onClick={(e) => {
                 e.stopPropagation();
-                setShowForwardModal(true)
+                setShowForwardModal(true);
             }}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Forward size={16} />
             <span>Forward</span>
           </button>
           <button
             onClick={handleStar}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Star size={16} />
             <span>{isStarred ? "Unstar" : "Star"}</span>
           </button>
           <button
             onClick={handlePin}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Pin size={16} />
             <span>{isPinned ? "Unpin" : "Pin"}</span>
           </button>
           <button
             onClick={handleInfo}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
           >
             <Info size={16} />
             <span>Info</span>
           </button>
           {isOwn && (
             <>
-              <hr className="my-1" />
+              <hr className="my-1 border-gray-200" />
               <button
                 onClick={handleEdit}
-                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
               >
                 <Edit size={16} />
                 <span>Edit</span>
               </button>
               <button
                 onClick={handleDelete}
-                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 text-red-600"
+                className="w-full px-4 py-2 text-left hover:bg-red-50 flex items-center space-x-2 text-red-600 transition-colors"
               >
                 <Trash2 size={16} />
                 <span>Delete</span>
@@ -265,28 +271,28 @@ export const MessageContextMenu: React.FC<
 
         {/* Forward Modal */}
         {showForwardModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-4 max-h-[70vh] flex flex-col">
               <h2 className="text-lg font-semibold mb-4">Forward Message</h2>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              <div className="space-y-2 flex-1 overflow-y-auto">
                 {chats?.map((chat) => (
                   <button
                     key={chat._id}
                     onClick={() => handleForward(chat._id)}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-100 rounded flex items-center space-x-2"
+                    className="w-full px-4 py-3 text-left hover:bg-gray-100 rounded-lg flex items-center space-x-3 transition-colors"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-semibold">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-sm font-semibold">
                         {chat.name?.charAt(0) || "U"}
                       </span>
                     </div>
-                    <span>{chat.name || "Unknown Chat"}</span>
+                    <span className="truncate">{chat.name || "Unknown Chat"}</span>
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => handleModalClose(setShowForwardModal)}
-                className="mt-4 w-full px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                className="mt-4 w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>
@@ -296,43 +302,49 @@ export const MessageContextMenu: React.FC<
 
         {/* Info Modal */}
         {showInfoModal && messageInfo && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-4 max-h-[70vh] flex flex-col">
               <h2 className="text-lg font-semibold mb-4">Message Info</h2>
-              <div className="space-y-2">
-                <p>
-                  <strong>Sender:</strong> {messageInfo.sender.username}
-                </p>
-                <p>
-                  <strong>Content:</strong> {messageInfo.content}
-                </p>
-                <p>
-                  <strong>Sent:</strong>{" "}
-                  {new Date(messageInfo.createdAt).toLocaleString()}
-                </p>
-                <p>
-                  <strong>Status:</strong>{" "}
-                  {messageInfo.isRead ? "Read" : "Delivered"}
-                </p>
+              <div className="space-y-3 flex-1 overflow-y-auto">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Sender</p>
+                  <p className="text-sm text-gray-900">{messageInfo.sender.username}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Content</p>
+                  <p className="text-sm text-gray-900 break-words">{messageInfo.content}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Sent</p>
+                  <p className="text-sm text-gray-900">
+                    {new Date(messageInfo.createdAt).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Status</p>
+                  <p className="text-sm text-gray-900">
+                    {messageInfo.isRead ? "Read" : "Delivered"}
+                  </p>
+                </div>
                 {messageInfo.readBy && messageInfo.readBy.length > 0 && (
                   <div>
-                    <p>
-                      <strong>Read by:</strong>
-                    </p>
-                    <ul className="list-disc pl-5">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Read by</p>
+                    <div className="space-y-1">
                       {messageInfo.readBy.map((reader) => (
-                        <li key={reader.user._id}>
-                          {reader.user.username} at{" "}
-                          {new Date(reader.readAt).toLocaleString()}
-                        </li>
+                        <div key={reader.user._id} className="text-sm text-gray-900">
+                          <span className="font-medium">{reader.user.username}</span>
+                          <span className="text-gray-600 ml-2">
+                            {new Date(reader.readAt).toLocaleString()}
+                          </span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>
               <button
                 onClick={() => handleModalClose(setShowInfoModal)}
-                className="mt-4 w-full px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                className="mt-4 w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
               >
                 Close
               </button>
@@ -342,3 +354,6 @@ export const MessageContextMenu: React.FC<
       </>
     );
   }
+);
+
+MessageContextMenu.displayName = "MessageContextMenu";

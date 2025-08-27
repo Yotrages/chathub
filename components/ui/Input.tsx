@@ -21,6 +21,7 @@ interface InputProps {
   readyMade?: boolean
   className?: string
   value?: any
+  autoFocus?: boolean;
   disabled?: boolean;
   onChange?: React.ChangeEventHandler<HTMLInputElement>
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
@@ -104,6 +105,7 @@ export const Input = ({
            onChange={onChange}
           onBlur={onBlur}
           onFocus={onFocus}
+          autoFocus={props.autoFocus}
             type={type}
             value={value}
             style={{
