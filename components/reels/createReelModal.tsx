@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { XCircleIcon, PhotoIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { XCircleIcon, PhotoIcon, TrashIcon, PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
+import { FilmIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { useCreateReel } from '@/hooks/useReels';
 import Input from '../ui/Input';
@@ -16,9 +17,11 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [title, setTitle] = useState<string>('');
   const [dragActive, setDragActive] = useState<boolean>(false);
+  const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-   const resetForm = () => {
+  const resetForm = () => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
@@ -26,6 +29,7 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
     setPreviewUrl(null);
     setTitle('');
     setDragActive(false);
+    setIsPlaying(true);
   };
 
   // Move hook calls before any conditional returns
@@ -124,8 +128,6 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
     mutate(payload);
   };
 
- 
-
   const removeFile = () => {
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -134,109 +136,244 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
     setPreviewUrl(null);
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
-        <button 
-          onClick={onClose} 
-          className="absolute top-2 right-2 p-1 hover:bg-gray-100 rounded-full transition-colors"
-          disabled={isPending}
-        >
-          <XCircleIcon className="h-6 w-6 text-gray-500" />
-        </button>
-        
-        <h2 className="text-xl font-bold mb-4">Create Reel</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* File Upload Area */}
-          <div 
-            className={`relative h-64 rounded-lg overflow-hidden border-2 border-dashed transition-colors ${
-              dragActive 
-                ? 'border-blue-500 bg-blue-50' 
-                : previewUrl 
-                ? 'border-gray-300' 
-                : 'border-gray-300 bg-gray-50'
-            }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-          >
-            {previewUrl ? (
-              <div className="relative w-full h-full">
-                <video 
-                  src={previewUrl} 
-                  className="w-full h-full object-cover" 
-                  muted 
-                  autoPlay 
-                  controls 
-                  loop 
-                />
-                <button
-                  type="button"
-                  onClick={removeFile}
-                  className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                >
-                  <TrashIcon className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <PhotoIcon className="h-12 w-12 mb-2" />
-                <p className="text-sm text-center">
-                  {dragActive ? 'Drop your video here' : 'Drag & drop a video file or click to upload'}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Max size: 50MB</p>
-              </div>
-            )}
-          </div>
+  const togglePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
 
-          {/* Upload Button */}
-          <div className="flex space-x-2">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[95vh] overflow-hidden animate-slideUp">
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+                <FilmIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Create Reel</h2>
+                <p className="text-purple-100 text-sm">Share your amazing content</p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="p-2 hover:bg-white/20 rounded-full transition-all duration-200 hover:scale-110"
               disabled={isPending}
             >
-              <PhotoIcon className="h-5 w-5 mr-2" />
-              {file ? 'Change Video' : 'Upload Video'}
+              <XCircleIcon fontSize={24} />
             </button>
           </div>
-
-          <input
-            type="file"
-            accept="video/*"
-            onChange={handleFileChange}
-            ref={fileInputRef}
-            className="hidden"
-          />
           
-          {/* Title Input */}
-          <Input 
-            value={title}
-            placeholder="Enter a catchy title..."
-            width="100%"
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={isPending}
-            maxLength={100}
-          />
-          
-          {/* Character Counter */}
-          <div className="text-right text-xs text-gray-500">
-            {title.length}/100 characters
+          {/* Decorative elements */}
+          <div className="absolute top-2 right-20 opacity-20">
+            <SparklesIcon className="h-8 w-8" />
           </div>
+          <div className="absolute bottom-2 left-20 opacity-20">
+            <SparklesIcon className="h-6 w-6" />
+          </div>
+        </div>
+        
+        <div className="p-6 overflow-y-auto max-h-[calc(95vh-120px)]">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* File Upload Area */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Upload Video
+              </label>
+              <div 
+                className={`relative h-72 rounded-xl overflow-hidden border-2 border-dashed transition-all duration-300 ${
+                  dragActive 
+                    ? 'border-purple-500 bg-purple-50 scale-105' 
+                    : previewUrl 
+                    ? 'border-gray-300 shadow-lg' 
+                    : 'border-gray-300 bg-gray-50 hover:border-purple-300 hover:bg-purple-25'
+                }`}
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                {previewUrl ? (
+                  <div className="relative w-full h-full group">
+                    <video 
+                      ref={videoRef}
+                      src={previewUrl} 
+                      className="w-full h-full object-cover rounded-xl" 
+                      muted 
+                      autoPlay 
+                      loop 
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                    />
+                    
+                    {/* Video Controls Overlay */}
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                      <button
+                        type="button"
+                        onClick={togglePlayPause}
+                        className="p-4 bg-white/90 text-gray-800 rounded-full hover:bg-white transition-all duration-200 shadow-lg"
+                      >
+                        {isPlaying ? (
+                          <PauseIcon className="h-8 w-8" />
+                        ) : (
+                          <PlayIcon className="h-8 w-8 ml-1" />
+                        )}
+                      </button>
+                    </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isPending || !file || !title.trim()}
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isPending ? 'Posting...' : 'Post Reel'}
-          </button>
-        </form>
+                    {/* Remove Button */}
+                    <button
+                      type="button"
+                      onClick={removeFile}
+                      className="absolute top-3 right-3 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all duration-200 shadow-lg hover:scale-110"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+
+                    {/* File Info */}
+                    <div className="absolute bottom-3 left-3 bg-black/70 text-white px-3 py-1 rounded-lg text-sm backdrop-blur-sm">
+                      {file?.name}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 p-6">
+                    <div className="p-4 bg-purple-100 rounded-full mb-4">
+                      <PhotoIcon className="h-12 w-12 text-purple-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      {dragActive ? 'Drop your video here!' : 'Upload your reel'}
+                    </h3>
+                    <p className="text-sm text-center text-gray-500 mb-2">
+                      Drag & drop a video file or click to browse
+                    </p>
+                    <div className="flex items-center space-x-4 text-xs text-gray-400">
+                      <span className="bg-gray-200 px-2 py-1 rounded">MP4</span>
+                      <span className="bg-gray-200 px-2 py-1 rounded">MOV</span>
+                      <span className="bg-gray-200 px-2 py-1 rounded">Max 50MB</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Upload Button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 shadow-lg"
+                disabled={isPending}
+              >
+                <PhotoIcon className="h-5 w-5 mr-2" />
+                {file ? 'Change Video' : 'Browse Files'}
+              </button>
+            </div>
+
+            <input
+              type="file"
+              accept="video/*"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              className="hidden"
+            />
+            
+            {/* Title Input */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Reel Title
+              </label>
+              <div className="relative">
+                <Input 
+                  value={title}
+                  placeholder="What's your reel about? Make it catchy! ✨"
+                  width="100%"
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={isPending}
+                  maxLength={100}
+                  className="pr-16 text-lg border-2 border-gray-200 focus:border-purple-500 rounded-lg transition-all duration-200"
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <div className={`text-xs px-2 py-1 rounded-full ${
+                    title.length > 80 
+                      ? 'bg-red-100 text-red-600' 
+                      : title.length > 60 
+                      ? 'bg-yellow-100 text-yellow-600' 
+                      : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    {title.length}/100
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isPending || !file || !title.trim()}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 shadow-xl font-semibold text-lg relative overflow-hidden group"
+            >
+              {isPending ? (
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                  Creating Magic...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <SparklesIcon className="h-5 w-5 mr-2 group-hover:animate-pulse" />
+                  Share Your Reel
+                </div>
+              )}
+              
+              {/* Button shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -skew-x-12 group-hover:animate-shimmer"></div>
+            </button>
+          </form>
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        
+        @keyframes shimmer {
+          0% { transform: translateX(-100%) skewX(-12deg); }
+          100% { transform: translateX(200%) skewX(-12deg); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-out;
+        }
+        
+        .animate-slideUp {
+          animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .animate-shimmer {
+          animation: shimmer 1.5s ease-in-out;
+        }
+        
+        .bg-purple-25 {
+          background-color: #faf7ff;
+        }
+      `}</style>
     </div>
   );
 };

@@ -32,7 +32,7 @@ export const PasswordInput = ({
 }: InputProps) => {
   const [show, setShow] = useState(false);
   return (
-    <div className="flex flex-col gap-1 items-start w-full">
+    <div className="flex flex-col gap-1 w-full">
       <label
         htmlFor={label}
         id={label}
@@ -60,7 +60,7 @@ export const PasswordInput = ({
           onClick={() => setShow((prev) => !prev)}
           className="absolute cursor-pointer transition-all duration-500 ease-in-out flex items-center justify-center top-3 right-3 w-[30px] h-[30px] rounded-full bg-black/5"
         >
-          {show ? <FaEyeSlash /> : <FaEye />}
+          {show ? <FaEyeSlash className="text-black"/> : <FaEye className="text-black"/>}
         </div>
       </div>
     </div>

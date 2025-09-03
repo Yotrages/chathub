@@ -50,6 +50,9 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [incomingCall, setIncomingCall] = useState<{from: string, isVideo: boolean} | null>(null);
   const [callTimeout, setCallTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // Track whether messages have been marked as read to prevent loops
+  const [markedAsReadChats, setMarkedAsReadChats] = useState<Set<string>>(new Set());
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -239,7 +242,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     const handleUserOnline = async ({ userId }: { userId: string }) => {
       if (currentChat.participants.some((p) => p._id === userId)) {
         try {
-          const response = await api.get(`/api/status/user/${userId}`);
+          const response = await api.get(`/status/user/${userId}`);
           if (response.data.isOnline) {
             setUserStatuses((prev) => {
               const newStatuses = new Map(prev);
@@ -306,18 +309,35 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     };
   }, [socket, activeChat, isUserOnline, currentChat, user, callState]);
 
-  // Load messages (existing code...)
+  // FIXED: Load messages without creating loops
   const loadChatMessages = useCallback(async (chatId: string) => {
     if (!isUserOnline) {
       console.log('User is offline, skipping message loading');
       return;
     }
+    
+    // Prevent loading the same chat multiple times
+    if (loadedChats.has(chatId)) {
+      console.log('Chat already loaded:', chatId);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       await loadMessages(chatId);
-      await markMessagesAsRead(chatId);
+      
+      // Mark as loaded first
+      setLoadedChats((prev) => new Set([...prev, chatId]));
+      
+      // Only mark as read if we haven't already done so
+      if (!markedAsReadChats.has(chatId)) {
+        await markMessagesAsRead(chatId);
+        setMarkedAsReadChats((prev) => new Set([...prev, chatId]));
+      }
+      
     } catch (error) {
       console.error('Failed to load messages:', error);
+      // Remove from loaded chats on error so it can be retried
       setLoadedChats((prev) => {
         const newSet = new Set(prev);
         newSet.delete(chatId);
@@ -326,23 +346,49 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     } finally {
       setIsLoading(false);
     }
-  }, [loadMessages, markMessagesAsRead, isUserOnline]);
+  }, [loadMessages, markMessagesAsRead, isUserOnline, loadedChats, markedAsReadChats]);
 
-  // Handle activeChat changes (existing code...)
+  // FIXED: Handle activeChat changes without loops
   useEffect(() => {
     if (!activeChat) return;
     if (!isUserOnline) {
       console.log('User is offline, skipping chat operations');
       return;
     }
+    
+    // Always join the chat
     joinChat(activeChat);
+    
+    // Load messages only if not already loaded
     if (!loadedChats.has(activeChat)) {
-      setLoadedChats((prev) => new Set([...prev, activeChat]));
       loadChatMessages(activeChat);
-    } else {
-      markMessagesAsRead(activeChat);
+    } else if (!markedAsReadChats.has(activeChat)) {
+      // If chat is loaded but messages haven't been marked as read, do that
+      markMessagesAsRead(activeChat).then(() => {
+        setMarkedAsReadChats((prev) => new Set([...prev, activeChat]));
+      }).catch(console.error);
     }
-  }, [activeChat, joinChat, loadChatMessages, loadedChats, isUserOnline]);
+  }, [activeChat, joinChat, loadChatMessages, isUserOnline, loadedChats, markedAsReadChats, markMessagesAsRead]);
+
+  // FIXED: Mark messages as read when new messages arrive (without loops)
+  useEffect(() => {
+    if (!activeChat || !isUserOnline || chatMessages.length === 0) return;
+    
+    // Check if there are unread messages from other users
+    const hasUnreadMessages = chatMessages.some(msg => {
+      const senderId = typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id;
+      return senderId !== user?._id && !msg.isRead;
+    });
+    
+    // Only mark as read if there are unread messages and we haven't already marked this chat as read recently
+    if (hasUnreadMessages && !markedAsReadChats.has(`${activeChat}-${chatMessages.length}`)) {
+      const markAsReadKey = `${activeChat}-${chatMessages.length}`;
+      
+      markMessagesAsRead(activeChat).then(() => {
+        setMarkedAsReadChats((prev) => new Set([...prev, markAsReadKey]));
+      }).catch(console.error);
+    }
+  }, [chatMessages, activeChat, user?._id, isUserOnline, markMessagesAsRead, markedAsReadChats]);
 
   // Auto-scroll (existing code...)
   useEffect(() => {
@@ -372,7 +418,13 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     };
   }, [socket, activeChat, user?._id, isUserOnline]);
 
-  // Enhanced call signaling
+  // FIXED: Clear tracking sets when activeChat changes
+  useEffect(() => {
+    // Clear the tracking sets when switching chats to allow proper loading of new chat
+    setMarkedAsReadChats(new Set());
+  }, [activeChat]);
+
+  // Enhanced call signaling (rest of the call-related code remains the same...)
   useEffect(() => {
     if (!socket || !activeChat || !isUserOnline || !currentChat) return;
 
@@ -810,10 +862,6 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             {callState === 'idle' && (
               <>
                 <button
-                  // disabled={
-                  //   !isUserOnline ||
-                  //   !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
-                  // }
                   onClick={() => startCall(false)}
                   className={`p-2 rounded-full transition-colors ${
                     isUserOnline
@@ -825,10 +873,6 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
                   <Phone size={20} />
                 </button>
                 <button
-                  // disabled={
-                  //   !isUserOnline ||
-                  //   !currentChat.participants.some((p) => p._id !== user?._id && userStatuses.get(p._id)?.isOnline)
-                  // }
                   onClick={() => startCall(true)}
                   className={`p-2 rounded-full transition-colors ${
                     isUserOnline

@@ -26,7 +26,7 @@ export const refreshAuthToken = async (currentToken: string): Promise<string> =>
         { headers: { Authorization: `Bearer ${currentToken}` } }
       );
       const newToken = response.data.token;
-      setCookie('auth-token', newToken, {maxAge: 24 * 60 * 60 }); // 24-hour expiration
+      setCookie('auth-token', newToken, {maxAge: 24 * 60 * 55}); // 24-hour expiration
       return newToken;
     } catch (error) {
       console.error('Token refresh failed:', error);

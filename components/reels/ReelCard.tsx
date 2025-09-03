@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, forwardRef } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/redux/store";
 import { Reel } from "@/types/index";
@@ -13,8 +13,9 @@ import { useChat } from "@/hooks/useChat";
 import SharePostModal from "../post/SharePostModal";
 import PostComments from "../post/PostComments";
 import { ReactionsModal } from "../post/LikesModal";
-import { selectComments } from "@/libs/redux/reelsSlice";
+import { makeSelectComments } from "@/libs/redux/reelsSlice";
 import { useGetReelComments } from "@/hooks/useReels";
+import { EMPTY_COMMENTS } from "@/libs/redux/reelsSlice";
 
 interface EnhancedReelCardProps {
   reel: Reel;
@@ -26,6 +27,14 @@ interface EnhancedReelCardProps {
 const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
   ({ reel, onReaction, isCompact = false, isFullscreen = false }, ref) => {
     const { user } = useSelector((state: RootState) => state.auth);
+
+    // Create memoized selector for this specific reel's comments
+    // In ReelCard.tsx
+    const selectCommentsForReel = useMemo(() => makeSelectComments(), []);
+    const comments = useSelector((state: RootState) =>
+      reel?._id ? selectCommentsForReel(state, reel._id) : EMPTY_COMMENTS
+    );
+
     const [isPlaying, setIsPlaying] = useState(!isCompact);
     const [showShareModal, setShowShareModal] = useState(false);
     const [isMuted, setIsMuted] = useState(isCompact);
@@ -37,17 +46,18 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
     const [commentContent, setCommentContent] = useState("");
     const [longPressActive, setLongPressActive] = useState(false);
     const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
-    const comments = useSelector(selectComments(reel._id));
+
     const { trigger: fetchComments, isLoading: isFetchingComments } =
-      useGetReelComments(reel._id);
+      useGetReelComments(reel?._id);
 
+      localStorage.setItem('long', JSON.stringify(longPressActive))
+    
     useEffect(() => {
-      console.log(`Fetching comments for reelId ${reel._id}`);
-      fetchComments();
-    }, [reel._id]);
-
-    localStorage.setItem("long", String(longPressActive));
-    // const isOwner = user?._id === reel.authorId._id;
+      if (reel?._id) {
+        console.log(`Fetching comments for reelId ${reel._id}`);
+        fetchComments();
+      }
+    }, [fetchComments]);
 
     useEffect(() => {
       if (videoRef.current) {
@@ -69,21 +79,18 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
         setIsPlaying(!isPlaying);
       }
     };
-
+    
     const handleBackdropClick = (e: React.MouseEvent) => {
       if (e.target === e.currentTarget) {
         setShowComments(false);
       }
     };
-    // const isLiked = user && reel.reactions.length > 0
-    //   ? reel.reactions.some((r) => (r.userId?._id || r.userId) === user?._id)
-    //   : false;
 
     const toggleMute = (e: React.MouseEvent) => {
       e.stopPropagation();
       setIsMuted(!isMuted);
     };
-
+    
     const trackShare = async () => {
       try {
         await api.post(`/reels/${reel._id}/share`);
@@ -94,7 +101,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
 
     const handleShare = async () => {
       const shareData = {
-        title: `Post by ${reel.authorId.username || "Unknown User"}`,
+        title: `Post by ${reel.authorId?.username || "Unknown User"}`,
         url: `${window.location.origin}/reels/${reel._id}`,
       };
 
@@ -162,17 +169,37 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
       }
     };
 
-    const groupedReactions =
-      reel?.reactions?.reduce((acc, reaction) => {
-        const emoji = reaction.emoji.category;
-        if (!acc[emoji]) acc[emoji] = [];
-        acc[emoji].push(reaction);
-        return acc;
-      }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) ||
-      {};
+    // Memoize grouped reactions to prevent recalculation on every render
+    const groupedReactions = useMemo(() => {
+      return (
+        reel?.reactions?.reduce((acc, reaction) => {
+          const emoji = reaction.emoji.category;
+          if (!acc[emoji]) acc[emoji] = [];
+          acc[emoji].push(reaction);
+          return acc;
+        }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) ||
+        {}
+      );
+    }, [reel?.reactions]);
 
-    const userReactionEmoji =
-      reel?.reactions.find((r) => r.userId?._id === user?._id)?.emoji || null;
+    // Memoize user reaction to prevent recalculation
+    const userReactionEmoji = useMemo(() => {
+      return (
+        reel?.reactions?.find((r) => r.userId?._id === user?._id)?.emoji || null
+      );
+    }, [reel?.reactions, user?._id]);
+    
+    if (!reel || !reel._id) {
+      return (
+        <div
+          className={`${
+            isCompact ? "w-32 h-48" : "w-full h-full"
+          } bg-gray-200 flex items-center justify-center`}
+        >
+          <p className="text-gray-500">Loading reel...</p>
+        </div>
+      );
+    }
 
     const containerClasses = isFullscreen
       ? "w-full h-full max-w-3xl mx-auto bg-black rounded-lg overflow-hidden relative"
@@ -232,14 +259,14 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
                         {userReactionEmoji.category}
                       </span>
                       <span className="text-white text-xs font-medium">
-                        {reel.reactions.length}
+                        {reel?.reactions?.length || 0}
                       </span>
                     </>
                   ) : (
                     <>
                       <ThumbsUp className="h-7 w-7 text-white" />
                       <span className="text-white text-xs font-medium">
-                        {reel?.reactions.length}
+                        {reel?.reactions?.length || 0}
                       </span>
                     </>
                   )}
@@ -272,21 +299,24 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
               <div className="absolute bottom-4 left-4 right-20 z-10">
                 <div className="flex items-start space-x-3 mb-3">
                   <img
-                    src={reel.authorId.avatar}
-                    alt={reel.authorId.username}
+                    src={reel?.authorId?.avatar || "/default-avatar.png"}
+                    alt={reel?.authorId?.username || "Unknown User"}
                     className="w-12 h-12 rounded-full border-2 border-white flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-semibold text-base truncate">
-                      {reel.authorId.username}
+                      {reel?.authorId?.username || "Unknown User"}
                     </p>
                     <p className="text-gray-300 text-sm">
-                      {new Date(reel.createdAt).toLocaleDateString()}
+                      {reel?.createdAt
+                        ? new Date(reel.createdAt).toLocaleDateString()
+                        : "Unknown date"}
                     </p>
                   </div>
                 </div>
 
-                {reel.title && (
+                {/* Fix the null title error - this was line 289 */}
+                {reel?.title && (
                   <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg p-2 mb-2">
                     <p className="text-white text-sm leading-relaxed">
                       {reel.title}
@@ -333,7 +363,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
                     className="flex items-center space-x-2 py-2"
                     onClick={() => setShowReactions(true)}
                   >
-                    {reel.reactions && reel.reactions.length > 0 && (
+                    {reel?.reactions && reel.reactions.length > 0 && (
                       <div className="flex -space-x-1">
                         {Object.entries(groupedReactions)
                           .slice(0, 3)
@@ -348,7 +378,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
                       </div>
                     )}
                     <span className="text-gray-600 text-sm font-medium">
-                      {reel?.reactions.length.toLocaleString()} reactions
+                      {reel?.reactions?.length?.toLocaleString() || 0} reactions
                     </span>
                   </button>
                 </div>
@@ -375,7 +405,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
           </div>
         )}
 
-        {showReactions && (
+        {showReactions && reel?.reactions && (
           <ReactionsModal
             reactions={reel.reactions}
             isOpen={showReactions}

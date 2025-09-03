@@ -31,7 +31,7 @@ export const useNotifications = () => {
 
 interface NotificationProviderProps {
   children: ReactNode;
-  userId: string;
+  userId: string | null;
   token: any;
 }
 
@@ -49,6 +49,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
 
   useEffect(() => {
+    // Only initialize socket if we have userId and token
+    if (!userId || !token) {
+      return;
+    }
+
     const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000', {
      auth: { 
         token: token,
@@ -58,7 +63,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       reconnectionAttempts: 10,
       autoConnect: true,
       reconnectionDelay: 1000,
-
     });
 
     setSocket(newSocket);
@@ -95,6 +99,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   }, [userId, token]);
 
   const fetchNotifications = async (pageNum: number = 1) => {
+    // Don't fetch if not authenticated
+    if (!userId || !token) {
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await api.get(`/notifications?page=${pageNum}&limit=20`)
@@ -120,6 +129,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const markAsRead = async (notificationId: string) => {
+    if (!userId || !token) return;
+
     try {
       const response = await api.put(`/notifications/${notificationId}/read`)
 
@@ -137,6 +148,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const markAllAsRead = async () => {
+    if (!userId || !token) return;
+
     if (socket && socket.connected) {
       socket.emit('mark_all_notification')
     } else {
@@ -154,6 +167,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   };
 
   const deleteNotification = async (notificationId: string) => {
+    if (!userId || !token) return;
+
     try {
       const response = await api.delete(`/notifications/${notificationId}`)
 

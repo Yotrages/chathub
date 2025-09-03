@@ -32,21 +32,65 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     const fetchFrequentSearches = async () => {
-      const res = await api.get("/search/tracking");
-      if (res.status === 200) {
-        const data = await res.data;
-        setFrequentSearches(data.searches.map((s: any) => s.query));
+      try {
+        const res = await api.get("/search/tracking");
+        if (res.status === 200) {
+          const data = res.data;
+          setFrequentSearches(data.searches.map((s: any) => s.query));
+        }
+      } catch (error) {
+        console.error("Failed to fetch frequent searches:", error);
+        // Fallback to empty array or default searches
+        setFrequentSearches([]);
       }
     };
     fetchFrequentSearches();
   }, []);
 
-  // Handle search submit
+  // Handle search submit - FIXED
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search/${searchQuery.trim()}`);
+      // Clear focus and close modals
+      setIsFocused(false);
       setShowSearch(false);
+      
+      // Navigate to search results
+      router.push(`/search/${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  // Track search for frequent searches - NEW
+  const trackSearch = async (query: string) => {
+    try {
+      await api.post("/search/tracking", { query });
+    } catch (error) {
+      console.error("Failed to track search:", error);
+    }
+  };
+
+  // Handle frequent search click - FIXED
+  const handleFrequentSearchClick = (query: string) => {
+    setSearchQuery(query);
+    setIsFocused(false);
+    setShowSearch(false);
+    
+    // Navigate to search results
+    router.push(`/search/${encodeURIComponent(query)}`);
+    
+    // Track the search
+    trackSearch(query);
+  };
+
+  // Handle search input change - ENHANCED
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Handle search input key press - NEW
+  const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearchSubmit(e as any);
     }
   };
 
@@ -56,6 +100,7 @@ const Header: React.FC = () => {
       if (e.key === 'Escape') {
         setShowSearch(false);
         setShowNotifications(false);
+        setIsFocused(false);
       }
     };
 
@@ -114,72 +159,20 @@ const Header: React.FC = () => {
     setShowNotifications(false);
   };
 
-  const handleFrequentSearchClick = (query: string) => {
-    setSearchQuery(query);
-    router.push(`/search/${query}`);
-    setShowSearch(false);
-    setIsFocused(false);
-  };
-
   return (
     <div className="bg-gray-50">
       <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-3 xs:px-4 py-3 xs:py-4">
-          <div className="flex items-center justify-between gap-2 xs:gap-4">
+          <div className="sm:flex items-center justify-between gap-2 xs:gap-4">
             
             {/* Logo Section */}
-            <div className="flex items-center flex-shrink-0">
+            <div className="flex items-center justify-between">
               <Link href="/" className="hover:opacity-80 transition-opacity duration-200">
                 <h1 className="text-xl xs:text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   ChatHub
                 </h1>
               </Link>
-            </div>
-
-            {/* Desktop Search - Hidden on mobile */}
-            <div ref={inputSearchRef} className="hidden sm:block flex-1 max-w-lg mx-4">
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <div className="relative w-full">
-                  <Input
-                    className="w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                    icon={<Search size={16} className="text-gray-400" />}
-                    left_content
-                    placeholder="Search posts, users, reels..."
-                    width="100%"
-                    border_radius="12px"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setIsFocused(true)}
-                  />
-                  
-                  {/* Desktop Search Dropdown */}
-                  {isFocused && searchQuery && frequentSearches.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-64 overflow-y-auto z-50">
-                      <div className="p-2">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
-                          Recent Searches
-                        </p>
-                        {frequentSearches
-                          .filter((q) => q.toLowerCase().includes(searchQuery.toLowerCase()))
-                          .slice(0, 5)
-                          .map((q, index) => (
-                            <div
-                              key={index}
-                              onClick={() => handleFrequentSearchClick(q)}
-                              className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
-                            >
-                              <Search size={14} className="text-gray-400 mr-3 flex-shrink-0" />
-                              <span className="text-gray-700 truncate">{q}</span>
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </form>
-            </div>
-
-            {/* Mobile Controls - Search & Settings */}
+              {/* Mobile Controls - Search & Settings */}
             <div className="flex sm:hidden items-center gap-2">
               <button 
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 flex-shrink-0"
@@ -192,12 +185,69 @@ const Header: React.FC = () => {
                 <Settings size={18} className="text-gray-600" />
               </Link>
             </div>
+            </div>
+
+            {/* Desktop Search - Hidden on mobile */}
+            <div ref={inputSearchRef} className="hidden sm:block flex-1 max-w-lg mx-4">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <div className="relative w-full">
+                  <Input
+                  type="search"
+                    className="border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
+                    icon={<Search size={16} className="text-gray-400" />}
+                    left_content
+                    placeholder="Search posts, users, reels..."
+                    width="100%"
+                    border_radius="12px"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    onKeyPress={handleSearchKeyPress}
+                    onFocus={() => setIsFocused(true)}
+                  />
+                  
+                  {/* Desktop Search Dropdown */}
+                  {isFocused && frequentSearches.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-64 overflow-y-auto z-50">
+                      <div className="p-2">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
+                          Recent Searches
+                        </p>
+                        {frequentSearches
+                          .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                          .slice(0, 5)
+                          .map((q, index) => (
+                            <div
+                              key={index}
+                              onClick={() => handleFrequentSearchClick(q)}
+                              className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                            >
+                              <Search size={14} className="text-gray-400 mr-3 flex-shrink-0" />
+                              <span className="text-gray-700 truncate">{q}</span>
+                            </div>
+                          ))}
+                        
+                        {/* Current search option */}
+                        {searchQuery && !frequentSearches.some(q => q.toLowerCase() === searchQuery.toLowerCase()) && (
+                          <div
+                            onClick={() => handleFrequentSearchClick(searchQuery)}
+                            className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
+                          >
+                            <Search size={14} className="text-blue-500 mr-3 flex-shrink-0" />
+                            <span className="text-gray-700 truncate">Search for &qout;{searchQuery}&quot;</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </form>
+            </div>
 
             {/* Navigation & User Section */}
-            <div className="flex items-center gap-1 xs:gap-2 sm:gap-4">
+            <div className="flex items-center justify-between sm:space-x-4">
               
               {/* Navigation Links */}
-              <nav className="flex items-center gap-1 xs:gap-2 sm:gap-4">
+              <nav className="flex flex-1 pr-4 items-center justify-between md:gap-5 gap-1">
                 {NavLinks.map((item, index) => (
                   <Link
                     href={item.route}
@@ -214,7 +264,7 @@ const Header: React.FC = () => {
                 ))}
                 
                 {/* Notification Icon */}
-                <div className="relative">
+                <div className="relative max-w-full">
                   {user && (
                     <NotificationIcon 
                       onClick={() => setShowNotifications(!showNotifications)}
@@ -280,6 +330,7 @@ const Header: React.FC = () => {
             <div className="p-4">
               <form onSubmit={handleSearchSubmit}>
                 <Input
+                type="search"
                   className="w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                   icon={<Search size={16} className="text-gray-400" />}
                   left_content
@@ -287,7 +338,8 @@ const Header: React.FC = () => {
                   width="100%"
                   border_radius="12px"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchInputChange}
+                  onKeyPress={handleSearchKeyPress}
                   onFocus={() => setIsFocused(true)}
                   autoFocus={true}
                 />
@@ -295,14 +347,14 @@ const Header: React.FC = () => {
             </div>
 
             {/* Mobile Search Results */}
-            {searchQuery && frequentSearches.length > 0 && (
+            {frequentSearches.length > 0 && (
               <div className="max-h-64 overflow-y-auto">
                 <div className="p-2">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
                     Recent Searches
                   </p>
                   {frequentSearches
-                    .filter((q) => q.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
                     .slice(0, 8)
                     .map((q, index) => (
                       <div
@@ -314,12 +366,23 @@ const Header: React.FC = () => {
                         <span className="text-gray-700 truncate">{q}</span>
                       </div>
                     ))}
+                  
+                  {/* Current search option */}
+                  {searchQuery && !frequentSearches.some(q => q.toLowerCase() === searchQuery.toLowerCase()) && (
+                    <div
+                      onClick={() => handleFrequentSearchClick(searchQuery)}
+                      className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
+                    >
+                      <Search size={14} className="text-blue-500 mr-3 flex-shrink-0" />
+                      <span className="text-gray-700 truncate">Search for &apos;{searchQuery}&apos;</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
             {/* Empty State */}
-            {!searchQuery && (
+            {frequentSearches.length === 0 && !searchQuery && (
               <div className="p-8 text-center">
                 <Search size={32} className="text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Start typing to search</p>

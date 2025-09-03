@@ -25,6 +25,7 @@ interface InputProps {
   disabled?: boolean;
   onChange?: React.ChangeEventHandler<HTMLInputElement>
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onKeyPress?: React.KeyboardEventHandler<HTMLInputElement>
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   maxLength?: number;
   ref?: RefObject<HTMLInputElement | null>
@@ -51,6 +52,7 @@ export const Input = ({
   disabled,
   maxLength,
   ref,
+  onKeyPress,
   ...props
 }: InputProps) => {
   return (
@@ -72,6 +74,7 @@ export const Input = ({
           ref={ref}
           maxLength={maxLength}
           disabled={disabled}
+          onKeyPress={onKeyPress}
           onChange={onChange}
           onBlur={onBlur}
           onFocus={onFocus}
@@ -104,6 +107,7 @@ export const Input = ({
           disabled={disabled}
            onChange={onChange}
           onBlur={onBlur}
+          onKeyPress={onKeyPress}
           onFocus={onFocus}
           autoFocus={props.autoFocus}
             type={type}
@@ -133,6 +137,7 @@ export const Input = ({
           maxLength={maxLength}
           disabled={disabled}
            onChange={onChange}
+           onKeyPress={onKeyPress}
           onBlur={onBlur}
           onFocus={onFocus}
             type={type}
@@ -163,6 +168,7 @@ export const Input = ({
           onBlur={onBlur}
           onFocus={onFocus}
           type={type}
+          onKeyPress={onKeyPress}
           value={value}
           style={{
             width: width ?? "100%",

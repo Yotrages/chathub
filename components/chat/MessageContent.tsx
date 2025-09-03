@@ -293,7 +293,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
         );
       case 'post':
         return (
-          <div className="bg-gray-100 p-3 rounded-lg w-full overflow-hidden">
+          <div className="bg-gray-100 max-w-[200px] xs:max-w-[280px] rounded-lg w-full overflow-hidden">
             {postPreview ? (
               <div className="flex items-start space-x-2">
                 {postPreview.images?.[0] && (
@@ -317,7 +317,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing }: MessageCo
               </div>
             ) : (
               <>
-                <p className="text-sm text-clip ">{message.content}</p>
+                <p className="text-sm text-clip text-black">{message.content}</p>
                 {message.postId ? (
                   <Link
                     href={`/post/${message.postId}`}

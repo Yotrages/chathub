@@ -1,4 +1,4 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { IComment, Reel } from '@/types';
 
 export interface CreateReel {
@@ -365,14 +365,61 @@ export const {
 
 export default reelsSlice.reducer;
 
-export const selectReels = (state: { reels: ReelsState }) => state.reels.reels;
-export const selectUserReels = (state: { reels: ReelsState }) => state.reels.userReels;
-export const selectComments = (reelId: string) => (state: { reels: ReelsState }) =>
-  state.reels?.comments[reelId] || [];
-export const selectIsLoading = (state: { reels: ReelsState }) => state.reels.isLoading;
-export const selectIsCreating = (state: { reels: ReelsState }) => state.reels.isCreating;
-export const selectReelPagination = (type: 'reels' | 'userReels' | 'likedReels' | 'savedReels' | 'comment', reelId?: string) => (
-  state: { reels: ReelsState }
-) => (type === 'comment' && reelId ? state.reels?.pagination.comment?.[reelId] : state.reels.pagination[type]);
-export const selectSearchResults = (state: { reels: ReelsState }) => state.reels.searchResults;
-export const selectSelectedReel = (state: { reels: ReelsState }) => state.reels.selectedReel;
+export const EMPTY_COMMENTS: IComment[] = [];
+
+export const selectReelsState = (state: { reels?: ReelsState }) => state.reels ?? initialState;
+
+export const selectReelsData = createSelector(
+  [selectReelsState],
+  (reelsState) => ({
+    reels: reelsState.reels,
+    pagination: reelsState.pagination,
+    isLoading: reelsState.isLoading,
+  })
+);
+
+export const selectReelsArray = createSelector(
+  [selectReelsState],
+  (reelsState) => reelsState.reels
+);
+
+export const selectReelsPagination = createSelector(
+  [selectReelsState],
+  (reelsState) => reelsState.pagination
+);
+
+export const selectReelsLoading = createSelector(
+  [selectReelsState],
+  (reelsState) => reelsState.isLoading
+);
+
+export const selectComments = createSelector(
+  [
+    selectReelsState,
+    (state: { reels?: ReelsState }, reelId: string) => reelId,
+  ],
+  (reelsState, reelId) => reelsState.comments[reelId] ?? EMPTY_COMMENTS
+);
+
+export const makeSelectComments = () =>
+  createSelector(
+    [
+      (state: { reels?: ReelsState }) => state.reels?.comments ?? {},
+      (state: { reels?: ReelsState }, reelId: string) => reelId,
+    ],
+    (comments, reelId) => comments[reelId] ?? EMPTY_COMMENTS
+  );
+
+export const selectReels = (state: { reels?: ReelsState }) => state.reels?.reels ?? [];
+export const selectUserReels = (state: { reels?: ReelsState }) => state.reels?.userReels ?? [];
+export const selectIsLoading = (state: { reels?: ReelsState }) => state.reels?.isLoading ?? false;
+export const selectIsCreating = (state: { reels?: ReelsState }) => state.reels?.isCreating ?? false;
+export const selectReelPagination = (
+  type: 'reels' | 'userReels' | 'likedReels' | 'savedReels' | 'comment',
+  reelId?: string
+) => (state: { reels?: ReelsState }) =>
+  type === 'comment' && reelId
+    ? state.reels?.pagination.comment?.[reelId] ?? null
+    : state.reels?.pagination[type] ?? null;
+export const selectSearchResults = (state: { reels?: ReelsState }) => state.reels?.searchResults ?? [];
+export const selectSelectedReel = (state: { reels?: ReelsState }) => state.reels?.selectedReel ?? null;

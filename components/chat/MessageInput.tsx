@@ -511,7 +511,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   };
 
   return (
-    <div className="bg-white border-t border-gray-200 p-4">
+    <div className="bg-white border-t border-gray-200 py-4 qy:px-4 ">
       <PermissionStatus />
       
       {/* Recording Controls */}
@@ -602,12 +602,12 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       )}
       
       {/* Input Form */}
-      <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
+      <form onSubmit={handleSendMessage} className="flex items-center qy:space-x-2 space-x-1">
         {!isVerySmallScreen && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors active:scale-95"
+            className="p-2 qy:flex hidden text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors active:scale-95"
           >
             <Paperclip size={20} />
           </button>

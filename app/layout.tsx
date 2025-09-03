@@ -4,6 +4,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor, RootState, AppDispatch } from '@/libs/redux/store';
 import { SocketProvider } from '@/context/socketContext';
 import ReactQueryProvider from '@/libs/react-query/react-query-provider';
+import { ThemeProvider } from '@/context/ThemeContext';
 import "./globals.css";
 import toast, { Toaster } from 'react-hot-toast';
 import { NotificationProvider } from '@/context/NotificationContext';
@@ -11,7 +12,6 @@ import { getCookie } from 'cookies-next';
 import NotificationPopup from '@/components/notification/NotificationPopUp';
 import { useEffect} from 'react';
 import { useSocket } from "@/context/socketContext"
-// import { setUserOnlineStatus } from '@/utils/formatter';
 import { updateUserOnlineStatus } from '@/libs/redux/authSlice';
 import { api } from '@/libs/axios/config';
 import { Analytics } from "@vercel/analytics/next"
@@ -100,19 +100,14 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
     };
   }, [user, token, socket, isConnected, dispatch]);
   
-  
-  if (!user || !token) {
-    return <>{children}</>;
-  }
-
+  // Always render NotificationProvider, but pass null values when user/token don't exist
   return (
-    <NotificationProvider userId={user._id} token={token}>
+    <NotificationProvider userId={user?._id || null} token={token || null}>
       {children}
-      <NotificationPopup />
+      {user && token && <NotificationPopup />}
     </NotificationProvider>
   );
 }
-
 
 export default function MainLayout({
   children,
@@ -121,21 +116,48 @@ export default function MainLayout({
 }) {
 
   return (
-    <html>
+    <html suppressHydrationWarning>
       <body>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <ReactQueryProvider>
-              <SocketProvider>
-                <NotificationWrapper>
-                  <Toaster />
-                  <Analytics />
-                  <div className={`min-h-screen overflow-hidden bg-gray-50`}>
-                    <main>{children}</main>
-                  </div>
-                </NotificationWrapper>
-              </SocketProvider>
-            </ReactQueryProvider>
+            <ThemeProvider defaultTheme="system" storageKey="chathub-theme">
+              <ReactQueryProvider>
+                <SocketProvider>
+                  <NotificationWrapper>
+                    {/* Dark mode aware Toaster */}
+                    <Toaster 
+                      position="top-right"
+                      toastOptions={{
+                        className: '',
+                        style: {
+                          background: 'var(--toast-bg)',
+                          color: 'var(--toast-color)',
+                          border: '1px solid var(--toast-border)',
+                        },
+                        success: {
+                          iconTheme: {
+                            primary: '#10b981',
+                            secondary: '#fff',
+                          },
+                        },
+                        error: {
+                          iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#fff',
+                          },
+                        },
+                      }}
+                    />
+                    <Analytics />
+                    <div className="min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+                      <main>
+                        {children}
+                      </main>
+                    </div>
+                  </NotificationWrapper>
+                </SocketProvider>
+              </ReactQueryProvider>
+            </ThemeProvider>
           </PersistGate>
         </Provider>
       </body>

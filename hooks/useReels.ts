@@ -25,6 +25,7 @@ import {
   removeReel,
   selectComments,
   removeComment,
+  EMPTY_COMMENTS,
 } from "@/libs/redux/reelsSlice";
 import { AppDispatch, RootState } from "@/libs/redux/store";
 import { IComment, Reel, ReactedUser } from "@/types";
@@ -111,12 +112,13 @@ export const useGetReels = (
 ): QueryResult<ReelsResponse> & { trigger: () => void } => {
   const dispatch: AppDispatch = useDispatch();
   const [page, setPage] = useState(initialPage);
-
+  console.log('useGetReels called, page:', page); // Debug log
   const result = useApiController<ReelsResponse>({
     method: "GET",
     url: `/reels?page=${page}&limit=20`,
     ...options,
     onSuccess: (data: ReelsResponse) => {
+      console.log('useGetReels success:', data); // Debug log
       if (page === 1) {
         dispatch(setReelsWithPagination(data));
       } else {
@@ -124,17 +126,16 @@ export const useGetReels = (
       }
     },
     queryOptions: {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 0,
       ...options?.queryOptions,
     },
   });
-
   const trigger = () => {
+    console.log('useGetReels trigger called, hasNextPage:', result.data?.pagination.hasNextPage); // Debug log
     if (!result.isLoading && result.data?.pagination.hasNextPage) {
       setPage((prevPage) => prevPage + 1);
     }
   };
-
   return { ...result, trigger };
 };
 
@@ -158,48 +159,47 @@ export const useGetSingleReel = (
 export const useGetReelComments = (
   reelId: string,
   options?: Partial<UseApiControllerOptions<Record<string, any>, CommentsResponse>>
-): QueryResult<CommentsResponse> & { loadMoreComments: () => void; refetchComments: () => void} => {
+): QueryResult<CommentsResponse> & { loadMoreComments: () => void; refetchComments: () => void } => {
   const dispatch: AppDispatch = useDispatch();
   const [page, setPage] = useState(1);
-
-    const existingComments = useSelector(selectComments(reelId));
-
+  const existingComments = useSelector((state: RootState) =>
+    reelId ? selectComments(state, reelId) : EMPTY_COMMENTS
+  );
+  console.log('useGetReelComments called, reelId:', reelId, 'page:', page); // Debug log
   const result = useApiController<CommentsResponse>({
     method: "GET",
     url: `/reels/${reelId}/comments?page=${page}&limit=10`,
     queryOptions: {
       enabled: !!reelId,
-      staleTime: 2 * 60 * 1000,
+      staleTime: 0, // Force fetch for debugging
       ...options?.queryOptions,
     },
     onSuccess: (data: CommentsResponse) => {
-      const updatedComments = page === 1 
-              ? data.comments 
-              : [...(existingComments || []), ...data.comments];
-            
-            dispatch(
-              setComments({
-                reelId,
-                comments: updatedComments,
-              })
-            );
-            dispatch(setPagination({ reelId, pagination: data.pagination }));
-          },
+      console.log('useGetReelComments success:', data); // Debug log
+      const updatedComments = page === 1
+        ? data.comments
+        : [...(existingComments || []), ...data.comments];
+      dispatch(
+        setComments({
+          reelId,
+          comments: updatedComments,
+        })
+      );
+      dispatch(setPagination({ reelId, pagination: data.pagination }));
+    },
   });
-
   const loadMoreComments = () => {
     if (!result.isLoading && result.data?.pagination.hasNextPage) {
       setPage((prev) => prev + 1);
     }
   };
-
-   const refetchComments = () => {
+  const refetchComments = () => {
     setPage(1);
     result.refetch();
   };
-
   return { ...result, loadMoreComments, refetchComments };
 };
+
 
 export const useGetSingleReelComment = (
   reelId: string,

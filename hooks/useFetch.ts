@@ -253,7 +253,7 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
       dispatch(setUserCredentials({
         user: authData.user,
       }));
-      setCookie("auth-token", authData.token);
+      setCookie("auth-token", authData.token, {maxAge: 24 * 60 * 55});
     }
 
     if (successMessage) {

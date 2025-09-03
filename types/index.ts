@@ -360,3 +360,91 @@ export interface MemoryContextData {
   createdAt: string;
   type: 'post' | 'comment' | 'reel';
 }
+
+
+export interface UserSettings {
+  _id: string;
+  userId: string;
+  privacy: {
+    profileVisibility: 'public' | 'friends' | 'private';
+    allowMessagesFrom: 'everyone' | 'friends' | 'none';
+    showOnlineStatus: boolean;
+    allowTagging: boolean;
+    showEmail: boolean;
+    showPhoneNumber: boolean;
+  };
+  notifications: {
+    email: {
+      newFollower: boolean;
+      messageReceived: boolean;
+      postLiked: boolean;
+      postCommented: boolean;
+      mentioned: boolean;
+      systemUpdates: boolean;
+    };
+    push: {
+      newFollower: boolean;
+      messageReceived: boolean;
+      postLiked: boolean;
+      postCommented: boolean;
+      mentioned: boolean;
+      systemUpdates: boolean;
+    };
+    inApp: {
+      newFollower: boolean;
+      messageReceived: boolean;
+      postLiked: boolean;
+      postCommented: boolean;
+      mentioned: boolean;
+      systemUpdates: boolean;
+      onlineStatus: boolean;
+    };
+  };
+  appearance: {
+    theme: 'light' | 'dark' | 'auto';
+    language: string;
+    fontSize: 'small' | 'medium' | 'large';
+    backgroundImage: string;
+    accentColor: string;
+  };
+  security: {
+    twoFactorAuth: boolean;
+    loginAlerts: boolean;
+    sessionTimeout: number;
+    blockedUsers: string[];
+    trustedDevices: {
+      deviceId: string;
+      deviceName: string;
+      lastUsed: string;
+      trusted: boolean;
+    }[];
+  };
+  content: {
+    autoPlayVideos: boolean;
+    showSensitiveContent: boolean;
+    contentLanguages: string[];
+    blockedKeywords: string[];
+  };
+  account: {
+    isDeactivated: boolean;
+    deactivatedAt?: string;
+    deleteScheduledAt?: string;
+    dataDownloadRequests: {
+      requestedAt: string;
+      status: 'pending' | 'processing' | 'completed' | 'failed';
+      downloadUrl?: string;
+      expiresAt?: string;
+    }[];
+  };
+}
+
+export interface Report {
+  _id: string;
+  reportType: string;
+  description: string;
+  status: string;
+  createdAt: string;
+  reportedUserId?: string;
+  reportedPostId?: string;
+  reportedCommentId?: string;
+}
