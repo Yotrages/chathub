@@ -121,7 +121,14 @@ export interface Message {
   content: string;
   messageType: "text" | "image" | "file" | "audio" | "video" | "post";
   edited: boolean;
-  isRead: boolean;
+  readBy: Array<{
+    userId: {
+      _id: string;
+      username: string;
+      avatar?: string;
+    };
+    readAt: Date;
+  }>
   reactions: Array<{
     userId: { _id: string; username: string; avatar: string };
     emoji: string;
@@ -150,7 +157,6 @@ export interface Chat {
   participants: Array<{
     _id: string;
     username: string;
-    name?: string;
     avatar?: string;
   }>;
   lastMessage?: Message;

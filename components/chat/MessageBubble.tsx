@@ -10,6 +10,7 @@ interface MessageBubbleProps {
   isOwn: boolean;
   showAvatar: boolean;
   currentUserId?: string;
+  otherParticipantsCount: number;
 }
 
 export const MessageBubble = ({
@@ -17,6 +18,7 @@ export const MessageBubble = ({
   isOwn,
   showAvatar,
   currentUserId,
+  otherParticipantsCount
 }: MessageBubbleProps) => {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
@@ -26,48 +28,44 @@ export const MessageBubble = ({
   const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
-  
+ 
   const messageRef = useRef<HTMLDivElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
-  
+ 
   const sender = typeof message.senderId === "string"
     ? { _id: message.senderId, username: "Unknown", avatar: "" }
     : message.senderId;
 
   // Calculate smart context menu position
-  const calculateContextMenuPosition = (clientX: number, clientY: number) => {
-    const contextMenuWidth = 192; // min-w-48 = 192px
-    const contextMenuHeight = 300; // Approximate height
-    const padding = 16; // Safe padding from edges
-    
+   const calculateContextMenuPosition = (clientX: number, clientY: number) => {
+    const contextMenuWidth = 240; // Adjusted for better fit
+    const contextMenuHeight = 400; // Estimated height
+    const padding = 20; // Increased padding for safety
+   
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    
-    let x = clientX;
-    let y = clientY;
-    
-    // Adjust X position if menu would overflow right edge
-    if (x + contextMenuWidth > viewportWidth - padding) {
-      x = viewportWidth - contextMenuWidth - padding;
+    const scrollX = window.scrollX || document.documentElement.scrollLeft;
+    const scrollY = window.scrollY || document.documentElement.scrollTop;
+   
+    let x = clientX + scrollX;
+    let y = clientY + scrollY;
+   
+    // Primary positioning logic
+    if (x + contextMenuWidth > viewportWidth + scrollX - padding) {
+      x = Math.max(scrollX + padding, clientX + scrollX - contextMenuWidth);
     }
-    
-    // Adjust X position if menu would overflow left edge
-    if (x < padding) {
-      x = padding;
+   
+    if (y + contextMenuHeight > viewportHeight + scrollY - padding) {
+      y = Math.max(scrollY + padding, clientY + scrollY - contextMenuHeight);
     }
-    
-    // Adjust Y position if menu would overflow bottom edge
-    if (y + contextMenuHeight > viewportHeight - padding) {
-      y = clientY - contextMenuHeight;
-    }
-    
-    // Adjust Y position if menu would overflow top edge
-    if (y < padding) {
-      y = padding;
-    }
-    
+   
+    // Ensure minimum distance from edges
+    x = Math.max(scrollX + padding, Math.min(x, viewportWidth + scrollX - contextMenuWidth - padding));
+    y = Math.max(scrollY + padding, Math.min(y, viewportHeight + scrollY - contextMenuHeight - padding));
+   
     return { x, y };
   };
+
 
   // Handle click outside for context menu
   useEffect(() => {
@@ -79,11 +77,9 @@ export const MessageBubble = ({
         setShowContextMenu(false);
       }
     };
-
     if (showContextMenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showContextMenu]);
 
@@ -95,11 +91,9 @@ export const MessageBubble = ({
         setShowReactions(false);
       }
     };
-
     if (showReactions) {
       document.addEventListener("mousedown", handleClickOutside);
     }
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showReactions]);
 
@@ -110,11 +104,9 @@ export const MessageBubble = ({
         setShowContextMenu(false);
       }
     };
-
     if (showContextMenu) {
       window.addEventListener('scroll', handleScroll, true);
     }
-
     return () => window.removeEventListener('scroll', handleScroll, true);
   }, [showContextMenu]);
 
@@ -139,7 +131,7 @@ export const MessageBubble = ({
   const handleContextMenu = (e: React.MouseEvent): void => {
     e.preventDefault();
     e.stopPropagation();
-    
+   
     const position = calculateContextMenuPosition(e.clientX, e.clientY);
     setContextMenuPosition(position);
     setShowContextMenu(true);
@@ -162,14 +154,14 @@ export const MessageBubble = ({
   };
 
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-2`}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-3 px-4`}>
       <div
-        className={`flex max-w-[280px] sm:max-w-sm md:max-w-md ${
+        className={`flex max-w-[85%] sm:max-w-[75%] md:max-w-[65%] ${
           isOwn ? "flex-row-reverse" : "flex-row"
-        } group`}
+        } group relative`}
       >
         {showAvatar && !isOwn && (
-          <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-2 flex-shrink-0 overflow-hidden">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden shadow-md">
             {sender.avatar ? (
               <img
                 src={sender.avatar}
@@ -177,40 +169,52 @@ export const MessageBubble = ({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-white text-xs font-semibold">
-                {sender.username.charAt(0).toUpperCase()}
-              </span>
+              <div className="w-full h-full bg-gradient-to-br from-purple-500 via-blue-500 to-teal-500 flex items-center justify-center">
+                <span className="text-white text-xs font-bold">
+                  {sender.username.charAt(0).toUpperCase()}
+                </span>
+              </div>
             )}
           </div>
         )}
+        
+        {/* Message container with minimum width for reactions */}
         <div
           ref={messageRef}
-          className={`px-4 py-2 rounded-2xl ${
+          className={`relative px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 ease-out group-hover:shadow-xl min-w-[120px] ${
             isOwn
-              ? "bg-blue-500 text-white rounded-br-md"
-              : "bg-gray-100 text-gray-900 rounded-bl-md"
-          } shadow-sm relative select-none`}
+              ? `bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md 
+                 shadow-blue-200 hover:shadow-blue-300 transform hover:scale-[1.02]`
+              : `bg-white text-gray-800 rounded-bl-md border border-gray-100 
+                 shadow-gray-200 hover:shadow-gray-300 transform hover:scale-[1.02]`
+          } select-none`}
           onTouchStart={handleLongPressStart}
           onTouchEnd={handleLongPressEnd}
           onContextMenu={handleContextMenu}
         >
+          {/* Message tail/pointer */}
+          <div
+            className={`absolute w-3 h-3 transform rotate-45 ${
+              isOwn
+                ? "bg-gradient-to-br from-blue-500 to-blue-600 -right-1 bottom-3"
+                : "bg-white border-l border-b border-gray-100 -left-1 bottom-3"
+            }`}
+          />
+          
           {!isOwn && showAvatar && (
-            <p
-              className={`text-xs font-medium mb-1 ${
-                isOwn ? "text-blue-100" : "text-gray-600"
-              }`}
-            >
+            <p className="text-xs font-semibold mb-2 text-blue-600 opacity-80">
               {sender.username}
             </p>
           )}
-          
-          <MessageContent 
-            isEditing={isEditing} 
-            onClose={() => setIsEditing(false)} 
-            message={message} 
-            isOwn={isOwn} 
+         
+          <MessageContent
+            isEditing={isEditing}
+            onClose={() => setIsEditing(false)}
+            message={message}
+            isOwn={isOwn}
+            otherParticipantsCount={otherParticipantsCount}
           />
-          
+         
           <MessageReactions
             showReactions={showReactions}
             onToggleReactions={handleReactionToggle}
@@ -222,7 +226,7 @@ export const MessageBubble = ({
           />
         </div>
       </div>
-      
+     
       <MessageContextMenu
         ref={contextMenuRef}
         setShowReaction={setShowReactions}

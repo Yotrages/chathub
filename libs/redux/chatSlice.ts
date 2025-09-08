@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Message, Chat } from '@/types';
-
 interface ChatState {
   chats: Chat[];
   messages: { [chatId: string]: Message[] };
@@ -10,7 +9,6 @@ interface ChatState {
   pinnedMessages: { [chatId: string]: Message[] };
   starredMessages: Message[];
 }
-
 const initialState: ChatState = {
   chats: [],
   messages: {},
@@ -20,7 +18,6 @@ const initialState: ChatState = {
   pinnedMessages: {},
   starredMessages: [],
 };
-
 const chatSlice = createSlice({
   name: 'chat',
   initialState,
@@ -51,18 +48,15 @@ const chatSlice = createSlice({
     addMessage: (state, action: PayloadAction<Message>) => {
       const message = action.payload;
       const { conversationId } = message;
-
       if (!state.messages[conversationId]) {
         state.messages[conversationId] = [];
       }
-
       const existingIndex = state.messages[conversationId].findIndex(m => m._id === message._id);
       if (existingIndex === -1) {
         state.messages[conversationId].push(message);
       } else {
         state.messages[conversationId][existingIndex] = message;
       }
-
       const chatIndex = state.chats.findIndex(chat => chat._id === conversationId);
       if (chatIndex !== -1) {
         state.chats[chatIndex].lastMessage = message;
@@ -74,26 +68,22 @@ const chatSlice = createSlice({
     updateMessage: (state, action: PayloadAction<Message>) => {
       const message = action.payload;
       const { conversationId } = message;
-
       if (state.messages[conversationId]) {
         const index = state.messages[conversationId].findIndex(m => m._id === message._id);
         if (index !== -1) {
           state.messages[conversationId][index] = message;
         }
       }
-
       if (state.pinnedMessages[conversationId]) {
         const pinnedIndex = state.pinnedMessages[conversationId].findIndex(m => m._id === message._id);
         if (pinnedIndex !== -1) {
           state.pinnedMessages[conversationId][pinnedIndex] = message;
         }
       }
-
       const starredIndex = state.starredMessages.findIndex(m => m._id === message._id);
       if (starredIndex !== -1) {
         state.starredMessages[starredIndex] = message;
       }
-
       const chatIndex = state.chats.findIndex(chat => chat._id === conversationId);
       if (chatIndex !== -1 && state.chats[chatIndex].lastMessage?._id === message._id) {
         state.chats[chatIndex].lastMessage = message;
@@ -173,7 +163,6 @@ const chatSlice = createSlice({
     },
   },
 });
-
 export const {
   setChats,
   addChat,
@@ -196,5 +185,4 @@ export const {
   addStarredMessage,
   removeStarredMessage,
 } = chatSlice.actions;
-
 export default chatSlice.reducer;

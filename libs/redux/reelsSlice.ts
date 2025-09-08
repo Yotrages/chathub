@@ -79,7 +79,7 @@ const initialState: ReelsState = {
 };
 
 const reelsSlice = createSlice({
-  name: 'reel',
+  name: 'reels',
   initialState,
   reducers: {
     setLoading: (state, action: PayloadAction<boolean>) => {

@@ -7,12 +7,10 @@ import { RootState } from '@/libs/redux/store';
 import { useChat } from '@/hooks/useChat';
 import { clearReplyingTo } from '@/libs/redux/chatSlice';
 import { toast } from 'react-hot-toast';
-
 interface MessageInputProps {
   currentChat: any;
   onShowFileUpload: () => void;
 }
-
 export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProps) => {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -27,19 +25,17 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isUserOnline, setIsUserOnline] = useState(navigator.onLine);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  
+ 
   // Enhanced timer states
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [pausedDuration, setPausedDuration] = useState(0);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const { replyingTo } = useSelector((state: RootState) => state.chat);
   const dispatch = useDispatch();
   const { sendMessage, startTyping, stopTyping, uploadFile } = useChat();
-
   // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => setIsUserOnline(true);
@@ -47,35 +43,31 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       setIsUserOnline(false);
       toast.error('Network error - You are offline');
     };
-
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
-
   // Enhanced responsive detection
   useEffect(() => {
     const checkResponsiveLayout = () => {
       const width = window.innerWidth;
       const userAgent = navigator.userAgent.toLowerCase();
       const mobileKeywords = ['mobile', 'android', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
-      
+     
       // Use defined breakpoints
       const isSmallScreen = width <= 632; // ss breakpoint
       const isMobileDevice = mobileKeywords.some((keyword) => userAgent.includes(keyword));
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      
+     
       setIsMobile(isMobileDevice || isSmallScreen || isTouchDevice);
-      
+     
       // Using qy breakpoint (575px) for very small screens
       const isVerySmall = width < 300;
       setIsVerySmallScreen(isVerySmall);
     };
-
     const checkMicrophonePermission = async () => {
       if ('permissions' in navigator) {
         try {
@@ -87,27 +79,24 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         }
       }
     };
-
     checkResponsiveLayout();
     checkMicrophonePermission();
-    
+   
     // Debounced resize handler for better performance
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(checkResponsiveLayout, 100);
     };
-
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', checkResponsiveLayout);
-    
+   
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', checkResponsiveLayout);
       clearTimeout(resizeTimeout);
     };
   }, []);
-
   // Click outside handler for emoji picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -115,11 +104,9 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         setShowEmojiPicker(false);
       }
     };
-
     if (showEmojiPicker) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -127,50 +114,46 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       if (currentChat?._id) stopTyping(currentChat._id);
     };
   }, [typingTimeout, currentChat?._id, stopTyping]);
-
   // Enhanced timer calculation
   const calculateRecordingDuration = useCallback(() => {
     if (!recordingStartTime) return 0;
-    
+   
     const now = Date.now();
     const totalElapsed = now - recordingStartTime;
     const actualDuration = Math.floor((totalElapsed - pausedDuration) / 1000);
-    
+   
     return Math.max(0, actualDuration);
   }, [recordingStartTime, pausedDuration]);
-
   // Update timer every 100ms for smoother display
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    
+   
     if (isRecording && !isPaused) {
       interval = setInterval(() => {
         setRecordingDuration(calculateRecordingDuration());
       }, 100);
     }
-    
+   
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [isRecording, isPaused, calculateRecordingDuration]);
-
   // Responsive classes helper
   const getResponsiveClasses = (baseClasses: string, mobileClasses?: string, smallScreenClasses?: string) => {
     let classes = baseClasses;
-    
+   
     if (isVerySmallScreen && smallScreenClasses) {
       classes += ` ${smallScreenClasses}`;
     } else if (isMobile && mobileClasses) {
       classes += ` ${mobileClasses}`;
     }
-    
+   
     return classes;
   };
-
   // Enhanced emoji picker positioning
   const getEmojiPickerStyles = () => {
     const width = window.innerWidth;
-    
+   
     if (width < 480) { // xs breakpoint
       return {
         width: width - 16,
@@ -196,16 +179,14 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       };
     }
   };
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+   
     // Check if user is online before sending
     if (!isUserOnline) {
       toast.error('Network error - Please check your connection');
       return;
     }
-
     if (message.trim() && currentChat?._id) {
       try {
         await sendMessage(
@@ -225,16 +206,14 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       }
     }
   };
-
   const handleTyping = useCallback(() => {
     if (!currentChat?._id || !isUserOnline) return;
-    
+   
     startTyping(currentChat._id);
     if (typingTimeout) clearTimeout(typingTimeout);
     const timeout = setTimeout(() => stopTyping(currentChat._id), 3000);
     setTypingTimeout(timeout);
   }, [currentChat?._id, startTyping, stopTyping, isUserOnline, typingTimeout]);
-
   const handleInputBlur = useCallback(() => {
     if (currentChat?._id && isUserOnline) {
       stopTyping(currentChat._id);
@@ -244,16 +223,14 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       }
     }
   }, [currentChat?._id, stopTyping, typingTimeout, isUserOnline]);
-
   const handleFileUpload = async (file: File, caption: string) => {
     if (!currentChat?._id) return;
-    
+   
     // Check if user is online before uploading
     if (!isUserOnline) {
       toast.error('Network error - Please check your connection');
       return;
     }
-
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -283,12 +260,10 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       toast.error('File upload failed');
     }
   };
-
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFileUpload(file, '');
   };
-
   const requestMicrophonePermission = async () => {
     try {
       setMicrophonePermission('checking');
@@ -311,51 +286,49 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       return false;
     }
   };
-
   const startRecording = async () => {
     if (microphonePermission !== 'granted') {
       const hasPermission = await requestMicrophonePermission();
       if (!hasPermission) return;
     }
-
     try {
       setPermissionError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 44100 },
       });
-      
+     
       const recorder = new MediaRecorder(stream, {
         mimeType: MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm',
       });
-      
+     
       const chunks: Blob[] = [];
-      
+     
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) {
           chunks.push(e.data);
           setRecordedChunks(prev => [...prev, e.data]);
         }
       };
-      
+     
       recorder.onstop = async () => {
         const audioBlob = new Blob(chunks || recordedChunks, { type: 'audio/webm' });
         const audioFile = new File([audioBlob], `voice_message_${Date.now()}.mp3`, { type: 'audio/mp3' });
-        
+       
         // Only upload if user is still online
         if (isUserOnline) {
           await handleFileUpload(audioFile, 'Voice message');
         } else {
           toast.error('Network error - Voice message not sent');
         }
-        
+       
         stream.getTracks().forEach((track) => track.stop());
       };
-      
+     
       recorder.start(100); // Smaller chunks for better pause/resume
       setMediaRecorder(recorder);
       setIsRecording(true);
       setIsPaused(false);
-      
+     
       // Initialize timing
       const startTime = Date.now();
       setRecordingStartTime(startTime);
@@ -363,7 +336,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       setPausedDuration(0);
       setPauseStartTime(null);
       setRecordedChunks([]);
-      
+     
       if ('vibrate' in navigator && isMobile) navigator.vibrate(50);
     } catch (error: any) {
       console.error('Failed to start recording:', error);
@@ -377,75 +350,73 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       }
     }
   };
-
   const pauseRecording = () => {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       mediaRecorder.pause();
       setIsPaused(true);
       setPauseStartTime(Date.now());
-      
+     
       if ('vibrate' in navigator && isMobile) navigator.vibrate(50);
     }
   };
-
   const resumeRecording = () => {
     if (mediaRecorder && mediaRecorder.state === 'paused') {
       mediaRecorder.resume();
       setIsPaused(false);
-      
+     
       // Add paused time to total paused duration
       if (pauseStartTime) {
         setPausedDuration(prev => prev + (Date.now() - pauseStartTime));
         setPauseStartTime(null);
       }
-      
+     
       if ('vibrate' in navigator && isMobile) navigator.vibrate(50);
     }
   };
-
   const stopRecording = () => {
     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
       mediaRecorder.stop();
       setIsRecording(false);
       setIsPaused(false);
       setMediaRecorder(null);
-      
+     
       // Reset timing
       setRecordingStartTime(null);
       setRecordingDuration(0);
       setPausedDuration(0);
       setPauseStartTime(null);
       setRecordedChunks([]);
-      
+     
       if ('vibrate' in navigator && isMobile) navigator.vibrate(100);
     }
   };
-
   const cancelRecording = () => {
     if (mediaRecorder) {
-      // Stop recording without triggering the onstop event
+      // Prevent upload on stop
+      mediaRecorder.onstop = () => {};
+      mediaRecorder.ondataavailable = () => {};
+      mediaRecorder.stop();
       mediaRecorder.stream.getTracks().forEach(track => track.stop());
       setIsRecording(false);
       setIsPaused(false);
       setMediaRecorder(null);
-      
+     
       // Reset timing
       setRecordingStartTime(null);
       setRecordingDuration(0);
       setPausedDuration(0);
       setPauseStartTime(null);
       setRecordedChunks([]);
-      
+     
       if ('vibrate' in navigator && isMobile) navigator.vibrate(100);
     }
   };
-
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
     e.preventDefault();
     const touchStartTime = Date.now();
     const longPressTimer = setTimeout(() => startRecording(), 200);
-    
+   
     const handleTouchEnd = () => {
       clearTimeout(longPressTimer);
       const touchDuration = Date.now() - touchStartTime;
@@ -457,11 +428,10 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       document.removeEventListener('touchend', handleTouchEnd);
       document.removeEventListener('touchcancel', handleTouchEnd);
     };
-    
+   
     document.addEventListener('touchend', handleTouchEnd);
     document.addEventListener('touchcancel', handleTouchEnd);
   };
-
   const handleEmojiClick = (emojiData: any) => {
     const emoji = emojiData.emoji;
     const cursorPosition = inputRef.current?.selectionStart || message.length;
@@ -474,13 +444,11 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       }
     }, 0);
   };
-
   const formatRecordingTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
-
   const PermissionStatus = () => {
     if (microphonePermission === 'checking') {
       return (
@@ -509,11 +477,10 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     }
     return null;
   };
-
   return (
     <div className="bg-white border-t border-gray-200 py-4 qy:px-4 ">
       <PermissionStatus />
-      
+     
       {/* Recording Controls */}
       {isRecording && (
         <div className={getResponsiveClasses(
@@ -531,7 +498,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
               {isPaused ? 'Paused' : 'Recording'}: {formatRecordingTime(recordingDuration)}
             </span>
           </div>
-          
+         
           <div className={getResponsiveClasses(
             "flex items-center space-x-2",
             "flex items-center space-x-1 justify-center", // Mobile: less spacing, centered
@@ -544,14 +511,14 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             >
               {isPaused ? <Play size={16} /> : <Pause size={16} />}
             </button>
-            
+           
             <button
               onClick={cancelRecording}
               className="px-3 py-1 bg-gray-500 text-white text-sm rounded-full hover:bg-gray-600 transition-colors active:scale-95"
             >
               Cancel
             </button>
-            
+           
             <button
               onClick={stopRecording}
               className="px-3 py-1 bg-red-500 text-white text-sm rounded-full hover:bg-red-600 transition-colors active:scale-95"
@@ -561,7 +528,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
           </div>
         </div>
       )}
-      
+     
       {/* Reply Section */}
       {replyingTo && (
         <div className="bg-gray-100 p-3 rounded-lg mb-3 relative">
@@ -582,11 +549,11 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
           </div>
         </div>
       )}
-      
+     
       {/* Emoji Picker */}
       {showEmojiPicker && (
-        <div 
-          ref={emojiPickerRef} 
+        <div
+          ref={emojiPickerRef}
           className="absolute z-50"
           style={getEmojiPickerStyles()}
         >
@@ -600,7 +567,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
           />
         </div>
       )}
-      
+     
       {/* Input Form */}
       <form onSubmit={handleSendMessage} className="flex items-center qy:space-x-2 space-x-1">
         {!isVerySmallScreen && (
@@ -612,7 +579,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             <Paperclip size={20} />
           </button>
         )}
-        
+       
         {!isVerySmallScreen && (
           <button
             type="button"
@@ -622,7 +589,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             <Image size={20} />
           </button>
         )}
-        
+       
         {!isVerySmallScreen && (
           <button
             type="button"
@@ -647,7 +614,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             )}
           </button>
         )}
-        
+       
         <div className="flex-1 relative">
           <input
             ref={inputRef}
@@ -678,7 +645,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             <Smile size={18} />
           </button>
         </div>
-        
+       
         <button
           type="submit"
           disabled={!message.trim() || isRecording || !isUserOnline}
@@ -688,21 +655,21 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
           <Send size={20} />
         </button>
       </form>
-      
+     
       {/* Mobile Instructions */}
       {isMobile && microphonePermission === 'granted' && !isRecording && !isVerySmallScreen && (
         <div className="mt-2 text-center">
           <p className="text-xs text-gray-500">Tap and hold the microphone to record voice messages</p>
         </div>
       )}
-      
+     
       {/* Very Small Screen Instructions */}
       {isVerySmallScreen && (
         <div className="mt-2 text-center">
           <p className="text-xs text-gray-400">Voice recording available on larger screens</p>
         </div>
       )}
-      
+     
       {/* Hidden File Input */}
       <input
         ref={fileInputRef}

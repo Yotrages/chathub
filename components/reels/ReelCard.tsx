@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, forwardRef, useMemo } from "react";
+import React, { useState, useRef, useEffect, forwardRef, useMemo, useCallback } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/redux/store";
 import { Reel } from "@/types/index";
@@ -29,7 +29,6 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
     const { user } = useSelector((state: RootState) => state.auth);
 
     // Create memoized selector for this specific reel's comments
-    // In ReelCard.tsx
     const selectCommentsForReel = useMemo(() => makeSelectComments(), []);
     const comments = useSelector((state: RootState) =>
       reel?._id ? selectCommentsForReel(state, reel._id) : EMPTY_COMMENTS
@@ -46,18 +45,74 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
     const [commentContent, setCommentContent] = useState("");
     const [longPressActive, setLongPressActive] = useState(false);
     const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
+    
+    // Add state to track if comments have been fetched and any errors
+    const [commentsLoaded, setCommentsLoaded] = useState(false);
+    const [commentsError, setCommentsError] = useState<boolean>(false);
+    const [retryCount, setRetryCount] = useState(0);
+    const maxRetries = 3;
 
     const { trigger: fetchComments, isLoading: isFetchingComments } =
       useGetReelComments(reel?._id);
 
-      localStorage.setItem('long', JSON.stringify(longPressActive))
-    
-    useEffect(() => {
-      if (reel?._id) {
+    localStorage.setItem('long', JSON.stringify(longPressActive));
+
+    // Memoized function to load comments with error handling
+    const loadComments = useCallback(async () => {
+      if (!reel?._id || commentsLoaded) return;
+      
+      try {
         console.log(`Fetching comments for reelId ${reel._id}`);
-        fetchComments();
+        await fetchComments();
+        setCommentsLoaded(true);
+        setCommentsError(false);
+        setRetryCount(0);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+        setCommentsError(true);
+        // Don't set commentsLoaded to true so we can retry
       }
-    }, [fetchComments]);
+    }, [reel?._id, fetchComments, commentsLoaded]);
+
+    // Retry function for failed requests
+    const retryLoadComments = useCallback(async () => {
+      if (retryCount >= maxRetries) {
+        console.error('Max retries reached for comments');
+        return;
+      }
+      
+      setRetryCount(prev => prev + 1);
+      setCommentsError(false);
+      
+      try {
+        console.log(`Retrying comments fetch for reelId ${reel._id} (attempt ${retryCount + 1})`);
+        await fetchComments();
+        setCommentsLoaded(true);
+        setCommentsError(false);
+        setRetryCount(0);
+      } catch (error) {
+        console.error(`Retry ${retryCount + 1} failed:`, error);
+        setCommentsError(true);
+      }
+    }, [reel?._id, fetchComments, retryCount, maxRetries]);
+
+    // Only fetch comments once when the component mounts or when showComments is opened
+    useEffect(() => {
+      if (reel?._id && !commentsLoaded && !isFetchingComments) {
+        loadComments();
+      }
+    }, [reel?._id, commentsLoaded, isFetchingComments, loadComments]);
+
+    // Fetch comments when comments modal is opened (if not already loaded or failed)
+    useEffect(() => {
+      if (showComments && (!commentsLoaded || commentsError) && !isFetchingComments) {
+        if (commentsError) {
+          retryLoadComments();
+        } else {
+          loadComments();
+        }
+      }
+    }, [showComments, commentsLoaded, commentsError, isFetchingComments, loadComments, retryLoadComments]);
 
     useEffect(() => {
       if (videoRef.current) {
@@ -315,7 +370,6 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
                   </div>
                 </div>
 
-                {/* Fix the null title error - this was line 289 */}
                 {reel?.title && (
                   <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg p-2 mb-2">
                     <p className="text-white text-sm leading-relaxed">
@@ -386,9 +440,20 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
                 {/* Comments */}
                 <div className="flex-1 overflow-auto">
                   {isFetchingComments ? (
-                    <p className="text-gray-500 text-center">
+                    <p className="text-gray-500 text-center py-4">
                       Loading comments...
                     </p>
+                  ) : commentsError ? (
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 mb-2">Failed to load comments</p>
+                      <button
+                        onClick={retryLoadComments}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                        disabled={retryCount >= maxRetries}
+                      >
+                        {retryCount >= maxRetries ? 'Max retries reached' : 'Retry'}
+                      </button>
+                    </div>
                   ) : (
                     <PostComments
                       type="reel"

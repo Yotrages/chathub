@@ -10,6 +10,7 @@ import {
   Star,
   Pin,
   Info,
+  X,
 } from "lucide-react";
 import { useChat } from "@/hooks/useChat";
 import { useSelector, useDispatch } from "react-redux";
@@ -17,6 +18,7 @@ import { RootState } from "@/libs/redux/store";
 import { Message } from "@/types";
 import { setReplyingTo } from "@/libs/redux/chatSlice";
 import toast from "react-hot-toast";
+import { UserAvatar } from "../constant/UserAvatar";
 
 interface MessageContextMenuProps {
   message: Message;
@@ -34,12 +36,17 @@ interface MessageInfo {
   sender: { _id: string; username: string; avatar?: string };
   createdAt: string;
   updatedAt: string;
-  isRead: boolean;
-  readBy: Array<{ user: { _id: string; username: string }; readAt: string }>;
+  readBy: Array<{ userId: { _id: string; username: string; avatar?: string }; readAt: string }>;
 }
 
-export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuProps>(
-  ({ message, isOwn, show, position, onClose, setIsEditing, setShowReaction }, ref) => {
+export const MessageContextMenu = forwardRef<
+  HTMLDivElement,
+  MessageContextMenuProps
+>(
+  (
+    { message, isOwn, show, position, onClose, setIsEditing, setShowReaction },
+    ref
+  ) => {
     const dispatch = useDispatch();
     const {
       deleteMessage,
@@ -57,23 +64,21 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [messageInfo, setMessageInfo] = useState<MessageInfo | null>(null);
 
-    useEffect(() => {
-      const handleScroll = () => {
-        if (show) {
-          onClose();
-        }
-      };
-
-      if (show) {
-        window.addEventListener('scroll', handleScroll, true);
-        document.addEventListener('wheel', handleScroll, true);
-      }
-
-      return () => {
-        window.removeEventListener('scroll', handleScroll, true);
-        document.removeEventListener('wheel', handleScroll, true);
-      };
-    }, [show, onClose]);
+    // useEffect(() => {
+    //   const handleScroll = () => {
+    //     if (show) {
+    //       onClose();
+    //     }
+    //   };
+    //   if (show) {
+    //     window.addEventListener('scroll', handleScroll, true);
+    //     document.addEventListener('wheel', handleScroll, true);
+    //   }
+    //   return () => {
+    //     window.removeEventListener('scroll', handleScroll, true);
+    //     document.removeEventListener('wheel', handleScroll, true);
+    //   };
+    // }, [show, onClose]);
 
     if (!show) return null;
 
@@ -98,7 +103,6 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
     const handleForward = async (chatId: string) => {
       try {
         await forwardMessage(message._id, chatId);
-        toast.success("Message forwarded successfully");
       } catch (error) {
         console.log(error);
         toast.error("Failed to forward message");
@@ -126,7 +130,6 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
     const handleDelete = async () => {
       try {
         await deleteMessage(message._id);
-        toast.success("Message deleted successfully");
       } catch (error) {
         console.log(error);
         toast.error("Failed to delete message");
@@ -137,12 +140,9 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
     const handleStar = async () => {
       try {
         if (isStarred) {
-          await unstarMessage(message._id).then(() =>
-            toast.success("Message unstarred")
-          );
+          await unstarMessage(message._id);
         } else {
           await starMessage(message._id);
-          toast.success("Message starred");
         }
       } catch (error) {
         console.log(error);
@@ -155,10 +155,8 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
       try {
         if (isPinned) {
           await unpinMessage(message.conversationId, message._id);
-          toast.success("Message unpinned");
         } else {
           await pinMessage(message.conversationId, message._id);
-          toast.success("Message pinned");
         }
       } catch (error) {
         console.log(error);
@@ -170,10 +168,11 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
     const handleInfo = async () => {
       try {
         const info = await getMessageInfo(message._id);
+        console.log("Message info received:", info); // Debug log
         setMessageInfo(info);
         setShowInfoModal(true);
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching message info:", error); // Debug log
         toast.error("Failed to get message info");
       }
       onClose();
@@ -183,158 +182,268 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
       modalSetter: React.Dispatch<SetStateAction<boolean>>
     ) => {
       modalSetter(false);
+      // Don't close the context menu when modal is canceled
     };
 
+    const menuItems = [
+      {
+        icon: Smile,
+        label: "React",
+        onClick: handleReaction,
+        color: "text-yellow-600",
+        hoverColor: "hover:bg-yellow-50",
+      },
+      {
+        icon: Reply,
+        label: "Reply",
+        onClick: handleReply,
+        color: "text-blue-600",
+        hoverColor: "hover:bg-blue-50",
+      },
+      {
+        icon: Copy,
+        label: "Copy",
+        onClick: handleCopy,
+        color: "text-green-600",
+        hoverColor: "hover:bg-green-50",
+      },
+      {
+        icon: Forward,
+        label: "Forward",
+        onClick: () => setShowForwardModal(true),
+        color: "text-purple-600",
+        hoverColor: "hover:bg-purple-50",
+      },
+      {
+        icon: Star,
+        label: isStarred ? "Unstar" : "Star",
+        onClick: handleStar,
+        color: isStarred ? "text-yellow-500" : "text-gray-600",
+        hoverColor: isStarred ? "hover:bg-yellow-50" : "hover:bg-gray-50",
+      },
+      {
+        icon: Pin,
+        label: isPinned ? "Unpin" : "Pin",
+        onClick: handlePin,
+        color: isPinned ? "text-red-500" : "text-gray-600",
+        hoverColor: isPinned ? "hover:bg-red-50" : "hover:bg-gray-50",
+      },
+      {
+        icon: Info,
+        label: "Info",
+        onClick: handleInfo,
+        color: "text-indigo-600",
+        hoverColor: "hover:bg-indigo-50",
+      },
+    ];
+
+    const ownMenuItems = [
+      {
+        icon: Edit,
+        label: "Edit",
+        onClick: handleEdit,
+        color: "text-blue-600",
+        hoverColor: "hover:bg-blue-50",
+      },
+      {
+        icon: Trash2,
+        label: "Delete",
+        onClick: handleDelete,
+        color: "text-red-600",
+        hoverColor: "hover:bg-red-50",
+      },
+    ];
+
     return (
-      <>
+      <div>
         <div
           ref={ref}
-          className="fixed z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-2 min-w-48 max-w-56"
+          className="fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 min-w-52 max-w-64 backdrop-blur-lg"
           style={{
             left: position.x,
             top: position.y,
+            background: "rgba(255, 255, 255, 0.95)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            onClick={handleReaction}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Smile size={16} />
-            <span>React</span>
-          </button>
-          <button
-            onClick={handleReply}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Reply size={16} />
-            <span>Reply</span>
-          </button>
-          <button
-            onClick={handleCopy}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Copy size={16} />
-            <span>Copy</span>
-          </button>
-          <button
-            onClick={(e) => {
-                e.stopPropagation();
-                setShowForwardModal(true);
-            }}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Forward size={16} />
-            <span>Forward</span>
-          </button>
-          <button
-            onClick={handleStar}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Star size={16} />
-            <span>{isStarred ? "Unstar" : "Star"}</span>
-          </button>
-          <button
-            onClick={handlePin}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Pin size={16} />
-            <span>{isPinned ? "Unpin" : "Pin"}</span>
-          </button>
-          <button
-            onClick={handleInfo}
-            className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-          >
-            <Info size={16} />
-            <span>Info</span>
-          </button>
+          {menuItems.map((item, index) => (
+            <button
+              key={index}
+              onClick={item.onClick}
+              className={`w-full px-4 py-2 text-left flex items-center space-x-3 transition-all duration-200 ${item.hoverColor} ${item.color} group`}
+            >
+              <item.icon
+                size={16}
+                className="group-hover:scale-110 transition-transform"
+              />
+              <span className="font-medium text-sm">{item.label}</span>
+            </button>
+          ))}
+
           {isOwn && (
             <>
-              <hr className="my-1 border-gray-200" />
-              <button
-                onClick={handleEdit}
-                className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 transition-colors"
-              >
-                <Edit size={16} />
-                <span>Edit</span>
-              </button>
-              <button
-                onClick={handleDelete}
-                className="w-full px-4 py-2 text-left hover:bg-red-50 flex items-center space-x-2 text-red-600 transition-colors"
-              >
-                <Trash2 size={16} />
-                <span>Delete</span>
-              </button>
+              <hr className="my-1 border border-gray-100" />
+              {ownMenuItems.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={item.onClick}
+                  className={`w-full px-4 py-2 text-left flex items-center space-x-3 transition-all duration-200 ${item.hoverColor} ${item.color} group`}
+                >
+                  <item.icon
+                    size={18}
+                    className="group-hover:scale-110 transition-transform"
+                  />
+                  <span className="font-medium">{item.label}</span>
+                </button>
+              ))}
             </>
           )}
         </div>
 
-        {/* Forward Modal */}
+        {/* Fixed Forward Modal - Now uses full width */}
         {showForwardModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-4 max-h-[70vh] flex flex-col">
-              <h2 className="text-lg font-semibold mb-4">Forward Message</h2>
-              <div className="space-y-2 flex-1 overflow-y-auto">
-                {chats?.map((chat) => (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
+            onClick={() => setShowForwardModal(false)}
+          >
+            <div
+              className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 scale-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-500 to-purple-600">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">
+                    Forward Message
+                  </h2>
                   <button
-                    key={chat._id}
-                    onClick={() => handleForward(chat._id)}
-                    className="w-full px-4 py-3 text-left hover:bg-gray-100 rounded-lg flex items-center space-x-3 transition-colors"
+                    onClick={() => setShowForwardModal(false)}
+                    className="p-2 rounded-full hover:bg-white/20 transition-colors"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm font-semibold">
-                        {chat.name?.charAt(0) || "U"}
-                      </span>
-                    </div>
-                    <span className="truncate">{chat.name || "Unknown Chat"}</span>
+                    <X size={20} className="text-white" />
                   </button>
-                ))}
+                </div>
               </div>
-              <button
-                onClick={() => handleModalClose(setShowForwardModal)}
-                className="mt-4 w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
+
+              <div className="p-4 max-h-[60vh] overflow-y-auto">
+                <div className="space-y-2">
+                  {chats?.map((chat) => (
+                    <button
+                      key={chat._id}
+                      onClick={() => handleForward(chat._id)}
+                      className="w-full p-4 text-left hover:bg-gray-50 rounded-2xl flex items-center space-x-4 transition-all duration-200 hover:shadow-sm group"
+                    >
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                        <span className="text-white text-sm font-bold">
+                          {chat.name?.charAt(0) || "U"}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold text-gray-800 truncate block">
+                          {chat.name || "Unknown Chat"}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Tap to forward
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <button
+                  onClick={() => handleModalClose(setShowForwardModal)}
+                  className="w-full px-4 py-3 bg-gray-200 rounded-2xl hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Info Modal */}
+        {/* Fixed Info Modal - Now properly shows when messageInfo exists */}
         {showInfoModal && messageInfo && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
-            <div className="bg-white rounded-lg w-full max-w-md mx-4 p-4 max-h-[70vh] flex flex-col">
-              <h2 className="text-lg font-semibold mb-4">Message Info</h2>
-              <div className="space-y-3 flex-1 overflow-y-auto">
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Sender</p>
-                  <p className="text-sm text-gray-900">{messageInfo.sender.username}</p>
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
+            onClick={() => setShowInfoModal(false)}
+          >
+            <div
+              className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 scale-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-500 to-blue-600">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">Message Info</h2>
+                  <button
+                    onClick={() => setShowInfoModal(false)}
+                    className="p-2 rounded-full hover:bg-white/20 transition-colors"
+                  >
+                    <X size={20} className="text-white" />
+                  </button>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Content</p>
-                  <p className="text-sm text-gray-900 break-words">{messageInfo.content}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Sent</p>
-                  <p className="text-sm text-gray-900">
-                    {new Date(messageInfo.createdAt).toLocaleString()}
+              </div>
+
+              <div className="p-6 max-h-[60vh] overflow-y-auto space-y-6">
+                <div className="bg-gray-50 p-4 rounded-2xl">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                    Sender
+                  </p>
+                  <p className="text-base text-gray-900">
+                    {messageInfo.sender?.username || "Unknown"}
                   </p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Status</p>
-                  <p className="text-sm text-gray-900">
-                    {messageInfo.isRead ? "Read" : "Delivered"}
+                <div className="bg-gray-50 p-4 rounded-2xl">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">
+                    Content
                   </p>
+                  <p className="text-sm text-gray-900 break-words leading-relaxed">
+                    {messageInfo.content || "No content"}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-2xl">
+                    <p className="text-sm font-semibold text-blue-700 mb-2">
+                      Sent
+                    </p>
+                    <p className="text-sm text-blue-900">
+                      {messageInfo.createdAt
+                        ? new Date(messageInfo.createdAt).toLocaleString()
+                        : "Unknown"}
+                    </p>
+                  </div>
+                  <div className="bg-green-50 p-4 rounded-2xl">
+                    <p className="text-sm font-semibold text-green-700 mb-2">
+                      Status
+                    </p>
+                    <p className="text-sm text-green-900 font-medium">
+                      {messageInfo.readBy.length > 0
+                        ? "✓✓ Read"
+                        : "✓ Delivered"}
+                    </p>
+                  </div>
                 </div>
                 {messageInfo.readBy && messageInfo.readBy.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Read by</p>
-                    <div className="space-y-1">
-                      {messageInfo.readBy.map((reader) => (
-                        <div key={reader.user._id} className="text-sm text-gray-900">
-                          <span className="font-medium">{reader.user.username}</span>
-                          <span className="text-gray-600 ml-2">
-                            {new Date(reader.readAt).toLocaleString()}
+                  <div className="bg-purple-50 p-4 rounded-2xl">
+                    <p className="text-sm font-semibold text-purple-700 mb-3">
+                      Read by
+                    </p>
+                    <div className="space-y-3">
+                      {messageInfo.readBy.map((reader, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-2 justify-center">
+                            <UserAvatar avatar={reader.userId.avatar} username={reader.userId.username} className="w-10 h-10 rounded-full"/>
+                            <span className="font-medium text-purple-900">
+                              {reader.userId?.username || "Unknown"}
+                            </span>
+                          </div>
+                          <span className="text-sm text-purple-600">
+                            {reader.readAt
+                              ? new Date(reader.readAt).toLocaleString()
+                              : "Unknown"}
                           </span>
                         </div>
                       ))}
@@ -342,16 +451,19 @@ export const MessageContextMenu = forwardRef<HTMLDivElement, MessageContextMenuP
                   </div>
                 )}
               </div>
-              <button
-                onClick={() => handleModalClose(setShowInfoModal)}
-                className="mt-4 w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-              >
-                Close
-              </button>
+
+              <div className="p-4 border-t border-gray-100 bg-gray-50">
+                <button
+                  onClick={() => handleModalClose(setShowInfoModal)}
+                  className="w-full px-4 py-3 bg-gray-200 rounded-2xl hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}
-      </>
+      </div>
     );
   }
 );
