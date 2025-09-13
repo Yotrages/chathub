@@ -43,19 +43,25 @@ interface PostsState {
   userPosts: Post[];
   likedPosts: Post[];
   savedPosts: Post[];
+  videoPosts: Post[]; 
+  trendingVideos: Post[]; 
   comments: { [postId: string]: IComment[] };
   isLoading: boolean;
   isCreating: boolean;
+  isLoadingVideos: boolean; 
   pagination: {
     posts: PaginationInfo | null;
     userPosts: PaginationInfo | null;
     likedPosts: PaginationInfo | null;
     savedPosts: PaginationInfo | null;
+    videoPosts: PaginationInfo | null; 
+    trendingVideos: PaginationInfo | null; 
     comment: { [postId: string]: PaginationInfo } | null;
   };
   searchResults: Post[];
   isSearching: boolean;
   selectedPost: Post | null;
+  selectedVideoPost: Post | null; 
 }
 
 const initialState: PostsState = {
@@ -63,19 +69,25 @@ const initialState: PostsState = {
   userPosts: [],
   likedPosts: [],
   savedPosts: [],
+  videoPosts: [],
+  trendingVideos: [],
   comments: {},
   isLoading: false,
   isCreating: false,
+  isLoadingVideos: false,
   pagination: {
     posts: null,
     userPosts: null,
     likedPosts: null,
     savedPosts: null,
+    videoPosts: null,
+    trendingVideos: null,
     comment: null,
   },
   searchResults: [],
   isSearching: false,
   selectedPost: null,
+  selectedVideoPost: null,
 };
 
 const postsSlice = createSlice({
@@ -88,9 +100,32 @@ const postsSlice = createSlice({
     setCreating: (state, action: PayloadAction<boolean>) => {
       state.isCreating = action.payload;
     },
+    setLoadingVideos: (state, action: PayloadAction<boolean>) => {
+      state.isLoadingVideos = action.payload;
+    },
     setPostsWithPagination: (state, action: PayloadAction<PostsResponse>) => {
       state.posts = action.payload.posts;
       state.pagination.posts = action.payload.pagination;
+    },
+    setVideoPostsWithPagination: (state, action: PayloadAction<PostsResponse>) => {
+      state.videoPosts = action.payload.posts;
+      state.pagination.videoPosts = action.payload.pagination;
+    },
+    addVideoPosts: (state, action: PayloadAction<Post[]>) => {
+      const newPosts = action.payload.filter(
+        (newPost) => !state.videoPosts.some((existingPost) => existingPost._id === newPost._id)
+      );
+      state.videoPosts.push(...newPosts);
+    },
+    setTrendingVideosWithPagination: (state, action: PayloadAction<PostsResponse>) => {
+      state.trendingVideos = action.payload.posts;
+      state.pagination.trendingVideos = action.payload.pagination;
+    },
+    addTrendingVideos: (state, action: PayloadAction<Post[]>) => {
+      const newPosts = action.payload.filter(
+        (newPost) => !state.trendingVideos.some((existingPost) => existingPost._id === newPost._id)
+      );
+      state.trendingVideos.push(...newPosts);
     },
     setPosts: (state, action: PayloadAction<Post[]>) => {
       state.posts = action.payload;
@@ -144,28 +179,27 @@ const postsSlice = createSlice({
       }
     },
     updatePost: (state, action: PayloadAction<{ post: Partial<Post>; _id: string }>) => {
-      const index = state.posts.findIndex((p) => p._id === action.payload._id);
-      if (index !== -1) {
-        state.posts[index] = { ...state.posts[index], ...action.payload.post };
-      }
-      const userIndex = state.userPosts.findIndex((p) => p._id === action.payload._id);
-      if (userIndex !== -1) {
-        state.userPosts[userIndex] = { ...state.userPosts[userIndex], ...action.payload.post };
-      }
-      const likedPostsIndex = state.likedPosts.findIndex((p) => p._id === action.payload._id);
-      if (likedPostsIndex !== -1) {
-        state.likedPosts[likedPostsIndex] = { ...state.likedPosts[likedPostsIndex], ...action.payload.post };
-      }
-      const savedPostsIndex = state.savedPosts.findIndex((p) => p._id === action.payload._id);
-      if (savedPostsIndex !== -1) {
-        state.savedPosts[savedPostsIndex] = { ...state.savedPosts[savedPostsIndex], ...action.payload.post };
-      }
+      const updatePostInArray = (posts: Post[]) => {
+        const index = posts.findIndex((p) => p._id === action.payload._id);
+        if (index !== -1) {
+          posts[index] = { ...posts[index], ...action.payload.post };
+        }
+      };
+
+      updatePostInArray(state.posts);
+      updatePostInArray(state.userPosts);
+      updatePostInArray(state.likedPosts);
+      updatePostInArray(state.savedPosts);
+      updatePostInArray(state.videoPosts);
+      updatePostInArray(state.trendingVideos);
     },
     removePost: (state, action: PayloadAction<string>) => {
       state.posts = state.posts.filter((p) => p._id !== action.payload);
       state.userPosts = state.userPosts.filter((p) => p._id !== action.payload);
       state.likedPosts = state.likedPosts.filter((p) => p._id !== action.payload);
       state.savedPosts = state.savedPosts.filter((p) => p._id !== action.payload);
+      state.videoPosts = state.videoPosts.filter((p) => p._id !== action.payload);
+      state.trendingVideos = state.trendingVideos.filter((p) => p._id !== action.payload);
       delete state.comments[action.payload];
     },
     setUserPosts: (state, action: PayloadAction<PostsResponse>) => {
@@ -182,26 +216,27 @@ const postsSlice = createSlice({
     },
     toggleLike: (state, action: PayloadAction<{ postId: string; userId: string; reactions: ReactedUser[] }>) => {
       const { postId, reactions } = action.payload;
-      const postIndex = state.posts.findIndex((p) => p._id === postId);
-      if (postIndex !== -1) {
-        state.posts[postIndex].reactions = reactions;
-      }
-      const userPostIndex = state.userPosts.findIndex((p) => p._id === postId);
-      if (userPostIndex !== -1) {
-        state.userPosts[userPostIndex].reactions = reactions;
-      }
-      const likedPostIndex = state.likedPosts.findIndex((p) => p._id === postId);
-      if (likedPostIndex !== -1) {
-        state.likedPosts[likedPostIndex].reactions = reactions;
-      }
+      
+      const updateReactionsInArray = (posts: Post[]) => {
+        const postIndex = posts.findIndex((p) => p._id === postId);
+        if (postIndex !== -1) {
+          posts[postIndex].reactions = reactions;
+        }
+      };
+
+      updateReactionsInArray(state.posts);
+      updateReactionsInArray(state.userPosts);
+      updateReactionsInArray(state.likedPosts);
+      updateReactionsInArray(state.videoPosts);
+      updateReactionsInArray(state.trendingVideos);
     },
     setComments: (state, action: PayloadAction<{ postId: string; comments: IComment[] }>) => {
-      console.log(`Setting comments for postId ${action.payload.postId}:`, action.payload.comments); // Debug log
+      console.log(`Setting comments for postId ${action.payload.postId}:`, action.payload.comments);
       state.comments[action.payload.postId] = action.payload.comments;
     },
     addComment: (state, action: PayloadAction<{ postId: string; comment: IComment }>) => {
       const { postId, comment } = action.payload;
-      console.log(`Adding comment for postId ${postId}:`, comment); // Debug log
+      console.log(`Adding comment for postId ${postId}:`, comment);
       if (!state.comments[postId]) {
         state.comments[postId] = [];
       }
@@ -310,6 +345,9 @@ const postsSlice = createSlice({
     setSelectedPost: (state, action: PayloadAction<Post | null>) => {
       state.selectedPost = action.payload;
     },
+    setSelectedVideoPost: (state, action: PayloadAction<Post | null>) => {
+      state.selectedVideoPost = action.payload;
+    },
     resetPosts: (state) => {
       return initialState;
     },
@@ -325,13 +363,26 @@ const postsSlice = createSlice({
       state.savedPosts = [];
       state.pagination.savedPosts = null;
     },
+    resetVideoPosts: (state) => {
+      state.videoPosts = [];
+      state.pagination.videoPosts = null;
+    },
+    resetTrendingVideos: (state) => {
+      state.trendingVideos = [];
+      state.pagination.trendingVideos = null;
+    },
   },
 });
 
 export const {
   setLoading,
   setCreating,
+  setLoadingVideos,
   setPostsWithPagination,
+  setVideoPostsWithPagination,
+  setTrendingVideosWithPagination,
+  addVideoPosts,
+  addTrendingVideos,
   setPosts,
   addPosts,
   addPost,
@@ -348,6 +399,7 @@ export const {
   setSearching,
   clearSearchResults,
   setSelectedPost,
+  setSelectedVideoPost,
   resetPosts,
   setUserLikedPosts,
   setUserSavedPosts,
@@ -360,6 +412,8 @@ export const {
   resetUserPosts,
   resetLikedPosts,
   resetSavedPosts,
+  resetVideoPosts,
+  resetTrendingVideos,
   setPagination,
 } = postsSlice.actions;
 

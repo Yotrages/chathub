@@ -485,12 +485,13 @@ export const useGetLikedPosts = (
 export const useGetSavedPosts = (
   initialPage: number = 1,
   userId: string,
+  sort: string = "latest"
 ) => {
   const dispatch: AppDispatch = useDispatch();
   const [page, setPage] = useState(initialPage)
  const result = useApiController({
     method: "GET",
-    url: `/auth/${userId}/saved-posts?page=${page}&limit=20`,
+    url: `/auth/${userId}/saved-posts?page=${page}&limit=20&sort=${sort}`,
     queryOptions: {
       staleTime: 2 * 60 * 1000,
     },

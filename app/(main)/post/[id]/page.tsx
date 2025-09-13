@@ -1,8 +1,9 @@
 "use client"
 import { PostItem } from '@/components/post/PostItem'
+import { useGetSinglePost } from '@/hooks/usePosts'
 import { RootState } from '@/libs/redux/store'
 import { useParams, useRouter } from 'next/navigation'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
 const Page = () => {
@@ -11,8 +12,14 @@ const Page = () => {
     const params = useParams()
     const { id } = params
     const { posts } = useSelector((state: RootState) => state.post)
+    const { data, trigger } = useGetSinglePost(id as string)
 
-    const post = posts.find((post) => post._id === id)
+    useEffect(() => {
+      trigger();
+    }, [])
+
+    const reduxPost = posts.find((post) => post._id === id)
+    const post = data?.post || reduxPost
      if (!post) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">

@@ -25,7 +25,7 @@ const NotificationPopup: React.FC = () => {
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
             <img
-              src={popupNotification.senderId.avatar || '/default-avatar.png'}
+              src={popupNotification.senderId.avatar || ''}
               alt={popupNotification.senderId.username}
               className="w-10 h-10 rounded-full object-cover"
             />

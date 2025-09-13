@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSocket } from "@/context/socketContext";
+import { useSocket } from "@/context/SocketContext";
 import { AppDispatch, RootState } from "@/libs/redux/store";
 import {
   addMessage,
@@ -92,13 +92,13 @@ export const useChat = () => {
               senderId: conversation.lastMessage.senderId,
               content: conversation.lastMessage.content,
               messageType: conversation.lastMessage.messageType || "text",
-              isRead: conversation.lastMessage.isRead,
               edited: conversation.lastMessage.edited,
               editedAt: conversation.lastMessage.editedAt,
               reactions: conversation.lastMessage.reactions || [],
               createdAt: conversation.lastMessage.createdAt,
               updatedAt: conversation.lastMessage.updatedAt,
               fileUrl: conversation.lastMessage.fileUrl,
+              readBy: conversation.lastMessage.readBy,
               fileName: conversation.lastMessage.fileName,
               replyTo: conversation.lastMessage.replyTo,
               postId: conversation.lastMessage.postId,
@@ -146,7 +146,6 @@ export const useChat = () => {
                 senderId: conversation.lastMessage.senderId,
                 content: conversation.lastMessage.content,
                 messageType: conversation.lastMessage.messageType || "text",
-                isRead: conversation.lastMessage.isRead,
                 edited: conversation.lastMessage.edited,
                 editedAt: conversation.lastMessage.editedAt,
                 reactions: conversation.lastMessage.reactions || [],
@@ -155,6 +154,7 @@ export const useChat = () => {
                 fileUrl: conversation.lastMessage.fileUrl,
                 fileName: conversation.lastMessage.fileName,
                 replyTo: conversation.lastMessage.replyTo,
+                readBy: conversation.readBy,
                 postId: conversation.lastMessage.postId,
               }
             : undefined,
@@ -234,7 +234,7 @@ export const useChat = () => {
               senderId: conv.lastMessage.senderId,
               content: conv.lastMessage.content,
               messageType: conv.lastMessage.messageType || "text",
-              isRead: conv.lastMessage.isRead,
+              readBy: conv.lastMessage.readBy,
               edited: conv.lastMessage.edited,
               editedAt: conv.lastMessage.editedAt,
               reactions: conv.lastMessage.reactions || [],
@@ -273,13 +273,13 @@ export const useChat = () => {
         messageType: message.messageType || "text",
         fileUrl: message.fileUrl,
         fileName: message.fileName,
-        isRead: message.isRead,
+        replyTo: message.replyTo,
+        readBy: message.readBy,
         edited: message.edited,
         editedAt: message.editedAt,
         reactions: message.reactions || [],
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
-        replyTo: message.replyTo,
         postId: message.postId,
       };
       dispatch(addMessage(transformedMessage));
@@ -299,7 +299,7 @@ export const useChat = () => {
           messageType: message.messageType || "text",
           fileUrl: message.fileUrl,
           fileName: message.fileName,
-          isRead: message.isRead,
+         readBy: message.readBy,
           edited: message.edited,
           editedAt: message.editedAt,
           reactions: message.reactions || [],
@@ -324,7 +324,7 @@ export const useChat = () => {
           messageType: message.messageType || "text",
           fileUrl: message.fileUrl,
           fileName: message.fileName,
-          isRead: message.isRead,
+          readBy: message.readBy,
           edited: message.edited,
           editedAt: message.editedAt,
           reactions: message.reactions || [],
@@ -346,7 +346,7 @@ export const useChat = () => {
           messageType: message.messageType || "text",
           fileUrl: message.fileUrl,
           fileName: message.fileName,
-          isRead: message.isRead,
+          readBy: message.readBy,
           edited: message.edited,
           editedAt: message.editedAt,
           reactions: message.reactions || [],
@@ -359,18 +359,8 @@ export const useChat = () => {
     });
     socket.on(
       "messages_read",
-      (data: { conversationId: string; userId: string }) => {
-        const currentMessages = messages[data.conversationId] || [];
-        const updatedMessages = currentMessages.map((msg: Message) => ({
-          ...msg,
-          isRead: true,
-        }));
-        dispatch(
-          setMessages({
-            chatId: data.conversationId,
-            messages: updatedMessages,
-          })
-        );
+      (data: { conversationId: string; userId: { username: string, _id: string, avatar?: string} }) => {
+        dispatch(markMessageAsRead({conversationId: data.conversationId, userId: data.userId}));
       }
     );
     socket.on(
@@ -437,7 +427,7 @@ export const useChat = () => {
       replyTo: replyTo
         ? { _id: replyTo, content: "", senderId: "", messageType: "text" }
         : undefined,
-      isRead: false,
+      readBy: [],
       edited: false,
       reactions: [],
       createdAt: new Date().toISOString(),
@@ -510,7 +500,7 @@ export const useChat = () => {
           messageType: messageData.messageType || "text",
           fileUrl: messageData.fileUrl,
           fileName: messageData.fileName,
-          isRead: messageData.isRead ?? false,
+          readBy: messageData.readBy ?? [],
           edited: messageData.edited,
           editedAt: messageData.editedAt,
           reactions: messageData.reactions || [],
@@ -565,7 +555,7 @@ export const useChat = () => {
         messageType: msg.messageType || "text",
         fileUrl: msg.fileUrl,
         fileName: msg.fileName,
-        isRead: msg.isRead,
+        readBy: msg.readBy,
         edited: msg.edited,
         editedAt: msg.editedAt,
         reactions: msg.reactions || [],
@@ -603,7 +593,7 @@ export const useChat = () => {
             messageType: messageData.messageType || "text",
             fileUrl: messageData.fileUrl,
             fileName: messageData.fileName,
-            isRead: messageData.isRead,
+            readBy: messageData.readBy,
             edited: messageData.edited,
             editedAt: messageData.editedAt,
             reactions: messageData.reactions || [],
@@ -666,7 +656,7 @@ export const useChat = () => {
             messageType: messageData.messageType || "text",
             fileUrl: messageData.fileUrl,
             fileName: messageData.fileName,
-            isRead: messageData.isRead,
+            readBy: messageData.readBy,
             edited: messageData.edited,
             editedAt: messageData.editedAt,
             reactions: messageData.reactions || [],
@@ -704,7 +694,7 @@ export const useChat = () => {
             messageType: messageData.messageType || "text",
             fileUrl: messageData.fileUrl,
             fileName: messageData.fileName,
-            isRead: messageData.isRead,
+            readBy: messageData.readBy,
             edited: messageData.edited,
             editedAt: messageData.editedAt,
             reactions: messageData.reactions || [],
@@ -746,7 +736,6 @@ export const useChat = () => {
       );
       if (response.status === 200) {
                   toast.success("Message unpinned");
-
       }
       dispatch(removePinnedMessage({ chatId: conversationId, messageId }));
     } catch (error: any) {
@@ -777,7 +766,6 @@ export const useChat = () => {
      const response = await api.post(`/chat/messages/${messageId}/star`);
      if (response.status === 200) {
                 toast.success("Message starred");
-
      }
       const message = Object.values(messages)
         .flat()
@@ -825,7 +813,7 @@ export const useChat = () => {
       const res = await api.post(`/chat/conversations/${chatId}/read`);
       console.log("✅ Messages marked as read via HTTP");
       const read = res.data;
-      dispatch(markMessageAsRead(read.conversationId));
+      dispatch(markMessageAsRead({conversationId: read.conversationId, userId: read.userId}));
     } catch (error) {
       console.error("❌ Failed to mark messages as read via HTTP:", error);
     }

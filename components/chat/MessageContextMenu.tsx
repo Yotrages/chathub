@@ -1,5 +1,5 @@
 "use client";
-import { forwardRef, SetStateAction, useEffect, useState } from "react";
+import { forwardRef, SetStateAction, useState } from "react";
 import {
   Smile,
   Reply,
@@ -64,22 +64,6 @@ export const MessageContextMenu = forwardRef<
     const [showInfoModal, setShowInfoModal] = useState(false);
     const [messageInfo, setMessageInfo] = useState<MessageInfo | null>(null);
 
-    // useEffect(() => {
-    //   const handleScroll = () => {
-    //     if (show) {
-    //       onClose();
-    //     }
-    //   };
-    //   if (show) {
-    //     window.addEventListener('scroll', handleScroll, true);
-    //     document.addEventListener('wheel', handleScroll, true);
-    //   }
-    //   return () => {
-    //     window.removeEventListener('scroll', handleScroll, true);
-    //     document.removeEventListener('wheel', handleScroll, true);
-    //   };
-    // }, [show, onClose]);
-
     if (!show) return null;
 
     const isPinned =
@@ -103,12 +87,13 @@ export const MessageContextMenu = forwardRef<
     const handleForward = async (chatId: string) => {
       try {
         await forwardMessage(message._id, chatId);
+        toast.success("Message forwarded successfully");
       } catch (error) {
         console.log(error);
         toast.error("Failed to forward message");
       }
       setShowForwardModal(false);
-      onClose();
+      // Do NOT call onClose() here to keep context menu open
     };
 
     const handleCopy = () => {
@@ -130,6 +115,7 @@ export const MessageContextMenu = forwardRef<
     const handleDelete = async () => {
       try {
         await deleteMessage(message._id);
+        toast.success("Message deleted successfully");
       } catch (error) {
         console.log(error);
         toast.error("Failed to delete message");
@@ -141,8 +127,10 @@ export const MessageContextMenu = forwardRef<
       try {
         if (isStarred) {
           await unstarMessage(message._id);
+          toast.success("Message unstarred");
         } else {
           await starMessage(message._id);
+          toast.success("Message starred");
         }
       } catch (error) {
         console.log(error);
@@ -155,8 +143,10 @@ export const MessageContextMenu = forwardRef<
       try {
         if (isPinned) {
           await unpinMessage(message.conversationId, message._id);
+          toast.success("Message unpinned");
         } else {
           await pinMessage(message.conversationId, message._id);
+          toast.success("Message pinned");
         }
       } catch (error) {
         console.log(error);
@@ -175,14 +165,14 @@ export const MessageContextMenu = forwardRef<
         console.log("Error fetching message info:", error); // Debug log
         toast.error("Failed to get message info");
       }
-      onClose();
+      // Do NOT call onClose() here to keep context menu open
     };
 
     const handleModalClose = (
       modalSetter: React.Dispatch<SetStateAction<boolean>>
     ) => {
       modalSetter(false);
-      // Don't close the context menu when modal is canceled
+      // Explicitly prevent closing context menu
     };
 
     const menuItems = [
@@ -279,8 +269,7 @@ export const MessageContextMenu = forwardRef<
               <span className="font-medium text-sm">{item.label}</span>
             </button>
           ))}
-
-          {isOwn && (
+          {message.messageType === "text" && isOwn && (
             <>
               <hr className="my-1 border border-gray-100" />
               {ownMenuItems.map((item, index) => (
@@ -290,21 +279,20 @@ export const MessageContextMenu = forwardRef<
                   className={`w-full px-4 py-2 text-left flex items-center space-x-3 transition-all duration-200 ${item.hoverColor} ${item.color} group`}
                 >
                   <item.icon
-                    size={18}
+                    size={16}
                     className="group-hover:scale-110 transition-transform"
                   />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </button>
               ))}
             </>
           )}
         </div>
-
-        {/* Fixed Forward Modal - Now uses full width */}
+        {/* Forward Modal */}
         {showForwardModal && (
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
-            onClick={() => setShowForwardModal(false)}
+            onClick={() => handleModalClose(setShowForwardModal)}
           >
             <div
               className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 scale-100"
@@ -316,14 +304,13 @@ export const MessageContextMenu = forwardRef<
                     Forward Message
                   </h2>
                   <button
-                    onClick={() => setShowForwardModal(false)}
+                    onClick={() => handleModalClose(setShowForwardModal)}
                     className="p-2 rounded-full hover:bg-white/20 transition-colors"
                   >
                     <X size={20} className="text-white" />
                   </button>
                 </div>
               </div>
-
               <div className="p-4 max-h-[60vh] overflow-y-auto">
                 <div className="space-y-2">
                   {chats?.map((chat) => (
@@ -349,7 +336,6 @@ export const MessageContextMenu = forwardRef<
                   ))}
                 </div>
               </div>
-
               <div className="p-4 border-t border-gray-100 bg-gray-50">
                 <button
                   onClick={() => handleModalClose(setShowForwardModal)}
@@ -361,12 +347,11 @@ export const MessageContextMenu = forwardRef<
             </div>
           </div>
         )}
-
-        {/* Fixed Info Modal - Now properly shows when messageInfo exists */}
+        {/* Info Modal */}
         {showInfoModal && messageInfo && (
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4"
-            onClick={() => setShowInfoModal(false)}
+            onClick={() => handleModalClose(setShowInfoModal)}
           >
             <div
               className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 scale-100"
@@ -376,14 +361,13 @@ export const MessageContextMenu = forwardRef<
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-white">Message Info</h2>
                   <button
-                    onClick={() => setShowInfoModal(false)}
+                    onClick={() => handleModalClose(setShowInfoModal)}
                     className="p-2 rounded-full hover:bg-white/20 transition-colors"
                   >
                     <X size={20} className="text-white" />
                   </button>
                 </div>
               </div>
-
               <div className="p-6 max-h-[60vh] overflow-y-auto space-y-6">
                 <div className="bg-gray-50 p-4 rounded-2xl">
                   <p className="text-sm font-semibold text-gray-700 mb-2">
@@ -435,7 +419,11 @@ export const MessageContextMenu = forwardRef<
                           className="flex items-center justify-between"
                         >
                           <div className="flex items-center gap-2 justify-center">
-                            <UserAvatar avatar={reader.userId.avatar} username={reader.userId.username} className="w-10 h-10 rounded-full"/>
+                            <UserAvatar
+                              avatar={reader.userId.avatar}
+                              username={reader.userId.username}
+                              className="w-10 h-10 rounded-full"
+                            />
                             <span className="font-medium text-purple-900">
                               {reader.userId?.username || "Unknown"}
                             </span>
@@ -451,7 +439,6 @@ export const MessageContextMenu = forwardRef<
                   </div>
                 )}
               </div>
-
               <div className="p-4 border-t border-gray-100 bg-gray-50">
                 <button
                   onClick={() => handleModalClose(setShowInfoModal)}

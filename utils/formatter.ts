@@ -18,6 +18,30 @@ export const formatTimeAgo = (date: Date): string => {
   return `${days}d`;
 };
 
+export const formatRelativeTime = (dateString: string | Date) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMilliseconds = now.getTime() - date.getTime();
+  const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  const diffInMonths = Math.floor(diffInDays / 30);
+  const diffInYears = Math.floor(diffInDays / 365);
+
+  if (diffInMinutes < 1) return 'Just now';
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays === 1) return 'Yesterday';
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  if (diffInWeeks === 1) return '1 week ago';
+  if (diffInWeeks < 4) return `${diffInWeeks}w ago`;
+  if (diffInMonths === 1) return '1 month ago';
+  if (diffInMonths < 12) return `${diffInMonths}mo ago`;
+  if (diffInYears === 1) return '1 year ago';
+  return `${diffInYears}y ago`;
+};
+
 export const refreshAuthToken = async (currentToken: string): Promise<string> => {
     try {
       const response = await axios.post(

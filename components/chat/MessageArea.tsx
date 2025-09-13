@@ -1,22 +1,47 @@
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/libs/redux/store';
 import { MessageBubble } from './MessageBubble';
 
+// Utility function to format date (e.g., "Today", "Yesterday", or "MM/DD/YYYY")
+const formatDate = (date: Date): string => {
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const isToday = date.toDateString() === today.toDateString();
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  if (isToday) return 'Today';
+  if (isYesterday) return 'Yesterday';
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+// Utility function to check if two dates are different
+const isNewDate = (current: Date, previous: Date | null): boolean => {
+  if (!previous) return true;
+  return current.toDateString() !== previous.toDateString();
+};
+
 interface MessagesAreaProps {
+  currentChat: any;
   isUserOnline: boolean;
   isLoading: boolean;
-  chatMessages: any[];
-  currentChat: any;
-  user: any;
 }
 
-export const MessagesArea: React.FC<MessagesAreaProps> = ({
+export const MessagesArea = ({
+  currentChat,
   isUserOnline,
   isLoading,
-  chatMessages,
-  currentChat,
-  user
-}) => {
+}: MessagesAreaProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { activeChat, messages } = useSelector((state: RootState) => state.chat);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const chatMessages = activeChat ? messages[activeChat] || [] : [];
 
   useEffect(() => {
     if (chatMessages.length > 0) {
@@ -33,7 +58,6 @@ export const MessagesArea: React.FC<MessagesAreaProps> = ({
           </div>
         </div>
       )}
-      
       {isLoading ? (
         <div className="text-center text-gray-500 mt-8">
           <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
@@ -46,26 +70,41 @@ export const MessagesArea: React.FC<MessagesAreaProps> = ({
           <p className="text-sm mt-1">Say hello and break the ice!</p>
         </div>
       ) : (
-        chatMessages.map((msg, index) => (
-          <MessageBubble
-            key={msg._id}
-            message={msg}
-            isOwn={
-              typeof msg.senderId === 'string'
-                ? msg.senderId === user?._id
-                : msg.senderId._id === user?._id
-            }
-            showAvatar={
-              index === 0 ||
-              (typeof chatMessages[index - 1].senderId === 'string'
-                ? chatMessages[index - 1].senderId !==
-                  (typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id)
-                : chatMessages[index - 1].senderId !==
-                  (typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id))
-            }
-            otherParticipantsCount={currentChat?.participants?.length - 1 || 0}
-          />
-        ))
+        chatMessages.map((msg, index) => {
+          const currentDate = new Date(msg.createdAt);
+          const previousMsg = index > 0 ? chatMessages[index - 1] : null;
+          const previousDate = previousMsg ? new Date(previousMsg.createdAt) : null;
+          const showDateSeparator = isNewDate(currentDate, previousDate);
+
+          return (
+            <div key={msg._id}>
+              {showDateSeparator && (
+                <div className="sticky top-0 z-10 text-center py-2">
+                  <span className="inline-block bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-1 rounded-full shadow-sm">
+                    {formatDate(currentDate)}
+                  </span>
+                </div>
+              )}
+              <MessageBubble
+                message={msg}
+                isOwn={
+                  typeof msg.senderId === 'string'
+                    ? msg.senderId === user?._id
+                    : msg.senderId._id === user?._id
+                }
+                showAvatar={
+                  index === 0 ||
+                  (typeof chatMessages[index - 1].senderId === 'string'
+                    ? chatMessages[index - 1].senderId !==
+                      (typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id)
+                    : chatMessages[index - 1].senderId !==
+                      (typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id))
+                }
+                otherParticipantsCount={currentChat?.participants?.length - 1 || 0}
+              />
+            </div>
+          );
+        })
       )}
       <div ref={messagesEndRef} />
     </div>

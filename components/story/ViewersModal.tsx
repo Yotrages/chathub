@@ -48,7 +48,7 @@ const ReelViewers: React.FC<ReelViewersProps> = ({
               {viewers.map((viewer) => (
                 <div key={viewer._id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
                   <img
-                    src={viewer.avatar || '/default-avatar.png'}
+                    src={viewer.avatar || ''}
                     alt={viewer.username}
                     className="w-10 h-10 rounded-full"
                   />

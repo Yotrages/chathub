@@ -4,7 +4,6 @@ import { io, Socket } from 'socket.io-client';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
 import { getCookie, setCookie } from 'cookies-next';
-import axios from 'axios'; // Ensure axios is installed: npm install axios
 import { refreshAuthToken } from '@/utils/formatter';
 
 interface SocketContextType {
@@ -52,8 +51,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       socket.connect();
     }
   };
-
-   
 
   useEffect(() => {
     if (!user || !token) {

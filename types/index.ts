@@ -106,6 +106,7 @@ export interface Post {
   createdAt: string | Date;
   updatedAt?: string | Date;
   shareCount: number;
+  savedAt?: string | Date;
 }
 
 export interface Sender {
@@ -127,11 +128,14 @@ export interface Message {
       username: string;
       avatar?: string;
     };
-    readAt: Date;
+    readAt: string;
   }>
   reactions: Array<{
     userId: { _id: string; username: string; avatar: string };
-    emoji: string;
+    emoji: {
+      category: string;
+      name: string;
+    };
   }>;
   createdAt: string;
   updatedAt: string;
@@ -328,6 +332,8 @@ export interface Reel {
     username: string;
     avatar: string;
   };
+  viewedAt: string;
+  viewers: Array<{ _id: string; username: string; avatar?: string }>;
   createdAt: Date;
   shareCount: number;
   updatedAt: Date;
@@ -454,3 +460,16 @@ export interface Report {
   reportedPostId?: string;
   reportedCommentId?: string;
 }
+
+export interface UserStatus {
+  isOnline: boolean;
+  username: string;
+}
+
+export interface IncomingCall {
+  from: string;
+  isVideo: boolean;
+}
+
+export type CallState = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended' | 'failed';
+export type ConnectionState = 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed';

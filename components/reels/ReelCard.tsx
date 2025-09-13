@@ -354,7 +354,7 @@ const ReelCard = forwardRef<HTMLDivElement | null, EnhancedReelCardProps>(
               <div className="absolute bottom-4 left-4 right-20 z-10">
                 <div className="flex items-start space-x-3 mb-3">
                   <img
-                    src={reel?.authorId?.avatar || "/default-avatar.png"}
+                    src={reel?.authorId?.avatar || ""}
                     alt={reel?.authorId?.username || "Unknown User"}
                     className="w-12 h-12 rounded-full border-2 border-white flex-shrink-0"
                   />

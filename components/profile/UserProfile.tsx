@@ -1,43 +1,48 @@
-'use client';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '@/libs/redux/store';
-import { PostItem } from '../post/PostItem';
-import { useInView } from 'react-intersection-observer';
-import { useEffect, useMemo, useRef } from 'react';
-import { useGetUserPosts, useGetLikedPosts, useGetSavedPosts } from '@/hooks/usePosts';
-import { resetUserPosts, resetLikedPosts, resetSavedPosts } from '@/libs/redux/postSlice';
-import { selectPagination } from '@/libs/redux/postSlice';
+import { useSelector, useDispatch } from "react-redux";
+import { RootState, AppDispatch } from "@/libs/redux/store";
+import { PostItem } from "../post/PostItem";
+import { useInView } from "react-intersection-observer";
+import { useEffect, useMemo, useRef } from "react";
+import { useGetUserPosts, useGetLikedPosts, useGetSavedPosts } from "@/hooks/usePosts";
+import { resetUserPosts, resetLikedPosts, resetSavedPosts } from "@/libs/redux/postSlice";
+import { selectPagination } from "@/libs/redux/postSlice";
+import { Bookmark } from "lucide-react";
+import { formatRelativeTime } from "@/utils/formatter";
 
 interface PostListProps {
   isLoading?: boolean;
-  type?: 'posts' | 'likes' | 'saved';
+  type?: "posts" | "likes" | "saved";
   userId: string;
+  sortType?: string; // Add sortType prop
 }
 
-export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) => {
+
+export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "latest" }: PostListProps) => {
   const dispatch: AppDispatch = useDispatch();
   const { userPosts, likedPosts, savedPosts, isLoading: postsLoading } = useSelector(
     (state: RootState) => state.post
   );
-  const pagination = useSelector(selectPagination(type === 'posts' ? 'userPosts' : type === 'likes' ? 'likedPosts' : 'savedPosts'));
-
+  const pagination = useSelector(
+    selectPagination(type === "posts" ? "userPosts" : type === "likes" ? "likedPosts" : "savedPosts")
+  );
   const { user } = useSelector((state: RootState) => state.auth);
 
   // Get all hooks but only use the one we need
   const { trigger: triggerUserPosts } = useGetUserPosts(1, userId);
   const { trigger: triggerLikedPosts } = useGetLikedPosts(1, userId);
-  const { trigger: triggerSavedPosts } = useGetSavedPosts(1, userId);
+  const { trigger: triggerSavedPosts } = useGetSavedPosts(1, userId, sortType); // Pass sortType
 
   // Use refs to track previous values to prevent unnecessary effects
   const prevTypeRef = useRef(type);
   const prevUserIdRef = useRef(userId);
+  const prevSortTypeRef = useRef(sortType);
 
   // Get posts based on type
   const posts = useMemo(() => {
     switch (type) {
-      case 'likes':
+      case "likes":
         return likedPosts;
-      case 'saved':
+      case "saved":
         return savedPosts;
       default:
         return userPosts;
@@ -47,17 +52,19 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
   const [ref, inView] = useInView();
   const hasMore = pagination?.hasNextPage ?? false;
 
-  // Reset posts and load initial data when type or userId changes
+  // Reset posts and load initial data when type, userId, or sortType changes
   useEffect(() => {
-    // Only run if type or userId actually changed
-    if (prevTypeRef.current !== type || prevUserIdRef.current !== userId) {
-      // Reset posts based on type
+    if (
+      prevTypeRef.current !== type ||
+      prevUserIdRef.current !== userId ||
+      prevSortTypeRef.current !== sortType
+    ) {
       switch (type) {
-        case 'likes':
+        case "likes":
           dispatch(resetLikedPosts());
           triggerLikedPosts();
           break;
-        case 'saved':
+        case "saved":
           dispatch(resetSavedPosts());
           triggerSavedPosts();
           break;
@@ -66,22 +73,22 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
           triggerUserPosts();
           break;
       }
-      
+
       // Update refs
       prevTypeRef.current = type;
       prevUserIdRef.current = userId;
+      prevSortTypeRef.current = sortType;
     }
-  }, [type, userId, dispatch, triggerUserPosts, triggerLikedPosts, triggerSavedPosts]);
+  }, [type, userId, sortType, dispatch, triggerUserPosts, triggerLikedPosts, triggerSavedPosts]);
 
-  // Infinite scroll - separate effect with minimal dependencies
+  // Infinite scroll
   useEffect(() => {
     if (inView && hasMore && !postsLoading) {
-      // Trigger the appropriate function based on current type
       switch (type) {
-        case 'likes':
+        case "likes":
           triggerLikedPosts();
           break;
-        case 'saved':
+        case "saved":
           triggerSavedPosts();
           break;
         default:
@@ -115,10 +122,10 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
         <p className="text-gray-500">
-          {type === 'likes'
-            ? 'No liked posts yet'
-            : type === 'saved'
-            ? 'No saved posts yet'
+          {type === "likes"
+            ? "No liked posts yet"
+            : type === "saved"
+            ? "No saved posts yet"
             : `No posts yet from ${user?.username}`}
         </p>
       </div>
@@ -127,10 +134,10 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
 
   const handleLoadMore = () => {
     switch (type) {
-      case 'likes':
+      case "likes":
         triggerLikedPosts();
         break;
-      case 'saved':
+      case "saved":
         triggerSavedPosts();
         break;
       default:
@@ -142,7 +149,17 @@ export const UserPosts = ({ isLoading, type = 'posts', userId }: PostListProps) 
   return (
     <div className="space-y-4">
       {posts?.map((post) => (
-        <PostItem key={post._id} post={post} />
+        <div key={post._id} className="relative">
+          {type === "saved" && post.savedAt && (
+            <div className="flex items-center justify-between mb-2 px-4 text-sm text-gray-500">
+              <div className="flex items-center space-x-2">
+                <Bookmark className="w-4 h-4 text-blue-500" />
+                <span>Saved {formatRelativeTime(post.savedAt)}</span>
+              </div>
+            </div>
+          )}
+          <PostItem post={post} />
+        </div>
       ))}
       {hasMore && (
         <div ref={ref} className="text-center py-4" role="region" aria-live="polite">

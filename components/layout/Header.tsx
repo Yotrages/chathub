@@ -267,7 +267,7 @@ const Header: React.FC = () => {
                 <div className="relative max-w-full">
                   {user && (
                     <NotificationIcon 
-                      onClick={() => setShowNotifications(!showNotifications)}
+                      onClick={() => window.innerWidth >= 632 ? setShowNotifications(!showNotifications) : handleNotificationNavigate}
                       className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 transition-colors duration-150 min-w-0"
                     />
                   )}

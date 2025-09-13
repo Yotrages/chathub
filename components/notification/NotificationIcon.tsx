@@ -20,7 +20,7 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({
       onClick={onClick}
       className={`relative rounded-full transition-colors ${className}`}
     >
-      <Bell size={18} className="text-gray-600 dark:text-gray-300" />
+      <Bell size={18} className="text-gray-600" />
       <p className="text-xs text-gray-600 hidden md:flex truncate mt-1 whitespace-nowrap">
         Notifications
       </p>

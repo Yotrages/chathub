@@ -5,6 +5,8 @@ import { RootState } from "@/libs/redux/store";
 import { useChat } from "@/hooks/useChat";
 import { Message } from "@/types";
 import toast from "react-hot-toast";
+import { ReactionsModal } from "../post/LikesModal";
+import { useState } from "react";
 
 interface MessageReactionsProps {
   message: Message;
@@ -22,11 +24,16 @@ export const MessageReactions = ({
   handleContextMenu,
   showReactions,
   onToggleReactions,
-  onCloseReactions
+  onCloseReactions,
 }: MessageReactionsProps) => {
   const { addReaction, removeReaction } = useChat();
   const { user } = useSelector((state: RootState) => state.auth);
-  
+  const [likesModal, setLikesModal] = useState<{
+    isOpen: boolean;
+    reactions: Message["reactions"];
+    type: string;
+  }>({ isOpen: false, reactions: [], type: "reply" });
+
   const reactionEmojis = [
     { emoji: "👍", label: "Like" },
     { emoji: "❤️", label: "Love" },
@@ -39,10 +46,11 @@ export const MessageReactions = ({
   const handleReaction = async (emoji: string): Promise<void> => {
     try {
       const userReaction = message.reactions?.find((r) => {
-        const reactionUserId = typeof r.userId === 'string' ? r.userId : r.userId?._id;
+        const reactionUserId =
+          typeof r.userId === "string" ? r.userId : r.userId?._id;
         return reactionUserId === user?._id;
       });
-      
+
       if (userReaction) {
         await removeReaction(message._id);
         toast.success("Reaction removed");
@@ -51,22 +59,35 @@ export const MessageReactions = ({
         toast.success("Reaction added");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("Failed to update reaction");
     }
     onCloseReactions();
   };
 
-  const groupedReactions = message.reactions?.reduce((acc, reaction) => {
-    const emoji = reaction.emoji;
-    if (!acc[emoji]) acc[emoji] = [];
-    acc[emoji].push(reaction);
-    return acc;
-  }, {} as Record<string, Array<{ userId: any; emoji: string }>>) || {};
+  const handleReactionModal = (
+    reactions: Message["reactions"],
+    type: string = "message"
+  ) => {
+    setLikesModal({ isOpen: true, reactions: reactions, type: type });
+  };
+
+  const handleCloseLikes = (): void => {
+    setLikesModal({ isOpen: false, reactions: [], type: "reply" });
+  };
+
+  const groupedReactions =
+    message.reactions?.reduce((acc, reaction) => {
+      const emoji = reaction.emoji.category;
+      if (!acc[emoji]) acc[emoji] = [];
+      acc[emoji].push(reaction);
+      return acc;
+    }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) ||
+    {};
 
   return (
     <>
-      {/* Hover Controls - Improved positioning to prevent overflow */}
+      {/* Hover Controls */}
       <div className="hidden md:flex absolute right-0 bottom-0 transform -translate-y-1/2 -translate-x-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 p-1 space-x-1 z-10">
         <button
           onClick={onToggleReactions}
@@ -83,52 +104,75 @@ export const MessageReactions = ({
           <MoreVertical size={14} />
         </button>
       </div>
-
-      {/* Existing Reactions - Fixed to not overflow beyond message width */}
+      {/* Existing Reactions */}
       {Object.keys(groupedReactions).length > 0 && (
-        <div className="mt-2">
-          <div className="flex flex-wrap items-center gap-1 min-w-0">
-            {Object.entries(groupedReactions).slice(0, 4).map(([emoji, reactions]) => {
-              const userHasReacted = reactions.some((r) => {
-                const userId = typeof r.userId === "string" ? r.userId : r.userId?._id;
-                return userId === user?._id;
-              });
-              
-              return (
-                <div
-                  key={emoji}
-                  className={`inline-flex items-center space-x-1 px-1.5 py-0.5 rounded-full text-xs cursor-pointer transition-all flex-shrink-0 ${
-                    userHasReacted
-                      ? isOwn
-                        ? "bg-blue-300 text-white ring-1 ring-blue-200"
-                        : "bg-blue-100 text-blue-700 ring-1 ring-blue-300"
-                      : isOwn
-                      ? "bg-blue-400 text-white hover:bg-blue-300"
-                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                  } shadow-sm hover:shadow-md`}
-                  onClick={() => handleReaction(emoji)}
-                  title={`${reactions.length} ${reactions.length === 1 ? 'reaction' : 'reactions'}`}
-                >
-                  <span className="text-xs leading-none">{emoji}</span>
-                  <span className="text-xs font-medium leading-none">
-                    {reactions.length > 9 ? '9+' : reactions.length}
-                  </span>
-                </div>
-              );
-            })}
+        <div
+          className={`mt-2 ${
+            isOwn ? "flex justify-end" : "flex justify-start"
+          }`}
+        >
+          <div
+            className={`flex flex-wrap items-center gap-1.5 min-w-[120px] max-w-full ${
+              isOwn ? "justify-end" : "justify-start"
+            }`}
+          >
+            {Object.entries(groupedReactions)
+              .slice(0, 4)
+              .map(([emoji, reactions]) => {
+                const userHasReacted = reactions.some((r) => {
+                  const userId =
+                    typeof r.userId === "string" ? r.userId : r.userId?._id;
+                  return userId === user?._id;
+                });
+
+                return (
+                  <div
+                    key={emoji}
+                    className={`inline-flex items-center space-x-1 px-2 py-1 rounded-full text-xs cursor-pointer transition-all duration-200 flex-shrink-0 ${
+                      userHasReacted
+                        ? isOwn
+                          ? "bg-blue-500 text-white ring-2 ring-blue-200 shadow-md"
+                          : "bg-blue-100 text-blue-700 ring-2 ring-blue-300 shadow-md"
+                        : isOwn
+                        ? "bg-gray-700 text-white hover:bg-gray-600 shadow-sm"
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 shadow-sm"
+                    } hover:shadow-lg hover:scale-105 active:scale-95`}
+                    onClick={() => handleReactionModal(message.reactions, 'message')}
+                    title={`${reactions.length} ${
+                      reactions.length === 1 ? "reaction" : "reactions"
+                    } • Click to see who reacted`}
+                  >
+                    <span className="text-sm leading-none select-none">
+                      {emoji}
+                    </span>
+                    <span className="text-xs font-semibold leading-none min-w-[12px] text-center">
+                      {reactions.length > 99 ? "99+" : reactions.length}
+                    </span>
+                  </div>
+                );
+              })}
             {Object.keys(groupedReactions).length > 4 && (
-              <div className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600 flex-shrink-0">
-                <span className="text-xs leading-none">+{Object.keys(groupedReactions).length - 4}</span>
+              <div
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-600 flex-shrink-0 cursor-pointer hover:bg-gray-200 transition-colors"
+                onClick={() => handleReactionModal(message.reactions)}
+                title={`+${
+                  Object.keys(groupedReactions).length - 4
+                } more reaction types`}
+              >
+                <span className="text-xs font-medium leading-none">
+                  +{Object.keys(groupedReactions).length - 4}
+                </span>
               </div>
             )}
           </div>
         </div>
       )}
-
       {/* Reaction Picker */}
       {showReactions && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+          className={`fixed inset-0 z-50 flex items-center ${
+            isOwn ? "justify-end -right-2 pr-4" : "justify-start -left-6 pl-4"
+          }`}
           onClick={onCloseReactions}
         >
           <div
@@ -148,6 +192,12 @@ export const MessageReactions = ({
           </div>
         </div>
       )}
+      <ReactionsModal
+        isOpen={likesModal.isOpen}
+        onClose={handleCloseLikes}
+        type={likesModal.type}
+        reactions={likesModal.reactions}
+      />
     </>
   );
 };

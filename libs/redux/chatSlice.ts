@@ -1,3 +1,4 @@
+// Updated chatSlice
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Message, Chat } from '@/types';
 interface ChatState {
@@ -117,13 +118,19 @@ const chatSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;
     },
-    markMessageAsRead: (state, action: PayloadAction<string>) => {
-      const chatId = action.payload;
-      if (state.messages[chatId]) {
-        state.messages[chatId] = state.messages[chatId].map(message => ({
-          ...message,
-          isRead: true,
-        }));
+    markMessageAsRead: (state, action: PayloadAction<{conversationId: string; userId: { username: string, _id: string, avatar?: string}}>) => {
+      const {conversationId, userId} = action.payload;
+      if (state.messages[conversationId]) {
+        state.messages[conversationId] = state.messages[conversationId].map(message => {
+          const senderId = typeof message.senderId === 'string' ? message.senderId : message.senderId._id;
+          if (senderId !== userId._id && !message.readBy.some(rb => rb.userId._id === userId._id)) {
+            return {
+              ...message,
+              readBy: [...message.readBy, {userId: {_id: userId._id, avatar: userId.avatar, username: userId.username}, readAt: new Date().toISOString()}]
+            };
+          }
+          return message;
+        });
       }
     },
     setReplyingTo: (state, action: PayloadAction<ChatState['replyingTo']>) => {

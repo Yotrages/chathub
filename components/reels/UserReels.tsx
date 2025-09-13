@@ -55,7 +55,7 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({
     <div className="w-full max-w-md mx-auto space-y-4">
       {userReels?.map((reel) => (
         <Link href={`/reels/${reel._id}`} key={reel._id}>
-          <ReelCard reel={reel} />
+          <ReelCard reel={reel} isCompact={false}/>
         </Link>
       ))}
       {hasMore && (

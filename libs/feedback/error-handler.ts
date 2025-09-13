@@ -9,7 +9,7 @@ export type ErrorType = {
   };
   message: string;
 };
-export const errorMessageHandler = async (obj: ErrorType) => {
+export const errorMessageHandler = async (obj: ErrorType, notify: boolean = true) => {
   if (obj.response) {
     if (obj.response.status === 401) {
       try {
@@ -25,12 +25,13 @@ export const errorMessageHandler = async (obj: ErrorType) => {
     if (obj.response.status === 500) {
       if (
         obj.response?.data?.errors &&
-        typeof obj.response?.data?.errors === "string"
+        typeof obj.response?.data?.errors === "string" &&
+        notify
       )
         return errorNotification(obj?.response?.data?.errors);
       return errorNotification(obj?.response?.data?.message);
     }
-    if (obj.response.status === 404) {
+    if (obj.response.status === 404 && notify) {
       return errorNotification(
         "Page not found, Please contact the site administrator"
       );
@@ -41,10 +42,12 @@ export const errorMessageHandler = async (obj: ErrorType) => {
     if (errors && Array.isArray(errors)) {
       errors.forEach((item) => {
         Object.entries(item).forEach(([k, v]) => {
-          errorNotification(`${k.replaceAll("_", " ")}: ${v}`);
+          if (notify) {
+            errorNotification(`${k.replaceAll("_", " ")}: ${v}`);
+          }
         });
       });
-    } else if (errors && typeof errors === "string") {
+    } else if (errors && typeof errors === "string" && notify) {
       errorNotification(errors);
     } else if (data && !message) {
       if (typeof data === "object")
@@ -58,11 +61,12 @@ export const errorMessageHandler = async (obj: ErrorType) => {
     } else if (obj?.response?.data?.error) {
       if (
         typeof obj.response.data.error === "string" &&
-        obj.response.data.message
+        obj.response.data.message && 
+        notify
       ) {
         return errorNotification(String(obj.response.data.message));
       }
-      if (typeof obj.response.data.error === "string") {
+      if (typeof obj.response.data.error === "string" && notify) {
         return errorNotification(obj.response.data.error);
       }
       if (Array.isArray(obj.response.data.error))
@@ -70,16 +74,16 @@ export const errorMessageHandler = async (obj: ErrorType) => {
       Object.entries(obj.response.data.error).map((item: any[]) => {
         if (item[1].length > 1) {
           item[1].forEach((el: any) => {
-            if (typeof el === "string") {
+            if (typeof el === "string" && notify) {
               errorNotification(el);
-            } else if (typeof el === "object") {
+            } else if (typeof el === "object" && notify) {
               Object.entries(el).map((item: any[]) => {
                 errorNotification(item[1]);
               });
             }
           });
         } else {
-          errorNotification(item[1]);
+         notify && errorNotification(item[1]);
         }
       });
     } else if (errors) {
@@ -88,12 +92,12 @@ export const errorMessageHandler = async (obj: ErrorType) => {
           if (typeof v === "string") errorNotification(v);
           else if (Array.isArray(v)) {
             v?.forEach((el) => {
-              if (typeof el === "string") {
+              if (typeof el === "string" && notify) {
                 errorNotification(el);
               } else if (typeof el === "object" && !Array.isArray(el)) {
                 Object.entries(el).forEach(([key, val]) => {
                   if (key === "message") {
-                    if (typeof val === "string") {
+                    if (typeof val === "string" && notify) {
                       errorNotification(val);
                     }
                   }
@@ -103,11 +107,11 @@ export const errorMessageHandler = async (obj: ErrorType) => {
           }
         });
       }
-      if (typeof errors === "string") errorNotification(errors);
+      if (typeof errors === "string" && notify) errorNotification(errors);
     } else if (obj?.response.data?.message) {
-      if (typeof message === "string") {
+      if (typeof message === "string" && notify) {
         errorNotification(message);
       }
     }
-  } else errorNotification(obj.message);
+  } else notify && errorNotification(obj.message);
 };

@@ -2,7 +2,7 @@
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor, RootState, AppDispatch } from '@/libs/redux/store';
-import { SocketProvider } from '@/context/socketContext';
+import { SocketProvider } from '@/context/SocketContext';
 import ReactQueryProvider from '@/libs/react-query/react-query-provider';
 import { ThemeProvider } from '@/context/ThemeContext';
 import "./globals.css";
@@ -11,7 +11,7 @@ import { NotificationProvider } from '@/context/NotificationContext';
 import { getCookie } from 'cookies-next';
 import NotificationPopup from '@/components/notification/NotificationPopUp';
 import { useEffect} from 'react';
-import { useSocket } from "@/context/socketContext"
+import { useSocket } from "@/context/SocketContext"
 import { updateUserOnlineStatus } from '@/libs/redux/authSlice';
 import { api } from '@/libs/axios/config';
 import { Analytics } from "@vercel/analytics/next"
