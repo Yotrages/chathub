@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
-import { useSocket } from '@/context/SocketContext';
+import { useSocket } from '@/context/socketContext';
 import { useChat } from '@/hooks/useChat';
 import { api } from '@/libs/axios/config';
 import debounce from 'lodash/debounce';

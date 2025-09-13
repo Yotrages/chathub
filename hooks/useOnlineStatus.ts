@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSocket } from '@/context/SocketContext';
+import { useSocket } from '@/context/socketContext';
 
 export const useOnlineStatus = () => {
   const [isUserOnline, setIsUserOnline] = useState(navigator.onLine);

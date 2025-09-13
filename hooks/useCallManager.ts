@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
-import { useSocket } from '@/context/SocketContext';
+import { useSocket } from '@/context/socketContext';
 import toast from 'react-hot-toast';
 
 type CallState = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended' | 'failed';
