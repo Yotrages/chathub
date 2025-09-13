@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 
 interface ChatHeaderProps {
   currentChat: Chat;
-  isUserOnline: boolean;
   typingUsers: string[];
   userStatuses: Map<string, UserStatus>;
   callState: string;
@@ -17,7 +16,6 @@ interface ChatHeaderProps {
 
 export const ChatHeader = ({
   currentChat,
-  isUserOnline,
   typingUsers,
   userStatuses,
   callState,
@@ -26,13 +24,28 @@ export const ChatHeader = ({
 }: ChatHeaderProps) => {
   const little_Phone = screen.availWidth < 300;
   const { user } = useSelector((state: RootState) => state.auth);
-  const router = useRouter()
-  const otherUserId = currentChat.participants.find((u) => u._id !== user?._id)
-  const renderStatus = () => {
-    if (!isUserOnline) {
-      return <span className="text-red-500">Offline</span>;
+  const router = useRouter();
+  
+  const otherUserId = currentChat.participants.find((u) => u._id !== user?._id);
+  
+  // Get the other user's online status from API data
+  const getOtherUserOnlineStatus = () => {
+    if (currentChat.type === 'group') {
+      // For groups, we'll show this in the group member list
+      return false;
     }
     
+    const otherUser = currentChat.participants.find((p: any) => p._id !== user?._id);
+    if (!otherUser) return false;
+    
+    const status = userStatuses.get(otherUser._id);
+    return status?.isOnline || false;
+  };
+
+  const isOtherUserOnline = getOtherUserOnlineStatus();
+
+  const renderStatus = () => {
+    // Show typing indicator first (highest priority)
     if (typingUsers.length > 0) {
       return (
         <span className="text-blue-500">
@@ -48,7 +61,11 @@ export const ChatHeader = ({
           <span className="ml-2">
             {currentChat.participants.map((p: any) => (
               p._id !== user?._id && (
-                <UserStatusIndicator key={p._id} userId={p._id} userStatuses={userStatuses} />
+                <UserStatusIndicator 
+                  key={p._id} 
+                  userId={p._id} 
+                  userStatuses={userStatuses} 
+                />
               )
             ))}
           </span>
@@ -56,11 +73,8 @@ export const ChatHeader = ({
       );
     }
 
-    const peer = currentChat.participants.find((p: any) => p._id !== user?._id);
-    if (!peer) return <span>Click to view profile</span>;
-    
-    const status = userStatuses.get(peer._id);
-    return status?.isOnline ? (
+    // For direct messages, show the other user's online status
+    return isOtherUserOnline ? (
       <span className="flex items-center">
         <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
         Online
@@ -78,16 +92,23 @@ export const ChatHeader = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           {currentChat.avatar ? (
-            <UserAvatar avatar={currentChat.avatar} username={currentChat.name} className='w-10 h-10 rounded-full'/>
+            <UserAvatar 
+              avatar={currentChat.avatar} 
+              username={currentChat.name} 
+              className='w-10 h-10 rounded-full'
+            />
           ) : (
-          <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
-            <span className="text-white font-semibold">
-              {currentChat.name?.charAt(0) || 'U'}
-            </span>
-          </div>
+            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
+              <span className="text-white font-semibold">
+                {currentChat.name?.charAt(0) || 'U'}
+              </span>
+            </div>
           )}
           <div>
-            <h2 onClick={() => currentChat.type !== 'group' && router.push(`/profile/${otherUserId?._id}`)} className="text-lg font-semibold text-gray-900">
+            <h2 
+              onClick={() => currentChat.type !== 'group' && router.push(`/profile/${otherUserId?._id}`)} 
+              className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
+            >
               {currentChat.name || 'Unknown Chat'}
             </h2>
             <p className="text-sm text-gray-500 flex items-center">
@@ -102,22 +123,24 @@ export const ChatHeader = ({
               <button
                 onClick={() => onStartCall(false)}
                 className={`p-2 rounded-full transition-colors ${
-                  isUserOnline
+                  isOtherUserOnline
                     ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     : 'text-gray-300 cursor-not-allowed'
                 }`}
-                title="Voice call"
+                disabled={!isOtherUserOnline}
+                title={isOtherUserOnline ? "Voice call" : "User is offline"}
               >
                 <Phone size={20} />
               </button>
               <button
                 onClick={() => onStartCall(true)}
                 className={`p-2 rounded-full transition-colors ${
-                  isUserOnline
+                  isOtherUserOnline
                     ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     : 'text-gray-300 cursor-not-allowed'
                 }`}
-                title="Video call"
+                disabled={!isOtherUserOnline}
+                title={isOtherUserOnline ? "Video call" : "User is offline"}
               >
                 <Video size={20} />
               </button>
@@ -136,21 +159,20 @@ export const ChatHeader = ({
   );
 };
 
-const UserStatusIndicator = ({ userId, userStatuses }: { userId: string; userStatuses: Map<string, UserStatus> }) => {
+const UserStatusIndicator = ({ 
+  userId, 
+  userStatuses 
+}: { 
+  userId: string; 
+  userStatuses: Map<string, UserStatus> 
+}) => {
   const status = userStatuses.get(userId);
   return (
-    <span className="ml-2">
-      {status?.isOnline ? (
-        <span className="flex items-center">
-          <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-          {status.username}
-        </span>
-      ) : (
-        <span className="flex items-center">
-          <span className="w-2 h-2 bg-gray-500 rounded-full mr-1"></span>
-          {status?.username}
-        </span>
-      )}
+    <span className="inline-flex items-center ml-2">
+      <span className={`w-2 h-2 rounded-full mr-1 ${
+        status?.isOnline ? 'bg-green-500' : 'bg-gray-500'
+      }`}></span>
+      <span className="text-xs">{status?.username || 'Unknown'}</span>
     </span>
   );
 };

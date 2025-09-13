@@ -216,11 +216,11 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
         </div>
         <div className="grid grid-cols-3 gap-1">
           <button
-            onMouseDown={handleLongPressStart} // Start tracking press
-            onMouseUp={handleLongPressEnd} // End tracking press
-            onMouseLeave={handleLongPressEnd} // Cancel if mouse leaves
-            onTouchStart={handleLongPressStart} // For touch devices
-            onTouchEnd={handleLongPressEnd} // For touch devices
+            onMouseDown={handleLongPressStart} 
+            onMouseUp={handleLongPressEnd} 
+            onMouseLeave={handleLongPressEnd} 
+            onTouchStart={handleLongPressStart} 
+            onTouchEnd={handleLongPressEnd} 
             onMouseOver={() =>
               window.screen.availWidth > 768 && setShowReactions(true)
             }

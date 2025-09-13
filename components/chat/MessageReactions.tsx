@@ -43,7 +43,7 @@ export const MessageReactions = ({
     { emoji: "😡", label: "Angry" },
   ];
 
-  const handleReaction = async (emoji: string): Promise<void> => {
+  const handleReaction = async (emoji: string, name: string): Promise<void> => {
     try {
       const userReaction = message.reactions?.find((r) => {
         const reactionUserId =
@@ -55,7 +55,7 @@ export const MessageReactions = ({
         await removeReaction(message._id);
         toast.success("Reaction removed");
       } else {
-        await addReaction(message._id, emoji);
+        await addReaction(message._id, emoji, name);
         toast.success("Reaction added");
       }
     } catch (error) {
@@ -182,7 +182,7 @@ export const MessageReactions = ({
             {reactionEmojis.map((reaction, index) => (
               <button
                 key={index}
-                onClick={() => handleReaction(reaction.emoji)}
+                onClick={() => handleReaction(reaction.emoji, reaction.label)}
                 className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors transform hover:scale-110 active:scale-95"
                 title={reaction.label}
               >

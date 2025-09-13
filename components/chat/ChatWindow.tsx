@@ -22,7 +22,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const { activeChat, chats } = useSelector((state: RootState) => state.chat);
   const currentChat = chats.find((chat) => chat._id === activeChat);
 
-  const { isUserOnline } = useOnlineStatus();
+  const { isUserOnline: currentUserOnline } = useOnlineStatus();
   
   const {
     callState,
@@ -52,7 +52,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const {
     isLoading,
     typingUsers,
-    userStatuses
+    userStatuses 
   } = useMessageManagement(currentChat);
 
   if (!currentChat) return null;
@@ -61,7 +61,6 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     <div className="flex flex-col h-full">
       <ChatHeader
         currentChat={currentChat}
-        isUserOnline={isUserOnline}
         typingUsers={typingUsers}
         userStatuses={userStatuses}
         callState={callState}
@@ -101,7 +100,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
       <MessagesArea
         currentChat={currentChat}
-        isUserOnline={isUserOnline}
+        isUserOnline={currentUserOnline} 
         isLoading={isLoading}
       />
 

@@ -629,14 +629,14 @@ export const useChat = () => {
       }
     }
   };
-  const addReaction = async (messageId: string, emoji: string) => {
+  const addReaction = async (messageId: string, emoji: string, name: string) => {
     console.log("Add reaction called", {
       socketExists: !!socket,
       isConnected: socket?.connected,
     });
     if (socket && isSocketReady()) {
       console.log("🔌 Adding reaction via socket...");
-      socket.emit("add_reaction", { messageId, emoji });
+      socket.emit("add_reaction", { messageId, emoji, name });
     } else {
       console.log(
         "🌐 Socket not ready, implementing HTTP fallback for add reaction"
@@ -644,7 +644,7 @@ export const useChat = () => {
       try {
         const response = await api.post(
           `/chat/messages/${messageId}/reactions`,
-          { emoji }
+          { emoji, name }
         );
         const messageData = response.data;
         dispatch(

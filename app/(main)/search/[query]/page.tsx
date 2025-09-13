@@ -155,7 +155,7 @@ const SearchPage: React.FC = () => {
         >
           <div className="relative">
             <Image
-              src={user.avatar || "/default-avatar.png"}
+              src={user.avatar || ""}
               alt={user?.username || ""}
               width={56}
               height={56}
