@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useSocket } from "@/context/socketContext";
+import { useSocket } from "@/context/SocketContext";
 import { AppDispatch, RootState } from "@/libs/redux/store";
 import {
   addMessage,
