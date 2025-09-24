@@ -18,7 +18,7 @@ const ConnectionsPage = () => {
 
   const { data: followersData, isLoading: followersLoading } = useGetFollowers(id as string);
   const { data: followingData, isLoading: followingLoading } = useGetFollowing(id as string);
-  const { data: pendingRequests, isLoading: pendingLoading } = useGetPendingRequests(id as string, { enabled: isOwnProfile && activeTab === 'pending' });
+  const { data: pendingRequestsData, isLoading: pendingLoading } = useGetPendingRequests(id as string, { enabled: isOwnProfile && activeTab === 'pending' });
   const { mutate: acceptRequest } = useAcceptFollowRequest();
   const { mutate: rejectRequest } = useRejectFollowRequest();
 
@@ -78,14 +78,14 @@ const ConnectionsPage = () => {
 
         <div className="p-6">
           {activeTab === 'followers' && (
-            <UserList users={followersData.data?.followers || []} title="No followers yet" />
+            <UserList users={followersData?.data.followers || []} title="No followers yet" />
           )}
           {activeTab === 'following' && (
-            <UserList users={followingData?.following || []} title="Not following anyone yet" />
+            <UserList users={followingData?.data.following || []} title="Not following anyone yet" />
           )}
           {activeTab === 'pending' && isOwnProfile && (
             <PendingRequestsList
-              requests={pendingRequests || []}
+              requests={pendingRequestsData?.data.pendingRequests || pendingRequestsData || []}
               onAccept={handleAcceptRequest}
               onReject={handleRejectRequest}
             />
@@ -97,7 +97,7 @@ const ConnectionsPage = () => {
 };
 
 const UserList = ({ users, title }: { users: User[]; title: string }) => {
-  if (users.length === 0) {
+  if (!Array.isArray(users) || users.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">{title}</p>
@@ -138,7 +138,8 @@ const PendingRequestsList = ({
   onReject: (followId: string) => void;
 }) => {
 
-  if (requests.length === 0) {
+  // Ensure requests is an array before checking length
+  if (!Array.isArray(requests) || requests.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500">No pending follow requests</p>
@@ -148,7 +149,7 @@ const PendingRequestsList = ({
 
   return (
     <div className="space-y-4">
-      {requests && requests?.map((request) => (
+      {requests.map((request) => (
         <div key={request._id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
           <Link href={`/profile/${request.followerId._id}`} className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">

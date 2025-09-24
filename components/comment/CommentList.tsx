@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { CommentItem } from "./CommentItem";
 import { ReactionsModal } from "../post/LikesModal";
 import { CommentListProps, IComment } from "@/types";
@@ -19,97 +19,121 @@ export const CommentList: React.FC<CommentListProps> = ({
     reactions: IComment["reactions"];
     type: string;
   }>({ isOpen: false, reactions: [], type: "comment" });
+
   const commentPagination = useSelector(selectPagination("comment", dynamicId));
   const reelCommentPagination = useSelector(
     selectReelPagination("comment", dynamicId)
   );
-  const { isLoading, loadMoreComments } = useGetComments(dynamicId);
-  const { isLoading: commentLoading, loadMoreComments: loadMore } =
-    useGetReelComments(dynamicId);
+
+  // Only call the hook that matches the type
+  const postCommentsHook = useGetComments(type === "post" ? dynamicId : "");
+  const reelCommentsHook = useGetReelComments(type === "reel" ? dynamicId : "");
+
+  // Use the appropriate hook based on type
+  const { isLoading, loadMoreComments } = type === "post" ? postCommentsHook : { isLoading: false, loadMoreComments: () => {} };
+  const { isLoading: commentLoading, loadMoreComments: loadMore } = type === "reel" ? reelCommentsHook : { isLoading: false, loadMoreComments: () => {} };
 
   useEffect(() => {
     console.log(
       `CommentList rendered for dynamicId ${dynamicId}, comments:`,
       comments
-    ); // Debug log
+    );
   }, [comments, dynamicId]);
 
-  const handleShowLikes = (
+  const handleShowLikes = useCallback((
     reactions: IComment["reactions"],
     type: string
   ): void => {
-    console.log(`Showing reactions for ${type}:`, reactions); // Debug log
+    console.log(`Showing reactions for ${type}:`, reactions);
     setLikesModal({ isOpen: true, reactions, type });
-  };
+  }, []);
 
-  const handleCloseLikes = (): void => {
-    console.log("Closing reactions modal"); // Debug log
+  const handleCloseLikes = useCallback((): void => {
+    console.log("Closing reactions modal");
     setLikesModal({ isOpen: false, reactions: [], type: "comment" });
-  };
+  }, []);
+
+  // Memoize the comments rendering to prevent unnecessary re-renders
+  const renderedComments = useMemo(() => {
+    if (!comments || comments.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg">No comments yet</p>
+          <p className="text-gray-400 text-sm">
+            Be the first to share your thoughts!
+          </p>
+        </div>
+      );
+    }
+
+    return comments.map((comment) => (
+      <CommentItem
+        type={type}
+        dynamicId={dynamicId}
+        key={comment._id}
+        comment={comment}
+        onShowReactions={handleShowLikes}
+      />
+    ));
+  }, [comments, type, dynamicId, handleShowLikes]);
+
+  // Memoize the load more button to prevent unnecessary re-renders
+  const loadMoreButton = useMemo(() => {
+    if (type === "post") {
+      return commentPagination?.hasNextPage ? (
+        <div className="text-center mt-4">
+          <button
+            onClick={loadMoreComments}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Load more comments"
+            )}
+          </button>
+        </div>
+      ) : null;
+    } else {
+      return reelCommentPagination?.hasNextPage ? (
+        <div className="text-center mt-4">
+          <button
+            onClick={loadMore}
+            disabled={commentLoading}
+            className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            {commentLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Load more comments"
+            )}
+          </button>
+        </div>
+      ) : null;
+    }
+  }, [
+    type,
+    commentPagination?.hasNextPage,
+    reelCommentPagination?.hasNextPage,
+    loadMoreComments,
+    loadMore,
+    isLoading,
+    commentLoading
+  ]);
 
   return (
-    <div className="bg-white p-4">
+    <div className="bg-white xs:p-4 py-4 px-1">
       <div className="space-y-4">
-        {comments && comments.length > 0 ? (
-          <>
-            {comments.map((comment) => (
-              <CommentItem
-                type={type}
-                dynamicId={dynamicId}
-                key={comment._id}
-                comment={comment}
-                onShowReactions={handleShowLikes}
-              />
-            ))}
-            {type === "post" ? (
-              commentPagination?.hasNextPage && (
-                <div className="text-center mt-4">
-                  <button
-                    onClick={loadMoreComments}
-                    disabled={isLoading}
-                    className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      "Load more comments"
-                    )}
-                  </button>
-                </div>
-              )
-            ) : (
-                reelCommentPagination?.hasNextPage && (
-                  <div className="text-center mt-4">
-                    <button
-                      onClick={loadMore}
-                      disabled={isLoading}
-                      className="flex items-center justify-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                    >
-                      {commentLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        "Load more comments"
-                      )}
-                    </button>
-                  </div>
-                )
-            )}
-          </>
-        ) : (
-          <div className="text-center py-12">
-            <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No comments yet</p>
-            <p className="text-gray-400 text-sm">
-              Be the first to share your thoughts!
-            </p>
-          </div>
-        )}
+        {renderedComments}
+        {loadMoreButton}
       </div>
       <ReactionsModal
         reactions={likesModal.reactions}

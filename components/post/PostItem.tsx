@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/libs/redux/store";
@@ -10,16 +10,19 @@ import PostEngagement from "./PostEngagement";
 import PostComments from "./PostComments";
 import EditModal from "./Editmodal";
 import { ReactionsModal } from "./LikesModal";
+import { PostModal } from "./PostModal";
 import { removePost, selectComments } from "@/libs/redux/postSlice";
 import { useRouter } from "next/navigation";
 import { useGetComments } from "@/hooks/usePosts";
 
 interface PostItemProps {
   post: Post;
+  isModal?: boolean; // Add this prop to determine if it's in modal/page view
 }
 
-export const PostItem = ({ post }: PostItemProps) => {
-  const [showComments, setShowComments] = useState(false);
+export const PostItem = ({ post, isModal = false }: PostItemProps) => {
+  const [showComments, setShowComments] = useState(isModal); // Show comments by default in modal/page
+  const [showPostModal, setShowPostModal] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -28,114 +31,240 @@ export const PostItem = ({ post }: PostItemProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
   const [hide, setHide] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [hasSuccessfullyFetched, setHasSuccessfullyFetched] = useState(false);
+  const [fetchAttempted, setFetchAttempted] = useState(false);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const { user } = useSelector((state: RootState) => state.auth);
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const comments = useSelector(selectComments(post._id));
-  // const commentPagination = useSelector(selectPagination('comment', post._id));
-  const { trigger: fetchComments, isLoading: isFetchingComments } = useGetComments(post._id);
+  const { trigger: fetchComments, isLoading: isFetchingComments } =
+    useGetComments(
+      post._id,
+      () => {
+        setHasSuccessfullyFetched(true);
+      },
+      () => {
+        setFetchAttempted(false);
+      }
+    );
 
+  // Listen for online/offline events
   useEffect(() => {
-    console.log(`PostItem mounted for postId ${post._id}, comments:`, comments); 
-    console.log(`Fetching comments for postId ${post._id}`); 
+    const handleOnline = () => {
+      console.log("Connection restored");
+      setIsOnline(true);
+    };
+
+    const handleOffline = () => {
+      console.log("Connection lost");
+      setIsOnline(false);
+    };
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  // Handle comment fetching with smart logic
+  useEffect(() => {
+    if (!isOnline) {
+      console.log(
+        `User is offline, skipping comment fetch for postId ${post._id}`
+      );
+      return;
+    }
+
+    if (hasSuccessfullyFetched) {
+      console.log(
+        `Comments already successfully fetched for postId ${post._id}, skipping`
+      );
+      return;
+    }
+
+    if (fetchAttempted) {
+      console.log(
+        `Fetch already attempted for postId ${post._id}, waiting for result`
+      );
+      return;
+    }
+
+    // Check if we already have comments in Redux store
+    if (comments && comments.length > 0) {
+      console.log(
+        `Comments already exist in store for postId ${post._id}, marking as successfully fetched`
+      );
+      setHasSuccessfullyFetched(true);
+      return;
+    }
+
+    console.log(`Fetching comments for postId ${post._id}`);
+    setFetchAttempted(true);
+
     fetchComments();
-  }, [post._id]);
+  }, [
+    post._id,
+    isOnline,
+    hasSuccessfullyFetched,
+    fetchAttempted,
+    comments,
+    fetchComments,
+  ]);
+
+  // Retry fetching when coming back online
+  useEffect(() => {
+    if (isOnline && !hasSuccessfullyFetched && !fetchAttempted) {
+      console.log(
+        `User came back online, attempting to fetch comments for postId ${post._id}`
+      );
+      // Reset the fetch attempt flag to allow fetching when coming back online
+      setFetchAttempted(false);
+    }
+  }, [isOnline, hasSuccessfullyFetched, fetchAttempted, post._id]);
 
   useEffect(() => {
-    console.log(`Comments updated for postId ${post._id}:`, comments); 
-  }, [comments, post._id]);
+    console.log(`Comments updated for postId ${post._id}:`, comments);
+
+    // Mark as successfully fetched if we receive comments
+    if (comments && comments.length > 0 && !hasSuccessfullyFetched) {
+      setHasSuccessfullyFetched(true);
+    }
+  }, [comments, post._id, hasSuccessfullyFetched]);
 
   const toggleComments = () => {
-    if (window.innerWidth <= 768 && !window.location.href.includes('/post/')) {
-      console.log(`Redirecting to /post/${post._id} for mobile view`); // Debug log
+    // Check if we're already on the post page or in modal
+    const isOnPostPage = window.location.href.includes(`/post/${post._id}`);
+
+    if (window.innerWidth <= 768 && !isOnPostPage && !isModal) {
+      // Mobile: route to post page
+      console.log(`Redirecting to /post/${post._id} for mobile view`);
       router.push(`/post/${post._id}`);
-      setShowComments(true);
+    } else if (window.innerWidth > 768 && !isOnPostPage && !isModal) {
+      // Desktop: show modal
+      console.log(`Opening modal for postId ${post._id}`);
+      setShowPostModal(true);
     } else {
-      console.log(`Toggling comments for postId ${post._id}, showComments: ${!showComments}`); // Debug log
+      // Toggle comments if already in modal or on post page
+      console.log(
+        `Toggling comments for postId ${
+          post._id
+        }, showComments: ${!showComments}`
+      );
       setShowComments(!showComments);
     }
   };
 
   const hidePost = () => {
-    console.log(`Hiding post ${post._id}`); // Debug log
+    console.log(`Hiding post ${post._id}`);
     setHide(true);
     dispatch(removePost(post._id));
+  };
+
+  // Manual retry function for failed fetches
+  const retryFetchComments = () => {
+    if (!isOnline) {
+      console.log("Cannot retry - user is offline");
+      return;
+    }
+
+    console.log(`Manually retrying comment fetch for postId ${post._id}`);
+    setFetchAttempted(false);
+    setHasSuccessfullyFetched(false);
   };
 
   if (hide) return null;
 
   return (
-    <article className="bg-white rounded-2xl flex flex-col shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
-      <PostHeader
-        authorId={post.authorId}
-        createdAt={post.createdAt}
-        postId={post._id}
-        content={post.content}
-        onEdit={() => setIsOpen(true)}
-        onHide={hidePost}
-      />
-      <PostContent content={post.content} />
-      <PostMediaGallery
-        images={post.images || []}
-        currentMediaIndex={currentMediaIndex}
-        setCurrentMediaIndex={setCurrentMediaIndex}
-        isVideoPlaying={isVideoPlaying}
-        setIsVideoPlaying={setIsVideoPlaying}
-        isVideoMuted={isVideoMuted}
-        setIsVideoMuted={setIsVideoMuted}
-        videoRef={videoRef}
-      />
-      <PostEngagement
-        postId={post._id}
-        reactions={post.reactions || []}
-        comments={comments || []}
-        images={post.images || []}
-        user={user}
-        showReactions={showReactions}
-        setShowReactions={setShowReactions}
-        onShowComments={toggleComments}
-        showComments={showComments}
-        setShowLikes={setShowLikes}
-        post={post}
-      />
-      {showComments && (
-        <div className="p-2 w-full max-w-full">
-          {isFetchingComments ? (
-            <p className="text-gray-500 text-center">Loading comments...</p>
-          ) : (
-            <PostComments
-              type="post"
-              dynamicId={post._id}
-              comments={comments}
-              user={user}
-              postAuthorId={post.authorId._id}
-              commentContent={commentContent}
-              setCommentContent={setCommentContent}
-            />
-          )}
-          {/* {commentPagination?.hasNextPage && (
-            <button
-              onClick={() => fetchComments()}
-              className="text-blue-500 mt-2 text-center"
-              disabled={isFetchingComments}
-            >
-              Load more comments
-            </button>
-          )} */}
-        </div>
-      )}
-      {isOpen && (
-        <EditModal onClose={() => setIsOpen(false)} postId={post._id} />
-      )}
-      {showLikes && (
-        <ReactionsModal
-          reactions={post.reactions}
-          isOpen={showLikes}
-          onClose={() => setShowLikes(false)}
-          type="Post"
+    <>
+      <article className="bg-white rounded-2xl flex flex-col shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
+        <PostHeader
+          authorId={post.authorId}
+          createdAt={post.createdAt}
+          postId={post._id}
+          content={post.content}
+          onEdit={() => setIsOpen(true)}
+          onHide={hidePost}
+        />
+        <PostContent content={post.content} />
+        <PostMediaGallery
+          images={post.images || []}
+          currentMediaIndex={currentMediaIndex}
+          setCurrentMediaIndex={setCurrentMediaIndex}
+          isVideoPlaying={isVideoPlaying}
+          setIsVideoPlaying={setIsVideoPlaying}
+          isVideoMuted={isVideoMuted}
+          setIsVideoMuted={setIsVideoMuted}
+          videoRef={videoRef}
+        />
+        <PostEngagement
+          postId={post._id}
+          reactions={post.reactions || []}
+          comments={comments || []}
+          images={post.images || []}
+          user={user}
+          showReactions={showReactions}
+          setShowReactions={setShowReactions}
+          onShowComments={toggleComments}
+          showComments={showComments}
+          setShowLikes={setShowLikes}
+          post={post}
+        />
+        {showComments && (
+          <div className="w-full max-w-full">
+            {isFetchingComments ? (
+              <div className="text-center py-4 text-gray-500">
+                <p>Loading comments...</p>
+              </div>
+            ) : !hasSuccessfullyFetched && fetchAttempted ? (
+              <div className="text-center py-4 text-gray-500">
+                <p>Failed to load comments.</p>
+                <button
+                  onClick={retryFetchComments}
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <PostComments
+                type="post"
+                dynamicId={post._id}
+                comments={comments}
+                user={user}
+                postAuthorId={post.authorId._id}
+                commentContent={commentContent}
+                setCommentContent={setCommentContent}
+              />
+            )}
+          </div>
+        )}
+        {isOpen && (
+          <EditModal onClose={() => setIsOpen(false)} postId={post._id} />
+        )}
+        {showLikes && (
+          <ReactionsModal
+            reactions={post.reactions}
+            isOpen={showLikes}
+            onClose={() => setShowLikes(false)}
+            type="Post"
+          />
+        )}
+      </article>
+
+      {/* Desktop Modal */}
+      {showPostModal && (
+        <PostModal
+          isOpen={showPostModal}
+          onClose={() => setShowPostModal(false)}
+          post={post}
         />
       )}
-    </article>
+    </>
   );
 };

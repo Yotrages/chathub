@@ -5,11 +5,12 @@ import {
   Paperclip,
 } from "lucide-react";
 import CreatePostModal from "./CreatePostModal";
+import { useRouter } from "next/navigation";
 
 
 export const CreatePost = () => {
   const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false)
-
+  const router = useRouter()
 
 
   // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +72,13 @@ export const CreatePost = () => {
   //   setFilePreviews((prev) => [...prev, ...newPreviews]);
   // };
 
+  const handleShow = () => {
+    if (window.innerWidth < 768) {
+      router.push('/post/create')
+    } else {
+      setShowCreatePostModal(true)
+    }
+  }
   
 
   return (
@@ -78,8 +86,8 @@ export const CreatePost = () => {
     <div className="bg-white rounded-lg shadow p-4 mb-6">
       <form>
         <input
-        onFocus={() => setShowCreatePostModal(true)}
-        onClick={() => setShowCreatePostModal(true)}
+        onFocus={handleShow}
+        onClick={handleShow}
           placeholder="What's on your mind?"
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />       

@@ -42,6 +42,7 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
   const [originalFile, setOriginalFile] = useState<File>();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [replyContent, setReplyContent] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -65,6 +66,23 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     setReplyContent((prev) => prev + emojiData.emoji);
   };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setReplyContent(e.target.value);
+    
+    // Auto-resize textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+  };
+
+  // Auto-resize on content change
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [replyContent]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -118,14 +136,15 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
 
   const renderFilePreview = (preview: string, type: string, file: File | undefined) => {
     return (
-      <div className="px-12 relative group">
-        <div className="relative w-36 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="px-2 sm:px-6 md:px-12 mb-2 relative group w-full overflow-x-auto">
+        <div className="relative w-24 xs:w-32 sm:w-36 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 mx-auto sm:mx-0">
           <button
             type="button"
             onClick={removeFile}
-            className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+            className="absolute top-1 right-1 sm:top-2 sm:right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 sm:p-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
           >
-            <X size={14} />
+            <X size={10} className="sm:hidden" />
+            <X size={14} className="hidden sm:block" />
           </button>
           <div className="aspect-square">
             {type === "image" && preview && (
@@ -137,12 +156,12 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
                   <img src={preview} alt="Video thumbnail" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <Video size={32} className="text-gray-400" />
+                    <Video size={20} className="text-gray-400 sm:w-8 sm:h-8" />
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                  <div className="bg-white bg-opacity-90 rounded-full p-2">
-                    <Play size={16} className="text-gray-800 ml-0.5" />
+                  <div className="bg-white bg-opacity-90 rounded-full p-1 sm:p-2">
+                    <Play size={12} className="text-gray-800 ml-0.5 sm:w-4 sm:h-4" />
                   </div>
                 </div>
               </div>
@@ -150,24 +169,24 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
             {type === "audio" && (
               <div className="relative w-full h-full bg-gray-900 flex items-center justify-center">
                 {preview ? (
-                  <audio src={preview} loop controls className="w-full h-full object-cover" />
+                  <audio src={preview} loop controls className="w-full h-full object-cover text-xs" />
                 ) : (
                   <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <Music size={32} className="text-gray-400" />
+                    <Music size={20} className="text-gray-400 sm:w-8 sm:h-8" />
                   </div>
                 )}
               </div>
             )}
             {type === "document" && (
-              <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4">
-                <FileText size={32} className="text-purple-500 mb-2" />
-                <span className="text-xs text-purple-700 text-center truncate w-full font-medium">
+              <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-2 sm:p-4">
+                <FileText size={20} className="text-purple-500 mb-1 sm:mb-2 sm:w-8 sm:h-8" />
+                <span className="text-xs text-purple-700 text-center truncate w-full font-medium px-1">
                   {file?.name}
                 </span>
               </div>
             )}
           </div>
-          <div className="p-2 bg-white bg-opacity-90 backdrop-blur-sm">
+          <div className="p-1 sm:p-2 bg-white bg-opacity-90 backdrop-blur-sm">
             <p className="text-xs font-medium text-gray-800 truncate">{file?.name}</p>
             <div className="flex items-center justify-between">
               {file && (
@@ -183,12 +202,20 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
   };
 
   return (
-    <div className="mt-3 flex-col ml-3">
-      {preview && <span>{renderFilePreview(preview, previewType, originalFile)}</span>}
-      <div className="flex gap-2">
-        <UserAvatar username={username} avatar={avatar} className="w-8 h-8" />
-        <button type="button" onClick={() => fileInputRef.current?.click()}>
-          <Image size={18} />
+    <div className="mt-3 sm:mt-4 flex-col ml-1 sm:ml-3 w-full max-w-full overflow-hidden">
+      {preview && <span className="block w-full">{renderFilePreview(preview, previewType, originalFile)}</span>}
+      <div className="flex gap-1 sm:gap-2 items-start w-full min-w-0">
+        <UserAvatar 
+          username={username} 
+          avatar={avatar} 
+          className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 hidden xs:flex" 
+        />
+        <button 
+          type="button" 
+          onClick={() => fileInputRef.current?.click()}
+          className="flex-shrink-0 p-1 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <Image size={16} className="sm:w-[18px] sm:h-[18px]" />
         </button>
         <input
           ref={fileInputRef}
@@ -198,38 +225,63 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
           onChange={handleFileChange}
           className="hidden"
         />
-        <form onSubmit={onSubmit} className="flex items-center justify-center relative w-full flex-1">
-          <input
-            type="text"
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
-            placeholder={`Reply to ${username}...`}
-            className="w-full bg-gray-50 rounded-full px-3 py-2 text-sm border-none outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all"
-          />
-          <span className="absolute flex items-center gap-2 right-2">
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="hover:scale-110 transition-transform"
-            >
-              😊
-            </button>
-            <button type="submit" disabled={!replyContent.trim()}>
-              <Send className="w-6 h-6 text-black" />
-            </button>
-          </span>
+        <form onSubmit={onSubmit} className="flex items-end w-full min-w-0 relative">
+          <div className="relative w-full min-w-0">
+            <textarea
+              ref={textareaRef}
+              value={replyContent}
+              onChange={handleTextareaChange}
+              placeholder={`Reply to ${username}...`}
+              rows={1}
+              className="w-full bg-gray-50 rounded-2xl sm:rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border-none outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all resize-none overflow-hidden pr-16 sm:pr-20 min-h-[36px] sm:min-h-[40px]"
+              style={{ 
+                minHeight: '36px',
+                maxHeight: '120px',
+                lineHeight: '1.4'
+              }}
+            />
+            <div className="absolute flex items-center gap-1 sm:gap-2 right-2 sm:right-3 bottom-2 sm:bottom-2.5">
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="hover:scale-110 transition-transform text-sm sm:text-base flex-shrink-0"
+              >
+                😊
+              </button>
+              <button 
+                type="submit" 
+                disabled={!replyContent.trim()}
+                className="flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-transform"
+              >
+                <Send className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
+              </button>
+            </div>
+          </div>
           {showEmojiPicker && (
-            <div ref={emojiRef} className="absolute bottom-12 right-0 z-10">
-              <EmojiPicker onEmojiClick={handleEmojiClick} />
+            <div 
+              ref={emojiRef} 
+              className="absolute bottom-full right-0 z-50 mb-2"
+              style={{
+                transform: window.innerWidth < 400 ? 'translateX(-50%)' : 'none',
+                right: window.innerWidth < 400 ? '50%' : '0'
+              }}
+            >
+              <div className="max-w-[280px] xs:max-w-none">
+                <EmojiPicker 
+                  onEmojiClick={handleEmojiClick}
+                  width={Math.min(320, window.innerWidth - 20)}
+                  height={Math.min(400, window.innerHeight * 0.4)}
+                />
+              </div>
             </div>
           )}
         </form>
       </div>
-      {errors.content || (reelErrors.content && (
-        <span className="text-red-500 mt-2 text-center">
+      {(errors.content || reelErrors.content) && (
+        <span className="text-red-500 mt-2 text-center text-xs sm:text-sm block w-full px-2">
           {errors.content?.message || reelErrors.content?.message}
         </span>
-      ))}
+      )}
     </div>
   );
 };

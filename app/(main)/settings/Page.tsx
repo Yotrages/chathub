@@ -11,8 +11,6 @@ import AccountSettings from '@/components/settings/AccountSettings';
 import ReportsSettings from '@/components/settings/ReportSettings';
 import { Report, UserSettings } from '@/types';
 
-
-
 export default function SettingsPage() {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [activeTab, setActiveTab] = useState('privacy');
@@ -48,7 +46,6 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       const response = await api.get('/settings');
-      if (!response.data) throw new Error('Failed to fetch settings');
       setSettings(response.data);
     } catch (error) {
       console.error('Error fetching settings:', error);
@@ -61,7 +58,6 @@ export default function SettingsPage() {
   const fetchReports = async () => {
     try {
       const response = await api.get('/settings/my-reports');
-      if (!response.data) throw new Error('Failed to fetch reports');
       setReports(response.data);
     } catch (error) {
       console.error('Error fetching reports:', error);
@@ -69,12 +65,11 @@ export default function SettingsPage() {
     }
   };
 
-  const updateSettings = async (section: string, data: any) => {
+  const updateSettings = async (section: string, settingsData: any) => {
     setSaving(true);
     setError(null);
     try {
-      const response = await api.put(`/settings/${section}`, { data });
-      if (!response.data) throw new Error(`Failed to update ${section} settings`);
+      const response = await api.put(`/settings/${section}`, settingsData); // Removed { data } wrapper
       setSettings(response.data);
     } catch (error) {
       console.error(`Error updating ${section} settings:`, error);
@@ -89,17 +84,10 @@ export default function SettingsPage() {
     const formData = new FormData();
     formData.append('background', file);
     try {
-      const response = await api.post('/settings/background', { formData });
-      if (!response.data) throw new Error('Failed to upload background');
-      if (settings) {
-        setSettings({
-          ...settings,
-          appearance: {
-            ...settings.appearance,
-            backgroundImage: response.data.backgroundImage,
-          },
-        });
-      }
+      const response = await api.post('/settings/background', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      setSettings(response.data);
     } catch (error) {
       console.error('Error uploading background:', error);
       setError('Failed to upload background image. Please try again.');
@@ -119,10 +107,11 @@ export default function SettingsPage() {
         reportedPostId: reportForm.reportedPostId || undefined,
         reportedCommentId: reportForm.reportedCommentId || undefined,
       });
-      if (!response.data) throw new Error('Failed to submit report');
-      setShowReportModal(false);
-      setReportForm({ reportType: 'spam', description: '', reportedUserId: '', reportedPostId: '', reportedCommentId: '' });
-      fetchReports();
+      if (response.status === 201) {
+        setShowReportModal(false);
+        setReportForm({ reportType: 'spam', description: '', reportedUserId: '', reportedPostId: '', reportedCommentId: '' });
+        fetchReports();
+      }
     } catch (error) {
       console.error('Error submitting report:', error);
       setError('Failed to submit report. Please try again.');
@@ -134,8 +123,7 @@ export default function SettingsPage() {
       setError(null);
       try {
         const response = await api.post('/settings/deactivate');
-        if (!response.data) throw new Error('Failed to deactivate account');
-        fetchSettings();
+        setSettings(response.data);
       } catch (error) {
         console.error('Error deactivating account:', error);
         setError('Failed to deactivate account. Please try again.');
@@ -148,8 +136,7 @@ export default function SettingsPage() {
       setError(null);
       try {
         const response = await api.post('/settings/schedule-delete');
-        if (!response.data) throw new Error('Failed to schedule deletion');
-        fetchSettings();
+        setSettings(response.data);
       } catch (error) {
         console.error('Error scheduling deletion:', error);
         setError('Failed to schedule deletion. Please try again.');
@@ -160,8 +147,8 @@ export default function SettingsPage() {
   const requestDataDownload = async () => {
     setError(null);
     try {
-      const response = await api.post('/api/settings/request-data');
-      if (!response.data) throw new Error('Failed to request data download');
+      const response = await api.post('/settings/request-data');
+      setSettings(response.data);
       alert('Data download request submitted. You will receive an email when ready.');
     } catch (error) {
       console.error('Error requesting data download:', error);
@@ -211,10 +198,10 @@ export default function SettingsPage() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-left ${
+                    className={`w-full flex items-center px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-left transition-colors ${
                       activeTab === tab.id
                         ? 'bg-blue-50 text-blue-600 border-l-4 border-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
                     <Icon className="h-5 w-5 mr-3" />

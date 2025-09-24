@@ -53,12 +53,27 @@ const PostComments: React.FC<PostCommentsProps> = ({
   } = useMemoryThreads();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
   const [preview, setPreview] = useState<string>("");
   const [previewType, setPreviewType] = useState("");
   const [originalFile, setOriginalFile] = useState<File>();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMemories, setShowMemories] = useState(false);
+
+  // Auto-resize textarea
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120; // Maximum height in pixels
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [commentContent]);
 
   // Extract keywords from comment text
   const extractKeywords = (text: string): string[] => {
@@ -122,9 +137,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
   };
 
   const handleExpandMemory = (memory: any) => {
-    // In a real implementation, this would open a detailed memory view
     console.log('Expanding memory:', memory);
-    // You could open a modal, navigate to a detail page, etc.
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,7 +176,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
 
   const removeFile = () => {
     setPreview("");
-    setPreviewType("")
+    setPreviewType("");
     setOriginalFile(undefined);
   };
 
@@ -180,14 +193,14 @@ const PostComments: React.FC<PostCommentsProps> = ({
 
   const renderFilePreview = (preview: string, type: string, file: File | undefined) => {
     return (
-      <div className="px-12 relative group">
-        <div className="relative w-36 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+      <div className="px-2 sm:px-4 md:px-6 lg:px-12 relative group">
+        <div className="relative w-24 sm:w-28 md:w-32 lg:w-36 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
           <button
             type="button"
             onClick={removeFile}
-            className="absolute top-2 right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
+            className="absolute top-1 right-1 sm:top-2 sm:right-2 z-10 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 sm:p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 transform hover:scale-110"
           >
-            <X size={14} />
+            <X size={12} className="sm:w-3.5 sm:h-3.5" />
           </button>
           <div className="aspect-square">
             {type === "image" && preview && (
@@ -199,12 +212,12 @@ const PostComments: React.FC<PostCommentsProps> = ({
                   <img src={preview} alt="Video thumbnail" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <Video size={32} className="text-gray-400" />
+                    <Video size={20} className="sm:w-8 sm:h-8 text-gray-400" />
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
-                  <div className="bg-white bg-opacity-90 rounded-full p-2">
-                    <Play size={16} className="text-gray-800 ml-0.5" />
+                  <div className="bg-white bg-opacity-90 rounded-full p-1 sm:p-2">
+                    <Play size={12} className="sm:w-4 sm:h-4 text-gray-800 ml-0.5" />
                   </div>
                 </div>
               </div>
@@ -215,21 +228,21 @@ const PostComments: React.FC<PostCommentsProps> = ({
                   <audio src={preview} loop controls className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <Music size={32} className="text-gray-400" />
+                    <Music size={20} className="sm:w-8 sm:h-8 text-gray-400" />
                   </div>
                 )}
               </div>
             )}
             {type === "document" && (
-              <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4">
-                <FileText size={32} className="text-purple-500 mb-2" />
+              <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-2 sm:p-4">
+                <FileText size={20} className="sm:w-8 sm:h-8 text-purple-500 mb-1 sm:mb-2" />
                 <span className="text-xs text-purple-700 text-center truncate w-full font-medium">
                   {file?.name}
                 </span>
               </div>
             )}
           </div>
-          <div className="p-2 bg-white bg-opacity-90 backdrop-blur-sm">
+          <div className="p-1 sm:p-2 bg-white bg-opacity-90 backdrop-blur-sm">
             <p className="text-xs font-medium text-gray-800 truncate">{file?.name}</p>
             <div className="flex items-center justify-between">
               {file && (
@@ -253,16 +266,22 @@ const PostComments: React.FC<PostCommentsProps> = ({
       {preview && <span>{renderFilePreview(preview, previewType, originalFile)}</span>}
       
       {user && (
-        <div className="py-6 xs:px-6 pb-4 w-full">
-          <form onSubmit={handleAddComment} className="flex space-x-3 w-full">
+        <div className="py-3 sm:py-4 md:py-6 px-2 sm:px-4 md:px-6 pb-3 sm:pb-4 w-full">
+          <form onSubmit={handleAddComment} className="flex items-end gap-2 w-full">
             <UserAvatar
               username={user?.username || "User"}
               avatar={user?.avatar}
-              className="w-10 h-10 flex-shrink-0 xs:flex hidden"
+              className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 hidden xs:flex"
             />
-            <button type="button" onClick={() => fileInputRef.current?.click()}>
-              <Image size={18} />
+            
+            <button 
+              className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+              type="button" 
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Image size={16} className="sm:w-5 sm:h-5" />
             </button>
+            
             <input
               ref={fileInputRef}
               type="file"
@@ -271,57 +290,68 @@ const PostComments: React.FC<PostCommentsProps> = ({
               onChange={handleFileChange}
               className="hidden"
             />
-            <div className="flex-1 relative flex space-x-2 xs:space-x-6">
-              <span className="flex flex-1 relative">
-                <input
-                  type="text"
+            
+            <div className="flex-1 relative min-w-0">
+              <div className="flex relative">
+                <textarea
+                  ref={textareaRef}
                   value={commentContent}
                   onChange={(e) => setCommentContent(e.target.value)}
                   placeholder="Write a comment..."
-                  className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  rows={1}
+                  className="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none overflow-hidden text-sm sm:text-base pr-8"
+                  style={{ minHeight: '38px' }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="absolute right-2 bottom-2 hover:scale-110 transition-transform"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 hover:scale-110 transition-transform text-lg"
                 >
                   😊
                 </button>
-              </span>
-              <button
-                type="submit"
-                disabled={!commentContent.trim()}
-                className="px-4 bg-blue-500 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 active:scale-95"
-              >
-                <Send size={18} />
-              </button>
+              </div>
+              
               {showEmojiPicker && (
-                <div ref={emojiRef} className="absolute bottom-12 right-0 z-10">
-                  <EmojiPicker onEmojiClick={handleEmojiClick} />
+                <div ref={emojiRef} className="absolute bottom-full mb-2 right-0 z-50">
+                  <div className="scale-75 sm:scale-100 origin-bottom-right">
+                    <EmojiPicker onEmojiClick={handleEmojiClick} />
+                  </div>
                 </div>
               )}
             </div>
+            
+            <button
+              type="submit"
+              disabled={!commentContent.trim()}
+              className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 flex items-center justify-center text-white rounded-lg sm:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 active:scale-95"
+            >
+              <Send size={16} className="sm:w-5 sm:h-5" />
+            </button>
           </form>
 
           {/* Memory Threads Panel */}
           {showMemories && (
-            <MemoryThreadsPanel
-              memories={memoryThreads}
-              isLoading={memoryLoading}
-              onExpandMemory={handleExpandMemory}
-              participantUsername={participantUsername}
-            />
+            <div className="mt-3 sm:mt-4">
+              <MemoryThreadsPanel
+                memories={memoryThreads}
+                isLoading={memoryLoading}
+                onExpandMemory={handleExpandMemory}
+                participantUsername={participantUsername}
+              />
+            </div>
           )}
 
           {(postErrors.content || reelErrors.content) && (
-            <span className="text-red-500 mt-2 text-center">
-              {postErrors.content?.message || reelErrors.content?.message}
-            </span>
+            <div className="mt-2 text-center">
+              <span className="text-red-500 text-sm">
+                {postErrors.content?.message || reelErrors.content?.message}
+              </span>
+            </div>
           )}
         </div>
       )}
       
-      <div className="sm:px-6 px-0 w-full pb-6">
+      <div className="px-1 sm:px-4 md:px-6 w-full pb-4 sm:pb-6">
         <CommentList type={type} dynamicId={dynamicId} comments={comments} />
       </div>
     </div>

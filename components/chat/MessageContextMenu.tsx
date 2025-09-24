@@ -269,14 +269,14 @@ export const MessageContextMenu = forwardRef<
               <span className="font-medium text-sm">{item.label}</span>
             </button>
           ))}
-          {message.messageType === "text" && isOwn && (
+          {isOwn && (
             <>
               <hr className="my-1 border border-gray-100" />
               {ownMenuItems.map((item, index) => (
                 <button
                   key={index}
                   onClick={item.onClick}
-                  className={`w-full px-4 py-2 text-left flex items-center space-x-3 transition-all duration-200 ${item.hoverColor} ${item.color} group`}
+                  className={`w-full px-4 py-2 ${ownMenuItems[0] && message.messageType === "text" ? 'flex' : 'hidden'} text-left flex items-center space-x-3 transition-all duration-200 ${item.hoverColor} ${item.color} group`}
                 >
                   <item.icon
                     size={16}

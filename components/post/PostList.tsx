@@ -6,11 +6,9 @@ import { useInView } from 'react-intersection-observer';
 import { useEffect, useCallback } from 'react';
 import { useGetPosts } from '@/hooks/usePosts';
 import { debounce } from 'lodash';
-
 interface PostListProps {
   initialLoading?: boolean;
 }
-
 export const PostList = ({ initialLoading = false }: PostListProps) => {
   const { posts, pagination, isLoading: postsLoading } = useSelector((state: RootState) => state.post);
   const { ref, inView } = useInView({
@@ -18,10 +16,7 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
     triggerOnce: false,
   });
   const { trigger } = useGetPosts(pagination.posts?.currentPage || 1);
-
   const hasMore = pagination.posts?.hasNextPage ?? false;
-
-  // Debounce the trigger function
   const debouncedTrigger = useCallback(
     debounce(() => {
       if (!postsLoading && hasMore) {
@@ -30,15 +25,12 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
     }, 500),
     [trigger, postsLoading, hasMore]
   );
-
   useEffect(() => {
     if (inView && hasMore && !postsLoading) {
       debouncedTrigger();
     }
-    return () => debouncedTrigger.cancel(); // Cleanup debounce on unmount
+    return () => debouncedTrigger.cancel();
   }, [inView, hasMore, postsLoading, debouncedTrigger]);
-
-  // Initial loading state
   if ((initialLoading || postsLoading) && posts.length === 0) {
     return (
       <div className="space-y-4 px-4 sm:px-0">
@@ -63,26 +55,6 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
       </div>
     );
   }
-
-  // // Error state
-  // if (error) {
-  //   return (
-  //     <div className="bg-white rounded-lg shadow p-8 text-center">
-  //       <p className="text-red-500" role="alert">
-  //         Failed to load posts
-  //       </p>
-  //       <button
-  //         onClick={() => trigger()}
-  //         className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-  //         aria-label="Retry loading posts"
-  //       >
-  //         Retry
-  //       </button>
-  //     </div>
-  //   );
-  // }
-
-  // Empty state
   if (posts.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -90,7 +62,6 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
       </div>
     );
   }
-
   return (
     <div className="space-y-4">
       {posts.map((post) => (

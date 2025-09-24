@@ -16,7 +16,7 @@ interface ReelViewersProps {
   onClose: () => void;
 }
 
-const ReelViewers: React.FC<ReelViewersProps> = ({ 
+const StoryViewers: React.FC<ReelViewersProps> = ({ 
   viewers, 
   viewersCount, 
   isOwner, 
@@ -68,4 +68,4 @@ const ReelViewers: React.FC<ReelViewersProps> = ({
   );
 };
 
-export default ReelViewers;
+export default StoryViewers;

@@ -30,6 +30,7 @@
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "emoji-picker-react": "^4.12.3",
+    "framer-motion": "^12.23.12",
     "lodash": "^4.17.21",
     "lucide-react": "^0.514.0",
     "moment": "^2.30.1",

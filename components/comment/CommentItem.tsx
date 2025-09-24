@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/redux/store";
@@ -11,7 +13,7 @@ import { RepliesSection } from "./RepliesSection";
 import { ContextMenu } from "./ContextMenu";
 import { formatTimeAgo } from "@/utils/formatter";
 import { useScreenSize } from "@/hooks/useScreenSize";
-import { Send } from "lucide-react";
+import { X, Check } from "lucide-react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
 import { useUpdateComment } from "@/hooks/usePosts";
 import { useUpdateReelComment } from "@/hooks/useReels";
@@ -39,18 +41,37 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   });
   const [showReactions, setShowReactions] = useState(false);
   const [commentContent, setCommentContent] = useState(comment.content);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const emojiRef = useRef<HTMLDivElement | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
   const { mutate: updatePostComment } = useUpdateComment(dynamicId, comment._id, () => {
-        setCommentContent("");
-    });
-    const { mutate: updateReelComment } = useUpdateReelComment(dynamicId, comment._id, () => {
-        setCommentContent("");
-    });
+    setIsEditing(false);
+  });
+  
+  const { mutate: updateReelComment } = useUpdateReelComment(dynamicId, comment._id, () => {
+    setIsEditing(false);
+  });
 
-  const isSmallScreen = useScreenSize(); // Use hook to determine screen size
+  const isSmallScreen = useScreenSize();
   const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
+
+  // Auto-resize textarea for editing
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120;
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isEditing) {
+      adjustTextareaHeight();
+    }
+  }, [commentContent, isEditing]);
 
   const handleContextMenu = (e: React.MouseEvent): void => {
     e.preventDefault();
@@ -58,12 +79,10 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     setShowContextMenu(true);
   };
 
-  const handleAddComment = (e: React.FormEvent) => {
+  const handleUpdateComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (commentContent.trim() && user) {
-      const payload = {
-        content: commentContent,
-      };
+    if (commentContent.trim() && user && commentContent !== comment.content) {
+      const payload = { content: commentContent };
       if (type === "post") {
         updatePostComment(payload);
       } else {
@@ -72,15 +91,23 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     }
   };
 
+  const handleCancelEdit = () => {
+    setCommentContent(comment.content);
+    setIsEditing(false);
+    setShowEmojiPicker(false);
+  };
+
   const handleViewReplies = () => {
     if (isSmallScreen && comment.replies?.length) {
+      const replyId = comment.replies[0]._id;
       router.push(
-        `/reply?commentId=${comment._id}&dynamicId=${dynamicId}&type=${type}&replyId=${comment.replies[0]._id}`
+        `/reply?commentId=${comment._id}&dynamicId=${dynamicId}&type=${type}&replyId=${replyId}`
       );
     } else {
       setShowReplies(!showReplies);
     }
   };
+
   const handleEmojiClick = (emojiData: EmojiClickData) => {
     setCommentContent(commentContent + emojiData.emoji);
   };
@@ -89,6 +116,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     const handleScroll = () => {
       setShowContextMenu(false);
       setShowReactions(false);
+      setShowEmojiPicker(false);
     };
     document.addEventListener("scroll", handleScroll);
     return () => document.removeEventListener("scroll", handleScroll);
@@ -107,53 +135,70 @@ export const CommentItem: React.FC<CommentItemProps> = ({
 
   return (
     <div id={`comment-${comment._id}`} className="group relative">
-      <div className="flex gap-3 relative">
+      <div className="flex gap-2 sm:gap-3 relative px-2 sm:px-0">
         <UserAvatar
           username={comment.authorId.username}
           avatar={comment.authorId.avatar}
-          className="w-10 h-10 flex-shrink-0 relative z-10"
+          className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 relative z-10"
           onClick={() => router.push(`/profile/${comment.authorId._id}`)}
         />
         <div className="flex-1 min-w-0">
           {isEditing ? (
-            <form onSubmit={handleAddComment} className="w-full">
-              <div className="flex-1 relative flex space-x-2 xs:space-x-6">
-                <span className="flex flex-1 relative">
-                  <input
-                    type="text"
-                    value={commentContent}
-                    onChange={(e) => setCommentContent(e.target.value)}
-                    placeholder="Write a comment..."
-                    className="flex-1 px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  />
+            <div className="w-full">
+              <form onSubmit={handleUpdateComment} className="w-full">
+                <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-blue-200 focus-within:border-blue-400 transition-colors">
+                  <div className="font-semibold text-sm text-gray-900 mb-2">
+                    {comment.authorId.username}
+                  </div>
+                  <div className="relative">
+                    <textarea
+                      ref={textareaRef}
+                      value={commentContent}
+                      onChange={(e) => setCommentContent(e.target.value)}
+                      placeholder="Edit your comment..."
+                      rows={1}
+                      className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-800 placeholder-gray-500"
+                      style={{ minHeight: '20px' }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="absolute bottom-0 right-0 text-lg hover:scale-110 transition-transform"
+                    >
+                      😊
+                    </button>
+                  </div>
+                  
+                  {showEmojiPicker && (
+                    <div ref={emojiRef} className="absolute z-50 mt-2">
+                      <div className="scale-75 sm:scale-100 origin-top-left">
+                        <EmojiPicker onEmojiClick={handleEmojiClick} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center justify-end gap-2 mt-2">
                   <button
                     type="button"
-                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                    className="absolute right-2 bottom-2 hover:scale-110 transition-transform"
+                    onClick={handleCancelEdit}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
                   >
-                    😊
+                    <X size={14} />
+                    <span className="hidden xs:inline">Cancel</span>
                   </button>
-                </span>
-                <button
-                  type="submit"
-                  disabled={
-                    !commentContent.trim() || comment.content === commentContent
-                  }
-                  className="px-4 bg-blue-500 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 active:scale-95"
-                >
-                  <Send size={18} />
-                </button>
-                {showEmojiPicker && (
-                  <div
-                    ref={emojiRef}
-                    className="absolute bottom-12 right-0 z-10"
+                  <button
+                    type="submit"
+                    disabled={!commentContent.trim() || commentContent === comment.content}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-xs sm:text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
                   >
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
-                  </div>
-                )}
-              </div>
-              <button onClick={() => setIsEditing(false)}>Cancel</button>
-            </form>
+                    <Check size={14} />
+                    <span className="hidden xs:inline">Save</span>
+                  </button>
+                </div>
+              </form>
+            </div>
           ) : (
             <>
               <CommentHeader
@@ -173,8 +218,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 createdAt={formatTimeAgo(comment.createdAt)}
               />
               {showReplyForm && (
-                <div className="relative">
-                  <div className="absolute left-[-1.25rem] top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                <div className="relative mt-2">
+                  <div className="absolute left-[-0.75rem] sm:left-[-1.25rem] top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   <ReplyForm
                     type={type}
                     dynamicId={dynamicId}

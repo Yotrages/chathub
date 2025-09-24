@@ -3,10 +3,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import ReelCard from "@/components/reels/ReelCard";
+import { ReelCardRef } from "@/components/reels/ReelCard";
 import { debounce } from "lodash";
 import CreateReelModal from "@/components/reels/createReelModal";
 import { PlusCircleIcon } from "@heroicons/react/24/outline";
-// import { RootState } from "@/libs/redux/store";
 import { useGetReels, useReactReel } from "@/hooks/useReels";
 import {
   selectReelsArray,
@@ -22,7 +22,7 @@ const ReelsPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const reelRefs = useRef<(ReelCardRef | null)[]>([]);
 
   const currentPage = pagination.reels?.currentPage || 1;
 
@@ -46,7 +46,7 @@ const ReelsPage: React.FC = () => {
       hasMore &&
       !reelsLoading &&
       reels.length > 0 &&
-      currentIndex >= reels.length - 2 
+      currentIndex >= reels.length - 2
     ) {
       console.log("Loading more reels...");
       trigger();
@@ -137,11 +137,16 @@ const ReelsPage: React.FC = () => {
 
   // Video play/pause control
   useEffect(() => {
-    videoRefs.current.forEach((video, index) => {
-      if (video && index === currentIndex) {
-        video.play().catch(() => {});
-      } else if (video) {
-        video.pause();
+    reelRefs.current.forEach((reelRef, index) => {
+      if (reelRef) {
+        const video = reelRef.getVideoElement();
+        if (video) {
+          if (index === currentIndex) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        }
       }
     });
   }, [currentIndex]);
@@ -150,9 +155,8 @@ const ReelsPage: React.FC = () => {
     reactToReel({ emoji, name });
   };
 
-
   // Loading state
-  if (isLoading) {
+  if (isLoading && !reels.length) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -164,7 +168,7 @@ const ReelsPage: React.FC = () => {
   }
 
   // Empty state
-  if (!isLoading && reels.length === 0 || !reels) {
+  if (!isLoading && reels.length === 0) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
@@ -186,39 +190,60 @@ const ReelsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black">
-      <div className="fixed top-0 left-0 w-full z-10 bg-black bg-opacity-50 p-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Reels</h1>
+      {/* Fixed Header */}
+      <div className="fixed top-0 left-0 w-full z-30 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex justify-between items-center">
+        <h1 className="text-2xl sm:visible invisible font-bold text-white">Reels</h1>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full"
+          className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
         >
           <PlusCircleIcon className="h-5 w-5 mr-2" />
           Create Reel
         </button>
       </div>
 
-      <div className="flex justify-center">
+      {/* Reel Container - FIXED for full screen */}
+      <div className="relative w-full h-screen overflow-hidden">
         {reels.map((reel, index) => (
           <div
             key={reel?._id ?? `reel-fallback-${index}`}
-            className={`w-full max-w-3xl mx-auto ${
-              index === currentIndex ? "block" : "hidden"
+            className={`absolute inset-0 w-full h-full transition-transform duration-300 ${
+              index === currentIndex 
+                ? "transform translate-y-0 opacity-100" 
+                : index < currentIndex 
+                ? "transform -translate-y-full opacity-0" 
+                : "transform translate-y-full opacity-0"
             }`}
-            style={{ height: "100vh" }}
           >
             <ReelCard
+              ref={(el) => {
+                reelRefs.current[index] = el;
+              }}
               key={`${reel?._id ?? `reel-fallback-${index}`}-${index}`}
               reel={reel}
               onReaction={handleReaction}
               isFullscreen={true}
-              ref={(el) => {
-                if (el) videoRefs.current[index] = el.querySelector("video");
-              }}
             />
           </div>
         ))}
       </div>
 
+      {/* Navigation Indicators */}
+      {/* <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-20 flex flex-col space-y-2">
+        {reels.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-8 rounded-full transition-all duration-200 ${
+              index === currentIndex
+                ? "bg-white opacity-100"
+                : "bg-white opacity-40 hover:opacity-70"
+            }`}
+          />
+        ))}
+      </div> */}
+
+      {/* Create Reel Modal */}
       <CreateReelModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

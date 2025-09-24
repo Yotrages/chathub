@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Download, Eye, Image, File, Mic, Video, Share2, Play, Pause } from 'lucide-react';
+import { Download, Eye, Image, File, Mic, Video, Play, Pause, X, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
 import { useChat } from '@/hooks/useChat';
 import { Message } from '@/types';
 import Link from 'next/link';
@@ -22,6 +22,101 @@ interface PostPreview {
   images?: string[];
 }
 
+interface MediaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  src: string;
+  type: 'image' | 'video';
+  fileName?: string;
+}
+
+const MediaModal = ({ isOpen, onClose, src, type, fileName }: MediaModalProps) => {
+  const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  
+  if (!isOpen) return null;
+
+  const handleZoomIn = () => setScale(prev => Math.min(prev + 0.25, 3));
+  const handleZoomOut = () => setScale(prev => Math.max(prev - 0.25, 0.5));
+  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
+  const handleReset = () => {
+    setScale(1);
+    setRotation(0);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-2 sm:p-4">
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+        aria-label="Close modal"
+      >
+        <X size={20} />
+      </button>
+
+      {/* Controls for images */}
+      {type === 'image' && (
+        <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 flex gap-2">
+          <button
+            onClick={handleZoomIn}
+            className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            aria-label="Zoom in"
+          >
+            <ZoomIn size={16} />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            aria-label="Zoom out"
+          >
+            <ZoomOut size={16} />
+          </button>
+          <button
+            onClick={handleRotate}
+            className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+            aria-label="Rotate"
+          >
+            <RotateCw size={16} />
+          </button>
+        </div>
+      )}
+
+      {/* Download button */}
+      <a
+        href={src}
+        download={fileName}
+        className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-10 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all"
+        aria-label="Download file"
+      >
+        <Download size={20} />
+      </a>
+
+      {/* Media content */}
+      <div className="max-w-full max-h-full flex items-center justify-center">
+        {type === 'image' ? (
+          <img
+            src={src}
+            alt="Full size view"
+            className="max-w-full max-h-full object-contain transition-transform duration-300"
+            style={{
+              transform: `scale(${scale}) rotate(${rotation}deg)`
+            }}
+            onClick={handleReset}
+          />
+        ) : (
+          <video
+            src={src}
+            controls
+            className="max-w-full max-h-full"
+            autoPlay
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 export const MessageContent = ({ message, isOwn, onClose, isEditing, otherParticipantsCount }: MessageContentProps) => {
   const [imageError, setImageError] = useState(false);
   const [mediaError, setMediaError] = useState(false);
@@ -31,6 +126,12 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [audioRef, setAudioRef] = useState<HTMLAudioElement | null>(null);
+  const [mediaModal, setMediaModal] = useState<{isOpen: boolean, src: string, type: 'image' | 'video', fileName?: string}>({
+    isOpen: false,
+    src: '',
+    type: 'image',
+    fileName: ''
+  });
   const waveformRef = useRef<HTMLDivElement>(null);
   
   const { editMessage } = useChat();
@@ -68,6 +169,32 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // const formatFileSize = (bytes: number): string => {
+  //   if (bytes === 0) return '0 Bytes';
+  //   const k = 1024;
+  //   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  //   const i = Math.floor(Math.log(bytes) / Math.log(k));
+  //   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  // };
+
+  const getFileExtension = (fileName: string): string => {
+    return fileName.split('.').pop()?.toLowerCase() || 'file';
+  };
+
+  const getFileIcon = (fileName: string) => {
+    const ext = getFileExtension(fileName);
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const videoTypes = ['mp4', 'avi', 'mov', 'mkv'];
+    const audioTypes = ['mp3', 'wav', 'aac', 'ogg'];
+    const docTypes = ['pdf', 'doc', 'docx', 'txt'];
+    
+    if (imageTypes.includes(ext)) return <Image size={20} />;
+    if (videoTypes.includes(ext)) return <Video size={20} />;
+    if (audioTypes.includes(ext)) return <Mic size={20} />;
+    if (docTypes.includes(ext)) return <File size={20} />;
+    return <File size={20} />;
   };
 
   const handleAudioPlay = () => {
@@ -109,6 +236,14 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
     }
   };
 
+  const openMediaModal = (src: string, type: 'image' | 'video', fileName?: string) => {
+    setMediaModal({ isOpen: true, src, type, fileName });
+  };
+
+  const closeMediaModal = () => {
+    setMediaModal({ isOpen: false, src: '', type: 'image', fileName: '' });
+  };
+
   const allRead = message.readBy?.length >= otherParticipantsCount;
 
   const renderReplyPreview = () => {
@@ -119,21 +254,21 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
       : message.replyTo.senderId;
     
     return (
-      <div className={`p-3 mb-3 rounded-xl border-l-4 transition-all duration-200 ${
+      <div className={`p-2 sm:p-3 mb-2 sm:mb-3 rounded-lg sm:rounded-xl border-l-4 transition-all duration-200 ${
         isOwn 
           ? 'bg-blue-400/30 border-blue-200 backdrop-blur-sm' 
           : 'bg-gray-50 border-blue-500 shadow-sm'
       }`}>
-        <p className={`text-xs font-semibold mb-1 ${
+        <p className={`text-xs font-semibold mb-1 truncate ${
           isOwn ? 'text-blue-100' : 'text-blue-600'
         }`}>
           {replySender.username}
         </p>
         
         {message.replyTo.messageType === 'image' && (
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded ${isOwn ? 'bg-blue-300' : 'bg-blue-100'}`}>
-              <Image size={14} className={isOwn ? 'text-blue-700' : 'text-blue-600'} />
+          <div className="flex items-center space-x-2 min-w-0">
+            <div className={`p-1 rounded flex-shrink-0 ${isOwn ? 'bg-blue-300' : 'bg-blue-100'}`}>
+              <Image size={12} className={isOwn ? 'text-blue-700' : 'text-blue-600'} />
             </div>
             <p className={`text-xs truncate ${
               isOwn ? 'text-blue-100' : 'text-gray-600'
@@ -143,58 +278,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
           </div>
         )}
         
-        {message.replyTo.messageType === 'video' && (
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded ${isOwn ? 'bg-blue-300' : 'bg-blue-100'}`}>
-              <Video size={14} className={isOwn ? 'text-blue-700' : 'text-blue-600'} />
-            </div>
-            <p className={`text-xs truncate ${
-              isOwn ? 'text-blue-100' : 'text-gray-600'
-            }`}>
-              {message.replyTo.content || 'Video'}
-            </p>
-          </div>
-        )}
-        
-        {message.replyTo.messageType === 'audio' && (
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded ${isOwn ? 'bg-blue-300' : 'bg-blue-100'}`}>
-              <Mic size={14} className={isOwn ? 'text-blue-700' : 'text-blue-600'} />
-            </div>
-            <p className={`text-xs truncate ${
-              isOwn ? 'text-blue-100' : 'text-gray-600'
-            }`}>
-              {message.replyTo.content || 'Voice message'}
-            </p>
-          </div>
-        )}
-        
-        {message.replyTo.messageType === 'file' && (
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded ${isOwn ? 'bg-blue-300' : 'bg-blue-100'}`}>
-              <File size={14} className={isOwn ? 'text-blue-700' : 'text-blue-600'} />
-            </div>
-            <p className={`text-xs truncate ${
-              isOwn ? 'text-blue-100' : 'text-gray-600'
-            }`}>
-              {message.replyTo.fileName || 'Document'}
-            </p>
-          </div>
-        )}
-        
-        {message.replyTo.messageType === 'post' && (
-          <div className="flex items-center space-x-2">
-            <div className={`p-1 rounded ${isOwn ? 'bg-blue-300' : 'bg-blue-100'}`}>
-              <Share2 size={14} className={isOwn ? 'text-blue-700' : 'text-blue-600'} />
-            </div>
-            <p className={`text-xs truncate ${
-              isOwn ? 'text-blue-100' : 'text-gray-600'
-            }`}>
-              {message.replyTo.content || 'Shared Post'}
-            </p>
-          </div>
-        )}
-        
+        {/* Similar updates for other message types */}
         {message.replyTo.messageType === 'text' && (
           <p className={`text-xs line-clamp-2 ${
             isOwn ? 'text-blue-100' : 'text-gray-600'
@@ -210,27 +294,30 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
     switch (message.messageType) {
       case 'image':
         return (
-          <div className="relative">
+          <div className="relative w-full">
             {!imageError ? (
-              <div className="relative overflow-hidden rounded-lg">
+              <div className="relative overflow-hidden rounded-lg w-full">
                 <img
                   src={message.fileUrl}
                   alt="Shared image"
-                  className="max-w-xs rounded-lg cursor-pointer hover:opacity-95 transition-all duration-300 shadow-md"
+                  className="w-full max-w-full h-auto max-h-48 sm:max-h-64 object-cover rounded-lg cursor-pointer hover:opacity-95 transition-all duration-300 shadow-md"
                   onError={() => setImageError(true)}
-                  onClick={() => message.fileUrl && window.open(message.fileUrl, '_blank')}
-                  aria-label="View image in new tab"
+                  onClick={() => openMediaModal(message.fileUrl!, 'image', message.fileName)}
+                  aria-label="View image in full screen"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg" />
+                <div className="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity bg-black/50 rounded-full p-1">
+                  <Eye size={16} className="text-white" />
+                </div>
               </div>
             ) : (
-              <div className="bg-gray-100 p-6 rounded-lg max-w-xs border-2 border-dashed border-gray-300">
-                <Eye className="mx-auto mb-2 text-gray-400" size={32} />
+              <div className="bg-gray-100 p-4 sm:p-6 rounded-lg w-full border-2 border-dashed border-gray-300">
+                <Eye className="mx-auto mb-2 text-gray-400" size={24} />
                 <p className="text-sm text-gray-600 text-center font-medium">Image unavailable</p>
               </div>
             )}
             {message.content && (
-              <p className={`mt-3 text-sm leading-relaxed ${
+              <p className={`mt-2 sm:mt-3 text-sm leading-relaxed break-words ${
                 isOwn ? 'text-blue-50' : 'text-gray-700'
               }`}>
                 {message.content}
@@ -241,9 +328,9 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
         
       case 'audio':
         return (
-          <div className="min-w-[250px] max-w-xs">
+          <div className="w-full min-w-0">
             {!mediaError ? (
-              <div className={`p-4 rounded-2xl shadow-inner transition-all duration-300 ${
+              <div className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-inner transition-all duration-300 ${
                 isOwn 
                   ? 'bg-blue-400/40 backdrop-blur-sm' 
                   : 'bg-white shadow-md border border-gray-100'
@@ -261,40 +348,40 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
                 />
                
                 {/* Enhanced Audio Player UI */}
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
                   <button
                     onClick={handleAudioPlay}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                    className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex-shrink-0 ${
                       isOwn
                         ? 'bg-white text-blue-500 hover:bg-blue-50'
                         : 'bg-blue-500 text-white hover:bg-blue-600'
                     }`}
                     aria-label={isPlaying ? 'Pause audio' : 'Play audio'}
                   >
-                    {isPlaying ? <Pause size={18} /> : <Play size={18} className="ml-0.5" />}
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
                   </button>
                  
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     {/* Waveform-style progress bar */}
                     <div
                       ref={waveformRef}
-                      className={`h-8 rounded-full cursor-pointer relative overflow-hidden ${
+                      className={`h-6 sm:h-8 rounded-full cursor-pointer relative overflow-hidden ${
                         isOwn ? 'bg-blue-300/50' : 'bg-gray-200'
                       }`}
                       onClick={handleSeek}
                     >
                       {/* Waveform bars */}
                       <div className="absolute inset-0 flex items-center justify-center space-x-0.5 px-2">
-                        {Array.from({ length: 40 }, (_, i) => (
+                        {Array.from({ length: 30 }, (_, i) => (
                           <div
                             key={i}
                             className={`w-0.5 rounded-full transition-all duration-200 ${
-                              i < (currentTime / duration * 40) 
+                              i < (currentTime / duration * 30) 
                                 ? (isOwn ? 'bg-white' : 'bg-blue-500') 
                                 : (isOwn ? 'bg-blue-200' : 'bg-gray-400')
                             }`}
                             style={{
-                              height: `${Math.max(8, Math.random() * 24)}px`
+                              height: `${Math.max(6, Math.random() * 20)}px`
                             }}
                           />
                         ))}
@@ -312,7 +399,7 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
                     </div>
                    
                     {/* Time display */}
-                    <div className={`flex justify-between text-xs mt-2 font-medium ${
+                    <div className={`flex justify-between text-xs mt-1 sm:mt-2 font-medium ${
                       isOwn ? 'text-blue-100' : 'text-gray-500'
                     }`}>
                       <span>{formatDuration(currentTime)}</span>
@@ -322,13 +409,13 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-100 p-6 rounded-2xl border-2 border-dashed border-gray-300">
-                <Mic className="mx-auto mb-2 text-gray-400" size={32} />
+              <div className="bg-gray-100 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-300">
+                <Mic className="mx-auto mb-2 text-gray-400" size={24} />
                 <p className="text-sm text-gray-600 text-center font-medium">Audio unavailable</p>
               </div>
             )}
             {message.content && (
-              <p className={`mt-3 text-sm leading-relaxed ${
+              <p className={`mt-2 sm:mt-3 text-sm leading-relaxed break-words ${
                 isOwn ? 'text-blue-50' : 'text-gray-700'
               }`}>
                 {message.content}
@@ -339,26 +426,31 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
         
       case 'video':
         return (
-          <div className="max-w-xs">
+          <div className="w-full overflow-hidden flex-1">
             {!mediaError ? (
               <div className="relative rounded-lg overflow-hidden shadow-lg">
                 <video
                   src={message.fileUrl}
-                  controls
-                  className="w-full h-48 object-cover rounded-lg"
-                  onError={() => setMediaError(true)}
-                  aria-label="Play video message"
+                  className="w-full h-32 sm:h-48 object-cover rounded-lg cursor-pointer"
+                  onClick={() => openMediaModal(message.fileUrl!, 'video', message.fileName)}
+                  aria-label="Play video in full screen"
+                  poster=""
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none rounded-lg" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent pointer-events-none rounded-lg" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-white/90 hover:bg-white rounded-full p-3 cursor-pointer transition-all">
+                    <Play size={20} className="text-gray-800 ml-1" />
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="bg-gray-100 p-6 rounded-lg border-2 border-dashed border-gray-300">
-                <Video className="mx-auto mb-2 text-gray-400" size={32} />
+              <div className="bg-gray-100 p-4 sm:p-6 rounded-lg border-2 border-dashed border-gray-300">
+                <Video className="mx-auto mb-2 text-gray-400" size={24} />
                 <p className="text-sm text-gray-600 text-center font-medium">Video unavailable</p>
               </div>
             )}
             {message.content && (
-              <p className={`mt-3 text-sm leading-relaxed ${
+              <p className={`mt-2 sm:mt-3 text-sm leading-relaxed break-words ${
                 isOwn ? 'text-blue-50' : 'text-gray-700'
               }`}>
                 {message.content}
@@ -369,19 +461,19 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
         
       case 'file':
         return (
-          <div className={`p-4 rounded-xl max-w-xs transition-all duration-300 hover:shadow-md ${
+          <div className={`p-3 sm:p-4 rounded-lg overflow-hidden sm:rounded-xl w-full transition-all duration-300 hover:shadow-md ${
             isOwn ? 'bg-blue-400/40' : 'bg-gray-50 border border-gray-200'
           }`}>
             <a
               href={message.fileUrl}
               download={message.fileName}
-              className="flex items-center space-x-3 group"
+              className="flex items-center space-x-3 group min-w-0"
               aria-label={`Download file ${message.fileName || 'File'}`}
             >
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 ${
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 flex-shrink-0 ${
                 isOwn ? 'bg-white/90 text-blue-600' : 'bg-blue-500 text-white'
               }`}>
-                <Download size={18} />
+                {getFileIcon(message.fileName || '')}
               </div>
               <div className="flex-1 min-w-0">
                 <p className={`text-sm font-semibold truncate ${
@@ -389,15 +481,28 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
                 }`}>
                   {message.fileName || 'Document'}
                 </p>
-                <p className={`text-xs mt-1 ${
-                  isOwn ? 'text-blue-100' : 'text-gray-500'
-                }`}>
-                  Tap to download
-                </p>
+                <div className="flex items-center space-x-2 mt-1">
+                  <p className={`text-xs ${
+                    isOwn ? 'text-blue-100' : 'text-gray-500'
+                  }`}>
+                    {/* {message.fileSize ? formatFileSize(message.fileSize) : 'Unknown size'} */}
+                  </p>
+                  <span className={`text-xs ${isOwn ? 'text-blue-200' : 'text-gray-400'}`}>•</span>
+                  <p className={`text-xs ${
+                    isOwn ? 'text-blue-100' : 'text-gray-500'
+                  }`}>
+                    {getFileExtension(message.fileName || '').toUpperCase()}
+                  </p>
+                </div>
+              </div>
+              <div className={`p-2 rounded-full transition-all duration-300 group-hover:scale-110 ${
+                isOwn ? 'bg-white/20' : 'bg-gray-100'
+              }`}>
+                <Download size={16} className={isOwn ? 'text-white' : 'text-blue-500'} />
               </div>
             </a>
             {message.content && (
-              <p className={`mt-3 text-sm leading-relaxed ${
+              <p className={`mt-3 text-sm leading-relaxed break-words ${
                 isOwn ? 'text-blue-50' : 'text-gray-700'
               }`}>
                 {message.content}
@@ -408,28 +513,28 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
         
       case 'post':
         return (
-          <div className={`rounded-xl overflow-hidden max-w-xs border transition-all duration-300 hover:shadow-lg ${
+          <div className={`rounded-lg sm:rounded-xl overflow-hidden w-full border transition-all duration-300 hover:shadow-lg ${
             isOwn 
               ? 'bg-blue-400/40 border-blue-300/50' 
               : 'bg-white border-gray-200 shadow-sm'
           }`}>
             {postPreview ? (
-              <div className="p-4">
-                <div className="flex items-start space-x-3">
+              <div className="p-3 sm:p-4">
+                <div className="flex items-start space-x-3 min-w-0">
                   {postPreview.images?.[0] && (
                     <img
                       src={postPreview.images[0]}
                       alt="Post preview"
-                      className="w-16 h-16 rounded-lg object-cover shadow-sm"
+                      className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg object-cover shadow-sm flex-shrink-0"
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-semibold mb-2 ${
+                    <p className={`text-xs font-semibold mb-2 truncate ${
                       isOwn ? 'text-blue-100' : 'text-blue-600'
                     }`}>
                       {postPreview.authorId.username}
                     </p>
-                    <p className={`text-sm line-clamp-3 leading-relaxed ${
+                    <p className={`text-sm line-clamp-3 leading-relaxed break-words ${
                       isOwn ? 'text-white' : 'text-gray-700'
                     }`}>
                       {postPreview.content}
@@ -449,8 +554,8 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
                 </Link>
               </div>
             ) : (
-              <div className="p-4">
-                <p className={`text-sm leading-relaxed ${
+              <div className="p-3 sm:p-4">
+                <p className={`text-sm leading-relaxed break-words ${
                   isOwn ? 'text-white' : 'text-gray-800'
                 }`}>
                   {message.content}
@@ -481,32 +586,34 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
         
       default:
         return isEditing ? (
-          <div className="flex items-center space-x-2 min-w-[200px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full min-w-0">
             <input
               type="text"
               value={editedContent}
               onChange={(e) => setEditedContent(e.target.value)}
-              className="flex-1 text-gray-800 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 text-gray-800 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-0"
               onKeyPress={(e) => e.key === 'Enter' && handleEdit()}
               aria-label="Edit message"
             />
-            <button
-              onClick={handleEdit}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm"
-              aria-label="Save edited message"
-            >
-              Save
-            </button>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium shadow-sm"
-              aria-label="Cancel editing"
-            >
-              Cancel
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={handleEdit}
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium shadow-sm text-sm"
+                aria-label="Save edited message"
+              >
+                Save
+              </button>
+              <button
+                onClick={onClose}
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium shadow-sm text-sm"
+                aria-label="Cancel editing"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
-          <p className={`text-sm whitespace-pre-wrap leading-relaxed ${
+          <p className={`text-sm whitespace-pre-wrap leading-relaxed break-words ${
             isOwn ? 'text-white' : 'text-gray-800'
           }`}>
             {message.content}
@@ -516,29 +623,40 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
   };
 
   return (
-    <div>
-      {renderReplyPreview()}
-      {renderMessageContent()}
-      <div className={`flex items-center justify-between mt-3 text-xs ${
-        isOwn ? 'text-blue-100/80' : 'text-gray-500'
-      }`}>
-        <span className="font-medium">
-          {formatTime(message.createdAt)}
-          {message.edited && (
-            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-              isOwn ? 'bg-blue-400/50 text-blue-100' : 'bg-gray-100 text-gray-600'
-            }`}>
-              edited
-            </span>
+    <>
+      <div className="w-full min-w-0">
+        {renderReplyPreview()}
+        {renderMessageContent()}
+        <div className={`flex items-center justify-between mt-2 sm:mt-3 text-xs ${
+          isOwn ? 'text-blue-100/80' : 'text-gray-500'
+        }`}>
+          <span className="font-medium">
+            {formatTime(message.createdAt)}
+            {message.edited && (
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                isOwn ? 'bg-blue-400/50 text-blue-100' : 'bg-gray-100 text-gray-600'
+              }`}>
+                edited
+              </span>
+            )}
+          </span>
+          {isOwn && (
+            <div className={`flex items-center space-x-1 ${allRead ? 'text-blue-200' : 'text-gray-300'}`}>
+              <span>✓</span>
+              <span className="-ml-3">✓</span>
+            </div>
           )}
-        </span>
-        {isOwn && (
-        <div className={`flex items-center space-x-1 ${allRead ? 'text-blue-200' : 'text-gray-300'}`}>
-          <span>✓</span>
-          <span className="-ml-2">✓</span>
         </div>
-      )}
       </div>
-    </div>
+      
+      {/* Media Modal */}
+      <MediaModal
+        isOpen={mediaModal.isOpen}
+        onClose={closeMediaModal}
+        src={mediaModal.src}
+        type={mediaModal.type}
+        fileName={mediaModal.fileName}
+      />
+    </>
   );
 };

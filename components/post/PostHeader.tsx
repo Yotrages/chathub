@@ -49,7 +49,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   }
 
   const handleBlockPost = () => {
-    blockPost({postId})
+    blockPost({ postId })
   }
 
   const isOwner = user?._id === authorId._id

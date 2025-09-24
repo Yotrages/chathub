@@ -12,6 +12,7 @@ interface MessageBubbleProps {
   showAvatar: boolean;
   currentUserId?: string;
   otherParticipantsCount: number;
+  onOpenLikesModal: (reactions: Message['reactions'], type?: string) => void;
 }
 
 export const MessageBubble = ({
@@ -20,6 +21,7 @@ export const MessageBubble = ({
   showAvatar,
   currentUserId,
   otherParticipantsCount,
+  onOpenLikesModal
 }: MessageBubbleProps) => {
   const [showContextMenu, setShowContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
@@ -151,7 +153,7 @@ export const MessageBubble = ({
   };
 
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-3 px-4`}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-3 px-1 sm:px-4 `}>
       <div
         className={`flex max-w-[85%] sm:max-w-[75%] md:max-w-[65%] ${
           isOwn ? "flex-row-reverse" : "flex-row"
@@ -179,7 +181,7 @@ export const MessageBubble = ({
         {/* Message container with minimum width for reactions */}
         <div
           ref={messageRef}
-          className={`relative px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 ease-out group-hover:shadow-xl min-w-[140px] ${
+          className={`relative px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 ease-out group-hover:shadow-xl w-full ${
             isOwn
               ? `bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md
                  shadow-blue-200 hover:shadow-blue-300 transform hover:scale-[1.02]`
@@ -221,6 +223,7 @@ export const MessageBubble = ({
             message={message}
             isOwn={isOwn}
             currentUserId={currentUserId}
+            onOpenLikesModal={onOpenLikesModal}
           />
         </div>
       </div>

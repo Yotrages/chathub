@@ -40,18 +40,18 @@ const StorySection: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="bg-white rounded-lg shadow-sm py-4 px-1">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Stories</h2>
       </div>
       
       {/* Horizontal scrollable reels */}
-      <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
         {/* Create Reel Button - Always first */}
         <div className="flex-shrink-0">
           <div 
             onClick={handleCreateStory}
-            className="relative w-32 h-48 bg-white rounded-xl border border-gray-200 cursor-pointer overflow-hidden group hover:shadow-md transition-all duration-200"
+            className="relative w-24 xs:w-32 h-48 bg-white rounded-xl border border-gray-200 cursor-pointer overflow-hidden group hover:shadow-md transition-all duration-200"
           >
             {/* User profile background */}
             <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200 relative">
@@ -85,7 +85,7 @@ const StorySection: React.FC = () => {
           <div key={story._id} className="flex-shrink-0">
             <div
               onClick={() => handleReelClick(story._id)}
-              className="cursor-pointer w-28 h-40 transform hover:scale-105 transition-transform"
+              className="cursor-pointer transform hover:scale-105 transition-transform"
             >
               <StoryCard story={story} isCompact={true} />
             </div>

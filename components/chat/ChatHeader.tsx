@@ -22,7 +22,6 @@ export const ChatHeader = ({
   onShowProfile,
   onStartCall
 }: ChatHeaderProps) => {
-  const little_Phone = screen.availWidth < 300;
   const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
   
@@ -48,7 +47,7 @@ export const ChatHeader = ({
     // Show typing indicator first (highest priority)
     if (typingUsers.length > 0) {
       return (
-        <span className="text-blue-500">
+        <span className="text-blue-500 text-xs sm:text-sm truncate">
           {`${typingUsers.length} user${typingUsers.length > 1 ? 's' : ''} typing...`}
         </span>
       );
@@ -56,10 +55,12 @@ export const ChatHeader = ({
 
     if (currentChat.type === 'group') {
       return (
-        <span>
-          {currentChat.participants.length} members
-          <span className="ml-2">
-            {currentChat.participants.map((p: any) => (
+        <div className="flex items-center text-xs sm:text-sm">
+          <span className="truncate">
+            {currentChat.participants.length} members
+          </span>
+          <div className="ml-2 flex items-center overflow-hidden">
+            {currentChat.participants.slice(0, 3).map((p: any) => (
               p._id !== user?._id && (
                 <UserStatusIndicator 
                   key={p._id} 
@@ -68,61 +69,68 @@ export const ChatHeader = ({
                 />
               )
             ))}
-          </span>
-        </span>
+            {currentChat.participants.length > 4 && (
+              <span className="text-xs text-gray-400 ml-1">...</span>
+            )}
+          </div>
+        </div>
       );
     }
 
     // For direct messages, show the other user's online status
     return isOtherUserOnline ? (
-      <span className="flex items-center">
-        <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
-        Online
+      <span className="flex items-center text-xs sm:text-sm">
+        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1 flex-shrink-0"></span>
+        <span className="truncate">Online</span>
       </span>
     ) : (
-      <span className="flex items-center">
-        <span className="w-2 h-2 bg-gray-500 rounded-full mr-1"></span>
-        Offline
+      <span className="flex items-center text-xs sm:text-sm">
+        <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-500 rounded-full mr-1 flex-shrink-0"></span>
+        <span className="truncate">Offline</span>
       </span>
     );
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center">
+    <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+      <div className="flex items-center justify-between min-w-0">
+        {/* Left side - Avatar and info */}
+        <div className="flex items-center min-w-0 flex-1 mr-2">
           {currentChat.avatar ? (
             <UserAvatar 
               avatar={currentChat.avatar} 
               username={currentChat.name} 
-              className='w-10 h-10 rounded-full'
+              className='w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 mr-2 sm:mr-3'
             />
           ) : (
-            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
-              <span className="text-white font-semibold">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
+              <span className="text-white font-semibold text-xs sm:text-sm">
                 {currentChat.name?.charAt(0) || 'U'}
               </span>
             </div>
           )}
-          <div>
+          <div className="min-w-0 flex-1">
             <h2 
               onClick={() => currentChat.type !== 'group' && router.push(`/profile/${otherUserId?._id}`)} 
-              className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
+              className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 truncate leading-tight"
+              title={currentChat.name || 'Unknown Chat'}
             >
               {currentChat.name || 'Unknown Chat'}
             </h2>
-            <p className="text-sm text-gray-500 flex items-center">
+            <div className="text-gray-500 min-w-0 mt-0.5">
               {renderStatus()}
-            </p>
+            </div>
           </div>
         </div>
         
-        <div className={`items-center ${little_Phone ? 'hidden' : 'flex'} space-x-2`}>
+        {/* Right side - Action buttons */}
+        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           {callState === 'idle' && (
             <>
+              {/* Voice call button - hidden on very small screens */}
               <button
                 onClick={() => onStartCall(false)}
-                className={`p-2 rounded-full transition-colors ${
+                className={`hidden xs:block p-1.5 sm:p-2 rounded-full transition-colors ${
                   isOtherUserOnline
                     ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     : 'text-gray-300 cursor-not-allowed'
@@ -130,11 +138,13 @@ export const ChatHeader = ({
                 disabled={!isOtherUserOnline}
                 title={isOtherUserOnline ? "Voice call" : "User is offline"}
               >
-                <Phone size={20} />
+                <Phone size={16} className="sm:w-5 sm:h-5" />
               </button>
+              
+              {/* Video call button */}
               <button
                 onClick={() => onStartCall(true)}
-                className={`p-2 rounded-full transition-colors ${
+                className={`p-1.5 sm:p-2 rounded-full transition-colors ${
                   isOtherUserOnline
                     ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     : 'text-gray-300 cursor-not-allowed'
@@ -142,16 +152,18 @@ export const ChatHeader = ({
                 disabled={!isOtherUserOnline}
                 title={isOtherUserOnline ? "Video call" : "User is offline"}
               >
-                <Video size={20} />
+                <Video size={16} className="sm:w-5 sm:h-5" />
               </button>
             </>
           )}
+          
+          {/* More options button */}
           <button
             onClick={onShowProfile}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full"
+            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
             title="More options"
           >
-            <MoreVertical size={20} />
+            <MoreVertical size={16} className="sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
@@ -168,11 +180,13 @@ const UserStatusIndicator = ({
 }) => {
   const status = userStatuses.get(userId);
   return (
-    <span className="inline-flex items-center ml-2">
-      <span className={`w-2 h-2 rounded-full mr-1 ${
+    <span className="inline-flex items-center ml-1 sm:ml-2 min-w-0">
+      <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full mr-1 flex-shrink-0 ${
         status?.isOnline ? 'bg-green-500' : 'bg-gray-500'
       }`}></span>
-      <span className="text-xs">{status?.username || 'Unknown'}</span>
+      <span className="text-xs truncate max-w-16 sm:max-w-20" title={status?.username || 'Unknown'}>
+        {status?.username || 'Unknown'}
+      </span>
     </span>
   );
 };

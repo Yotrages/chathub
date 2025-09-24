@@ -1,7 +1,15 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
 import { MessageBubble } from './MessageBubble';
+import { Message } from '@/types';
+import { ReactionsModal } from '../post/LikesModal';
+
+interface LikesModalState {
+  isOpen: boolean;
+  reactions: Message['reactions'];
+  type: string;
+}
 
 // Utility function to format date (e.g., "Today", "Yesterday", or "MM/DD/YYYY")
 const formatDate = (date: Date): string => {
@@ -40,6 +48,7 @@ export const MessagesArea = ({
 }: MessagesAreaProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { activeChat, messages } = useSelector((state: RootState) => state.chat);
+  const [likesModal, setLikesModal] = useState<LikesModalState>({ isOpen: false, reactions: [], type: 'reply' });
   const { user } = useSelector((state: RootState) => state.auth);
   const chatMessages = activeChat ? messages[activeChat] || [] : [];
 
@@ -49,12 +58,20 @@ export const MessagesArea = ({
     }
   }, [chatMessages.length]);
 
+  const handleOpenLikesModal = (reactions: Message['reactions'], type: string = 'message') => {
+    setLikesModal({ isOpen: true, reactions, type });
+  };
+  const handleCloseLikes = () => {
+    setLikesModal({ isOpen: false, reactions: [], type: 'reply' });
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+    <>
+    <div className="flex-1 w-full overflow-y-auto p-4 space-y-4 bg-gray-50">
       {!isUserOnline && (
-        <div className="text-center text-red-500 mb-4">
+        <div className="text-center w-full text-red-500 mb-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <p className="text-sm">You are currently offline. Messages will not load or send.</p>
+            <p className="text-xs sm:text-sm">You are currently offline. Messages will not load or send.</p>
           </div>
         </div>
       )}
@@ -80,7 +97,7 @@ export const MessagesArea = ({
             <div key={msg._id}>
               {showDateSeparator && (
                 <div className="sticky top-0 z-10 text-center py-2">
-                  <span className="inline-block bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-1 rounded-full shadow-sm">
+                  <span className="inline-block bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-0.5 rounded-full shadow-sm">
                     {formatDate(currentDate)}
                   </span>
                 </div>
@@ -101,6 +118,7 @@ export const MessagesArea = ({
                       (typeof msg.senderId === 'string' ? msg.senderId : msg.senderId._id))
                 }
                 otherParticipantsCount={currentChat?.participants?.length - 1 || 0}
+                onOpenLikesModal={handleOpenLikesModal}
               />
             </div>
           );
@@ -108,5 +126,12 @@ export const MessagesArea = ({
       )}
       <div ref={messagesEndRef} />
     </div>
+    <ReactionsModal
+        isOpen={likesModal.isOpen}
+        onClose={handleCloseLikes}
+        type={likesModal.type}
+        reactions={likesModal.reactions}
+      />
+    </>
   );
 };

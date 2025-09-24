@@ -14,11 +14,11 @@ import { XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import StoryCard from "@/components/story/StoryCard";
 import StoryNavigation from "@/components/story/StoryNavigation";
-import ReelViewers from "@/components/story/ViewersModal";
 import EmojiReactions from "@/components/story/EmojiReactions";
 import toast from "react-hot-toast";
 import { EyeIcon, MoreHorizontal } from "lucide-react";
 import { StoriesContextMenu } from "@/components/story/StoriesContextMenu";
+import StoryViewers from "@/components/story/ViewersModal";
 
 const StoriesPage: React.FC = () => {
   const router = useRouter();
@@ -227,7 +227,7 @@ const StoriesPage: React.FC = () => {
         {/* Left side - Viewers */}
         <button
           onClick={handleViewersClick}
-          className="flex items-center space-x-2 bg-black bg-opacity-40 backdrop-blur-sm rounded-full px-3 py-2 hover:bg-opacity-60 transition-all"
+          className={`${isOwner ? 'flex' : 'hidden'} items-center space-x-2 bg-black bg-opacity-40 backdrop-blur-sm rounded-full px-3 py-2 hover:bg-opacity-60 transition-all`}
         >
           <EyeIcon className="text-white h-4 w-4" />
           <span className="text-white text-sm font-medium">{currentStory.viewers?.length}</span>
@@ -240,7 +240,7 @@ const StoriesPage: React.FC = () => {
       </div>
 
       {showViewers && currentStory.viewers && (
-        <ReelViewers
+        <StoryViewers
           reelId={currentStory._id}
           viewers={currentStory.viewers}
           viewersCount={currentStory.viewers?.length}

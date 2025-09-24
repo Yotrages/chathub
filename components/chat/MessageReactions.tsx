@@ -5,8 +5,6 @@ import { RootState } from "@/libs/redux/store";
 import { useChat } from "@/hooks/useChat";
 import { Message } from "@/types";
 import toast from "react-hot-toast";
-import { ReactionsModal } from "../post/LikesModal";
-import { useState } from "react";
 
 interface MessageReactionsProps {
   message: Message;
@@ -16,6 +14,7 @@ interface MessageReactionsProps {
   showReactions: boolean;
   onToggleReactions: (e: React.MouseEvent) => void;
   onCloseReactions: () => void;
+  onOpenLikesModal: (reactions: Message['reactions'], type?: string) => void;
 }
 
 export const MessageReactions = ({
@@ -25,14 +24,11 @@ export const MessageReactions = ({
   showReactions,
   onToggleReactions,
   onCloseReactions,
+  onOpenLikesModal,
 }: MessageReactionsProps) => {
   const { addReaction, removeReaction } = useChat();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [likesModal, setLikesModal] = useState<{
-    isOpen: boolean;
-    reactions: Message["reactions"];
-    type: string;
-  }>({ isOpen: false, reactions: [], type: "reply" });
+ 
 
   const reactionEmojis = [
     { emoji: "👍", label: "Like" },
@@ -69,11 +65,7 @@ export const MessageReactions = ({
     reactions: Message["reactions"],
     type: string = "message"
   ) => {
-    setLikesModal({ isOpen: true, reactions: reactions, type: type });
-  };
-
-  const handleCloseLikes = (): void => {
-    setLikesModal({ isOpen: false, reactions: [], type: "reply" });
+  onOpenLikesModal(reactions, type);
   };
 
   const groupedReactions =
@@ -88,7 +80,7 @@ export const MessageReactions = ({
   return (
     <>
       {/* Hover Controls */}
-      <div className="hidden md:flex absolute right-0 bottom-0 transform -translate-y-1/2 -translate-x-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 p-1 space-x-1 z-10">
+      <div className="hidden md:flex absolute right-0 top-1 transform -translate-y-1/2 -translate-x-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm rounded-full shadow-lg border border-gray-200 p-1 space-x-1 z-10">
         <button
           onClick={onToggleReactions}
           className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
@@ -192,12 +184,6 @@ export const MessageReactions = ({
           </div>
         </div>
       )}
-      <ReactionsModal
-        isOpen={likesModal.isOpen}
-        onClose={handleCloseLikes}
-        type={likesModal.type}
-        reactions={likesModal.reactions}
-      />
     </>
   );
 };

@@ -46,7 +46,7 @@ export const CallInterface = ({
   if (callState === 'idle') return null;
 
   return (
-    <div className={`bg-gray-900 text-white transition-all duration-300 ${
+    <div className={`bg-gray-900 text-white py-3 transition-all duration-300 ${
       isCallMinimized ? 'h-16' : isVideoCall ? 'h-80' : 'h-32'
     }`}>
       <CallHeader

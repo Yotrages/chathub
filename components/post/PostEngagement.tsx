@@ -1,8 +1,8 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLikePost } from "@/hooks/usePosts";
 import { useChat } from "@/hooks/useChat";
-import {  MessageCircle, Share2, ThumbsUp } from "lucide-react";
+import { MessageCircle, Share2, ThumbsUp } from "lucide-react";
 import { Post, User } from "@/types";
 import { toast } from "react-hot-toast";
 import SharePostModal from "./SharePostModal";
@@ -21,7 +21,6 @@ interface PostEngagementProps {
   onShowComments: () => void;
   post: Post;
 }
-
 const PostEngagement: React.FC<PostEngagementProps> = ({
   postId,
   reactions,
@@ -38,8 +37,9 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
   const { mutate: likePost } = useLikePost(postId);
   const { conversations, sendMessage } = useChat();
   const [showShareModal, setShowShareModal] = useState(false);
-  const [longPressActive, setLongPressActive] = useState(false); // Track long press state
-  const longPressTimeout = useRef<NodeJS.Timeout | null>(null); // Store timeout reference
+  const [longPressActive, setLongPressActive] = useState(false);
+  const reactionRef = useRef<HTMLDivElement | null>(null);
+  const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const isLiked =
     user && reactions.length > 0
       ? reactions.some((r) => {
@@ -47,14 +47,12 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           return reactionUserId === user?._id;
         })
       : false;
-      localStorage.setItem("press", JSON.stringify(longPressActive))
-
+  localStorage.setItem("press", JSON.stringify(longPressActive));
   const userReactionEmoji =
     reactions.find((r) => {
       const reactionUserId = r.userId?._id || r.userId;
       return reactionUserId === user?._id;
     })?.emoji || null;
-
   const reactionsIcon = [
     { emoji: "👍", name: "Like" },
     { emoji: "❤️", name: "Love" },
@@ -63,33 +61,28 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
     { emoji: "😢", name: "Sad" },
     { emoji: "😡", name: "Angry" },
   ];
-
-
   const handleLike = (emoji: string, name: string) => {
     likePost({ isLiked: !isLiked, emoji, name });
     setShowReactions(false);
   };
-
   const trackShare = async () => {
     try {
       await api.post(`/posts/${postId}/share`);
+      toast.success("Post shared successfully!");
     } catch (error) {
       console.error("Error tracking share:", error);
     }
   };
-
   const handleShare = async () => {
     const shareData = {
       title: `Post by ${post.authorId.username || "Unknown User"}`,
       text: post.content || "Check out this post!",
       url: `${window.location.origin}/post/${post._id}`,
     };
-
     if (navigator.share) {
       try {
         await navigator.share(shareData);
         await trackShare();
-        toast.success("Post shared successfully!");
       } catch (error: any) {
         console.error("Error sharing post:", error);
         toast.error("Failed to share post. Try again.");
@@ -136,60 +129,74 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
       return acc;
     }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) ||
     {};
-
-  // Handle long press for smaller devices
   const handleLongPressStart = () => {
-    if (window.screen.availWidth < 768) { // Check for smaller devices
+    if (window.screen.availWidth < 768) {
       longPressTimeout.current = setTimeout(() => {
         setLongPressActive(true);
         setShowReactions(true);
-      }, 500); // 500ms is a typical long-press duration
+      }, 500);
     }
   };
 
   const handleLongPressEnd = () => {
     if (window.screen.availWidth < 768) {
       if (longPressTimeout.current) {
-        clearTimeout(longPressTimeout.current); // Cancel if not long enough
+        clearTimeout(longPressTimeout.current);
       }
       setLongPressActive(false);
       if (!showReactions) {
-        handleLike("👍", "Like"); // Trigger like on short press
+        handleLike("👍", "Like");
       }
     }
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        reactionRef.current &&
+        !reactionRef.current.contains(event.target as Node)
+      ) {
+        setShowReactions(false);
+      }
+    };
+    if (showReactions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showReactions]);
 
   return (
     <>
       <div className="px-6 py-3 border-t border-gray-50">
         <div className="flex justify-between items-center text-sm text-gray-600">
-          <div className="flex items-center space-x-4">
-            <button className="p-0 m-0">
+          <div className="flex items-center justify-center space-x-4">
+            <button className="p-0 m-0 flex items-center -space-x-0.5 cursor-pointer">
               {post.reactions &&
                 post.reactions.length > 0 &&
-                Object.entries(groupedReactions).map(([emoji]) => (
-                  <span
-                    className="text-base"
-                    onClick={() => setShowLikes(true)}
-                    key={emoji}
-                  >
-                    {emoji}
-                  </span>
-                ))}
-              <span className="hover:text-gray-800 cursor-pointer transition-colors">
+                Object.entries(groupedReactions)
+                  .slice(0, 3)
+                  .map(([emoji]) => (
+                    <span
+                      className="text-xs sm:text-base"
+                      onClick={() => setShowLikes(true)}
+                      key={emoji}
+                    >
+                      {emoji}
+                    </span>
+                  ))}
+              <span className="hover:text-gray-800 text-xs sm:text-base cursor-pointer transition-colors">
                 {reactions.length}
               </span>
             </button>
-
-            <span className="hover:text-gray-800 cursor-pointer transition-colors">
+            <span className="hover:text-gray-800 cursor-pointer text-xs sm:text-base transition-colors">
               {comments.length} {comments.length === 1 ? "comment" : "comments"}
             </span>
-            <span className="hover:text-gray-800 cursor-pointer transition-colors">
+            <span className="hover:text-gray-800 text-xs sm:text-base cursor-pointer transition-colors">
               {post.shareCount || 0}{" "}
               {post.shareCount === 1 ? "share" : "shares"}
             </span>
           </div>
-          <div className="flex items-center space-x-1 text-gray-400">
+          <div className="flex items-center space-x-1 text-xs sm:text-base text-gray-400">
             {images.length > 0 && <span>{images.length}</span>}
           </div>
         </div>
@@ -200,15 +207,19 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           className="absolute -top-24"
         >
           {showReactions && (
-            <div className="bg-white rounded-2xl z-10 backdrop-blur-sm border border-gray-500 px-2 py-3 flex items-center justify-center flex-wrap">
+            <div
+              ref={reactionRef}
+              className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg px-2 py-2 sm:py-3 flex items-center justify-center gap-1 backdrop-blur-sm"
+            >
               {reactionsIcon.map((item, index) => (
                 <button
                   key={index}
                   onClick={() => handleLike(item.emoji, item.name)}
-                  className="flex flex-col hover:scale-150 items-center justify-center px-3 rounded-xl transition-all duration-200"
+                  className="flex flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <span className="text-lg">{item.emoji}</span>
-                  <span className="font-medium text-xs">{item.name}</span>
+                  <span className="text-base sm:text-xl hover:scale-125 transition-transform duration-200">
+                    {item.emoji}
+                  </span>
                 </button>
               ))}
             </div>
@@ -216,11 +227,11 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
         </div>
         <div className="grid grid-cols-3 gap-1">
           <button
-            onMouseDown={handleLongPressStart} 
-            onMouseUp={handleLongPressEnd} 
-            onMouseLeave={handleLongPressEnd} 
-            onTouchStart={handleLongPressStart} 
-            onTouchEnd={handleLongPressEnd} 
+            onMouseDown={handleLongPressStart}
+            onMouseUp={handleLongPressEnd}
+            onMouseLeave={handleLongPressEnd}
+            onTouchStart={handleLongPressStart}
+            onTouchEnd={handleLongPressEnd}
             onMouseOver={() =>
               window.screen.availWidth > 768 && setShowReactions(true)
             }
@@ -233,7 +244,9 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           >
             {userReactionEmoji ? (
               <>
-                <span className="text-[20px]">{userReactionEmoji.category}</span>
+                <span className="text-[20px]">
+                  {userReactionEmoji.category}
+                </span>
                 <span className="font-medium flex qy:hidden">
                   {reactions.length}
                 </span>

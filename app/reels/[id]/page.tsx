@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/redux/store";
-import ReelCard from "@/components/reels/ReelCard";
+import ReelCard, { ReelCardRef } from "@/components/reels/ReelCard";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { useGetReels, useReactReel } from "@/hooks/useReels";
@@ -19,12 +19,14 @@ const ReelsPage: React.FC = () => {
     pagination,
     isLoading: reelsLoading,
   } = useSelector((state: RootState) => state.reels);
-  const [currentIndex, setCurrentIndex] = useState(-1); // Start with -1 to indicate not set
+  const [currentIndex, setCurrentIndex] = useState(-1); 
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const { trigger } = useGetReels(pagination.reels?.currentPage || 1);
   const { mutate: reactToReel } = useReactReel(
     reels[currentIndex >= 0 ? currentIndex : 0]?._id || ""
   );
+  const reelRefs = useRef<(ReelCardRef | null)[]>([]);
+  
 
   useEffect(() => {
     if (reels.length === 0 && !reelsLoading) {
@@ -180,7 +182,7 @@ const ReelsPage: React.FC = () => {
               onReaction={handleReaction}
               isFullscreen={true}
               ref={(el) => {
-                if (el) videoRefs.current[index] = el.querySelector("video");
+                reelRefs.current[index] = el;
               }}
             />
           </div>

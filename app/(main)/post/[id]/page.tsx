@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 
-const Page = () => {
+const PostPage = () => {
 
     const router = useRouter()
     const params = useParams()
@@ -33,10 +33,10 @@ const Page = () => {
     );
   }
   return (
-    <div className='max-w-4xl w-full items-center mx-auto justify-center py-11'>
-        <PostItem post={post}/>
+    <div className='max-w-4xl min-h-screen w-full items-center mx-auto justify-center'>
+        <PostItem post={post} isModal={true}/>
     </div>
   )
 }
 
-export default Page
+export default PostPage

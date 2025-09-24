@@ -72,6 +72,7 @@ interface singleCommentResponse {
 interface CreatePostData extends Record<string, any> {
   content: string;
   images?: File[];
+  visibility?: string;
 }
 
 interface EditPostData extends Record<string, any> {
@@ -161,10 +162,17 @@ export const useGetSinglePost = (
 
 export const useGetComments = (
   postId: string,
-  options?: Partial<UseApiControllerOptions<Record<string, any>, CommentsResponse>>
-): QueryResult<CommentsResponse> & { loadMoreComments: () => void; refetchComments: () => void } => {
+  then?: () => void,
+  catcher?: () => void,
+  options?: Partial<UseApiControllerOptions<Record<string, any>, CommentsResponse>>,
+): QueryResult<CommentsResponse> & { 
+  loadMoreComments: () => void; 
+  refetchComments: () => void;
+  hasSuccessfullyFetched: boolean;
+} => {
   const dispatch: AppDispatch = useDispatch();
   const [page, setPage] = useState(1);
+  const [hasSuccessfullyFetched, setHasSuccessfullyFetched] = useState(false);
   
   // Get existing comments from Redux state using the corrected selector
   const existingComments = useSelector(selectComments(postId));
@@ -173,12 +181,17 @@ export const useGetComments = (
     method: "GET",
     url: `/posts/${postId}/comments?page=${page}&limit=10`,
     queryOptions: {
-      enabled: !!postId,
-      staleTime: 2 * 60 * 1000,
+      enabled: !!postId && navigator.onLine, // Only enable if online
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: (failureCount: number, error: any) => {
+        // Retry up to 3 times, but only if online
+        return failureCount < 3 && navigator.onLine;
+      },
+      retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
       ...options?.queryOptions,
     },
     onSuccess: (data: CommentsResponse) => {
-      console.log(`Fetched comments for postId ${postId}:`, data.comments);
+      console.log(`Successfully fetched comments for postId ${postId}:`, data.comments);
       
       // For page 1, replace all comments. For subsequent pages, append to existing comments
       const updatedComments = page === 1 
@@ -192,15 +205,23 @@ export const useGetComments = (
         })
       );
       dispatch(setPagination({ postId, pagination: data.pagination }));
+      setHasSuccessfullyFetched(true);
+      if (then) then();
     },
     onError: (error: any) => {
       console.error(`Failed to fetch comments for postId ${postId}:`, error);
-      errorMessageHandler(error);
+      setHasSuccessfullyFetched(false);
+      if (catcher) catcher();
     },
     ...options,
   } as any);
 
   const loadMoreComments = () => {
+    if (!navigator.onLine) {
+      console.log('Cannot load more comments - user is offline');
+      return;
+    }
+    
     if (!result.isLoading && result.data?.pagination.hasNextPage) {
       console.log(`Loading more comments for postId ${postId}, page ${page + 1}`);
       setPage((prev) => prev + 1);
@@ -208,12 +229,20 @@ export const useGetComments = (
   };
 
   const refetchComments = () => {
+    if (!navigator.onLine) {
+      console.log('Cannot refetch comments - user is offline');
+      return;
+    }
+    
+    console.log(`Refetching comments for postId ${postId}`);
     setPage(1);
+    setHasSuccessfullyFetched(false);
     result.refetch();
   };
 
-  return { ...result, loadMoreComments, refetchComments };
+  return { ...result, loadMoreComments, refetchComments, hasSuccessfullyFetched };
 };
+
 
 export const useGetSingleComment = (
   postId: string,

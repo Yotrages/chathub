@@ -67,7 +67,7 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
   const containerClasses = isFullscreen
     ? "w-full h-full max-h-full mx-auto bg-black rounded-lg overflow-hidden"
     : isCompact
-    ? "w-32 h-48 aspect-[9/16] bg-white rounded-lg shadow-md overflow-hidden"
+    ? "w-24 xs:w-32 h-48 aspect-[9/16] bg-white rounded-lg shadow-md overflow-hidden"
     : "w-full h-full bg-white rounded-lg shadow-md overflow-hidden";
 
   return (

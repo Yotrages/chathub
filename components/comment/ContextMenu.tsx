@@ -45,6 +45,11 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
     }
   };
 
+  const handleEdit = () => {
+    setIsEditing(true);
+    onClose();
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
@@ -52,41 +57,56 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       }
     };
 
+    const handleScroll = () => {
+      onClose();
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("scroll", handleScroll);
+    
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("scroll", handleScroll);
+    };
   }, [onClose]);
 
   if (!show) return null;
 
+  // Adjust position for small screens
+  const adjustedPosition = {
+    left: Math.min(position.x, window.innerWidth - (window.innerWidth > 768 ? 110 : 130)),
+    top: Math.max(position.y - 180, 10),
+  };
+
   return (
     <div
       ref={contextMenuRef}
-      className="fixed z-50 bg-white rounded-lg shadow-lg border py-2 min-w-48"
+      className="fixed z-50 bg-white rounded-lg shadow-lg border py-1 min-w-[160px] sm:min-w-[180px]"
       style={{
-        left: position.x,
-        top: position.y,
-        transform: "translate(-50%, -100%)",
+        left: adjustedPosition.left,
+        top: adjustedPosition.top,
+        transform: "translateX(-50%)",
       }}
     >
       <button
         onClick={onReact}
-        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+        className="w-full px-3 sm:px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-sm transition-colors"
       >
-        <Smile size={16} />
+        <Smile size={14} className="sm:w-4 sm:h-4" />
         <span>React</span>
       </button>
       <button
-        onClick={() => setIsEditing(true)}
-        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+        onClick={handleEdit}
+        className="w-full px-3 sm:px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-sm transition-colors"
       >
-        <Edit size={16} />
+        <Edit size={14} className="sm:w-4 sm:h-4" />
         <span>Edit</span>
       </button>
       <button
         onClick={onReply}
-        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+        className="w-full px-3 sm:px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-sm transition-colors"
       >
-        <Reply size={16} />
+        <Reply size={14} className="sm:w-4 sm:h-4" />
         <span>Reply</span>
       </button>
       <button
@@ -95,16 +115,16 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
           onClose();
           toast.success("Comment copied successfully");
         }}
-        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2"
+        className="w-full px-3 sm:px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-sm transition-colors"
       >
-        <Copy size={16} />
+        <Copy size={14} className="sm:w-4 sm:h-4" />
         <span>Copy</span>
       </button>
       <button
         onClick={handleDelete}
-        className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center space-x-2 text-red-500"
+        className="w-full px-3 sm:px-4 py-2 text-left hover:bg-gray-50 flex items-center space-x-2 text-sm text-red-500 transition-colors"
       >
-        <Trash size={16} />
+        <Trash size={14} className="sm:w-4 sm:h-4" />
         <span>Delete</span>
       </button>
     </div>

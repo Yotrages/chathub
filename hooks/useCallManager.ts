@@ -21,15 +21,18 @@ export const useCallManagement = (currentChat: any) => {
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [incomingCall, setIncomingCall] = useState<{from: string, isVideo: boolean} | null>(null);
   const [callTimeout, setCallTimeout] = useState<NodeJS.Timeout | null>(null);
-
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const callStartTimeRef = useRef<number | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
-
   const { socket } = useSocket();
   const { user } = useSelector((state: RootState) => state.auth);
+
+  // NEW: Compute otherUserId for direct chats (skip groups)
+  const otherUserId = currentChat?.type === 'group' 
+    ? null 
+    : currentChat?.participants?.find((p: any) => p._id !== user?._id)?._id;
 
   // Enhanced WebRTC Configuration
   const configuration = {
@@ -86,15 +89,15 @@ export const useCallManagement = (currentChat: any) => {
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
     }
-    
+   
     peerConnectionRef.current = new RTCPeerConnection(configuration);
 
     // Handle ICE candidates
     peerConnectionRef.current.onicecandidate = (event) => {
-      if (event.candidate && socket && currentChat) {
+      if (event.candidate && socket && currentChat && otherUserId) {
         socket.emit('ice-candidate', {
           candidate: event.candidate,
-          to: currentChat._id,
+          to: otherUserId,  // FIXED: Use otherUserId (user ID), not conv ID
           callId: `${user?._id}-${currentChat._id}-${Date.now()}`
         });
       }
@@ -113,7 +116,7 @@ export const useCallManagement = (currentChat: any) => {
     peerConnectionRef.current.onconnectionstatechange = () => {
       const state = peerConnectionRef.current?.connectionState;
       setConnectionState(state as ConnectionState);
-     
+    
       if (state === 'connected') {
         setCallState('connected');
         setCallError(null);
@@ -134,7 +137,7 @@ export const useCallManagement = (currentChat: any) => {
     peerConnectionRef.current.oniceconnectionstatechange = () => {
       const iceState = peerConnectionRef.current?.iceConnectionState;
       console.log('ICE Connection State:', iceState);
-     
+    
       if (iceState === 'failed') {
         setCallError('Network connection failed. Please check your internet connection.');
       } else if (iceState === 'disconnected') {
@@ -145,23 +148,16 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     return peerConnectionRef.current;
-  }, [socket, currentChat, user?._id, startCallTimer]);
+  }, [socket, currentChat, user?._id, otherUserId, startCallTimer]);  // ADDED: otherUserId to deps
 
   // Start a call with enhanced error handling
   const startCall = useCallback(async (isVideo: boolean = false) => {
-    if (!currentChat || !socket) {
-      toast.error('Cannot start call - connection unavailable');
+    if (!currentChat || !socket || !otherUserId) {  // ADDED: Check otherUserId
+      toast.error('Cannot start call - connection or peer unavailable');
       return;
     }
-
     if (currentChat.type === 'group') {
       toast.error('Group calls are not supported yet');
-      return;
-    }
-
-    const validPeer = currentChat.participants.find((p: any) => p._id !== user?._id);
-    if (!validPeer) {
-      toast.error('No valid peer to call');
       return;
     }
 
@@ -169,33 +165,29 @@ export const useCallManagement = (currentChat: any) => {
       setCallError(null);
       setCallState('calling');
       setIsVideoCall(isVideo);
-
       const pc = initializePeerConnection();
-      
+     
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: isVideo,
       });
-      
+     
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
-
       stream.getTracks().forEach((track) => {
         pc.addTrack(track, stream);
       });
-
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: isVideo,
       });
-     
+    
       await pc.setLocalDescription(offer);
-      
-      socket.emit('offer', { sdp: offer, to: validPeer._id, isVideo });
-      socket.emit('call_request', { to: validPeer._id, isVideo });
-
+     
+      socket.emit('offer', { sdp: offer, to: otherUserId, isVideo });  // FIXED: Use otherUserId
+      socket.emit('call_request', { to: otherUserId, isVideo });  // FIXED: Use otherUserId
       const timeout = setTimeout(() => {
         if (callState === 'calling') {
           setCallError('Call not answered');
@@ -204,11 +196,10 @@ export const useCallManagement = (currentChat: any) => {
         }
       }, 30000);
       setCallTimeout(timeout);
-
     } catch (error: any) {
       console.error('Error starting call:', error);
       let message = 'Failed to start call';
-     
+    
       if (error.name === 'NotAllowedError') {
         message = 'Camera/microphone permission denied. Please allow access and try again.';
       } else if (error.name === 'NotFoundError') {
@@ -216,29 +207,29 @@ export const useCallManagement = (currentChat: any) => {
       } else if (error.name === 'NotSupportedError') {
         message = 'Browser does not support this feature.';
       }
-     
+    
       setCallError(message);
       setCallState('failed');
       toast.error(message);
     }
-  }, [currentChat, socket, user?._id, initializePeerConnection, callState]);
+  }, [currentChat, socket, otherUserId, initializePeerConnection, callState]);  // ADDED: otherUserId to deps
 
   // Accept incoming call
   const acceptCall = useCallback(() => {
-    if (incomingCall && socket) {
-      socket.emit('call_accept', { to: incomingCall.from });
+    if (incomingCall && socket && otherUserId) {  // ADDED: Check otherUserId
+      socket.emit('call_accept', { to: incomingCall.from });  // FIXED: to is from (caller user ID)
       setIncomingCall(null);
       if (callTimeout) {
         clearTimeout(callTimeout);
         setCallTimeout(null);
       }
     }
-  }, [incomingCall, socket, callTimeout]);
+  }, [incomingCall, socket, callTimeout, otherUserId]);  // ADDED: otherUserId
 
   // Decline incoming call
   const declineCall = useCallback(() => {
-    if (incomingCall && socket) {
-      socket.emit('call_decline', { to: incomingCall.from });
+    if (incomingCall && socket && otherUserId) {  // ADDED: Check otherUserId
+      socket.emit('call_decline', { to: incomingCall.from });  // FIXED: to is from (caller user ID)
       setIncomingCall(null);
       setCallState('idle');
       if (callTimeout) {
@@ -246,7 +237,7 @@ export const useCallManagement = (currentChat: any) => {
         setCallTimeout(null);
       }
     }
-  }, [incomingCall, socket, callTimeout]);
+  }, [incomingCall, socket, callTimeout, otherUserId]);  // ADDED: otherUserId
 
   // Toggle audio mute
   const toggleAudioMute = useCallback(() => {
@@ -283,19 +274,19 @@ export const useCallManagement = (currentChat: any) => {
 
   // Switch call type (voice to video or vice versa)
   const switchCallType = useCallback(async () => {
-    if (!peerConnectionRef.current || callState !== 'connected') return;
-   
+    if (!peerConnectionRef.current || callState !== 'connected' || !otherUserId) return;  // ADDED: otherUserId check
+  
     try {
       const newIsVideo = !isVideoCall;
       const stream = await navigator.mediaDevices.getUserMedia({
         video: newIsVideo,
         audio: true
       });
-     
+    
       const sender = peerConnectionRef.current.getSenders().find(s =>
         s.track && s.track.kind === 'video'
       );
-     
+    
       if (newIsVideo && !sender) {
         const videoTrack = stream.getVideoTracks()[0];
         if (videoTrack) {
@@ -309,18 +300,18 @@ export const useCallManagement = (currentChat: any) => {
           await sender.replaceTrack(videoTrack);
         }
       }
-     
+    
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
       setIsVideoCall(newIsVideo);
-     
+    
     } catch (error) {
       console.error('Failed to switch call type:', error);
       setCallError('Failed to switch call type');
     }
-  }, [callState, isVideoCall]);
+  }, [callState, isVideoCall, otherUserId]);  // ADDED: otherUserId
 
   // End call with cleanup
   const endCall = useCallback(() => {
@@ -329,18 +320,16 @@ export const useCallManagement = (currentChat: any) => {
       localStream.getTracks().forEach((track) => track.stop());
       setLocalStream(null);
     }
-   
+  
     if (remoteStream) {
       remoteStream.getTracks().forEach((track) => track.stop());
       setRemoteStream(null);
     }
-
     // Close peer connection
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
-
     // Clear video elements
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
@@ -348,7 +337,6 @@ export const useCallManagement = (currentChat: any) => {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = null;
     }
-
     // Reset states
     setCallState('idle');
     setConnectionState('new');
@@ -358,59 +346,57 @@ export const useCallManagement = (currentChat: any) => {
     setIsRemoteAudioMuted(false);
     setIsCallMinimized(false);
     setIncomingCall(null);
-   
+  
     // Clear timeouts
     if (callTimeout) {
       clearTimeout(callTimeout);
       setCallTimeout(null);
     }
-   
+  
     // Stop call timer
     stopCallTimer();
-
     // Notify other user
-    if (currentChat && socket && callState !== 'idle') {
-      socket.emit('call_end', { to: currentChat._id });
+    if (currentChat && socket && otherUserId && callState !== 'idle') {  // ADDED: otherUserId check
+      socket.emit('call_end', { to: otherUserId });  // FIXED: to otherUserId (user ID)
     }
-
     // Reinitialize peer connection for next call
     setTimeout(() => {
-      if (socket && currentChat) {
+      if (socket && currentChat && otherUserId) {  // ADDED: otherUserId
         initializePeerConnection();
       }
     }, 1000);
-  }, [localStream, remoteStream, callTimeout, stopCallTimer, currentChat, socket, callState, initializePeerConnection]);
+  }, [localStream, remoteStream, callTimeout, stopCallTimer, currentChat, socket, callState, otherUserId, initializePeerConnection]);  // ADDED: otherUserId
 
   // Socket event listeners for call signaling
   useEffect(() => {
-    if (!socket || !currentChat) return;
+    if (!socket || !currentChat || !otherUserId) return;  // ADDED: otherUserId check (for direct chats)
 
     const handleOffer = async (data: { sdp: RTCSessionDescriptionInit; from: string; isVideo: boolean }) => {
-      if (data.from === currentChat._id && peerConnectionRef.current) {
+      console.log('Received offer from:', data.from);  // NEW: Debug log
+      if (data.from === otherUserId && peerConnectionRef.current) {  // FIXED: Check otherUserId, not currentChat._id
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
-         
+        
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: data.isVideo,
           });
-         
+        
           setLocalStream(stream);
           if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
           }
-         
+        
           stream.getTracks().forEach((track) => {
             peerConnectionRef.current?.addTrack(track, stream);
           });
-
           const answer = await peerConnectionRef.current.createAnswer();
           await peerConnectionRef.current.setLocalDescription(answer);
-         
-          socket.emit('answer', { sdp: answer, to: data.from });
+        
+          socket.emit('answer', { sdp: answer, to: data.from });  // FIXED: to data.from (caller user ID)
           setCallState('connected');
           setIsVideoCall(data.isVideo);
-         
+        
         } catch (err) {
           console.error('Answer creation failed:', err);
           setCallError('Failed to accept call');
@@ -420,7 +406,8 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleAnswer = async (data: { sdp: RTCSessionDescriptionInit; from: string }) => {
-      if (data.from === currentChat._id && peerConnectionRef.current) {
+      console.log('Received answer from:', data.from);  // NEW: Debug log
+      if (data.from === otherUserId && peerConnectionRef.current) {  // FIXED: Check otherUserId
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
           setCallState('connected');
@@ -432,7 +419,8 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; from: string }) => {
-      if (data.from === currentChat._id && peerConnectionRef.current) {
+      console.log('Received ICE from:', data.from);  // NEW: Debug log
+      if (data.from === otherUserId && peerConnectionRef.current) {  // FIXED: Check otherUserId
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
         } catch (err) {
@@ -442,11 +430,16 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleCallRequest = (data: { from: string; isVideo: boolean; timestamp: string }) => {
-      if (data.from === currentChat._id && callState === 'idle') {
+      console.log('Received call_request from:', data.from);  // NEW: Debug log
+      if (currentChat.type === 'group') {  // NEW: Group handling
+        console.log('Group calls not supported');
+        return;
+      }
+      if (data.from === otherUserId && callState === 'idle') {  // FIXED: Check otherUserId, not currentChat._id
         setIncomingCall({ from: data.from, isVideo: data.isVideo });
         setCallState('ringing');
         setIsVideoCall(data.isVideo);
-       
+      
         const timeout = setTimeout(() => {
           declineCall();
         }, 30000);
@@ -455,7 +448,8 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleCallAccept = (data: { from: string; timestamp: string }) => {
-      if (data.from === currentChat._id) {
+      console.log('Received call_accept from:', data.from);  // NEW: Debug log
+      if (data.from === otherUserId) {  // FIXED: Check otherUserId
         setCallState('connected');
         if (callTimeout) {
           clearTimeout(callTimeout);
@@ -465,14 +459,16 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleCallEnd = (data: { from: string; timestamp: string }) => {
-      if (data.from === currentChat._id) {
+      console.log('Received call_end from:', data.from);  // NEW: Debug log
+      if (data.from === otherUserId) {  // FIXED: Check otherUserId
         endCall();
         toast.success('Call ended by other user');
       }
     };
 
     const handleCallDecline = (data: { from: string; timestamp: string }) => {
-      if (data.from === currentChat._id) {
+      console.log('Received call_decline from:', data.from);  // NEW: Debug log
+      if (data.from === otherUserId) {  // FIXED: Check otherUserId
         endCall();
         toast.error('Call declined');
       }
@@ -495,20 +491,20 @@ export const useCallManagement = (currentChat: any) => {
       socket.off('call_end', handleCallEnd);
       socket.off('call_decline', handleCallDecline);
     };
-  }, [socket, currentChat, callState, callTimeout, declineCall, endCall]);
+  }, [socket, currentChat, otherUserId, callState, callTimeout, declineCall, endCall]);  // ADDED: otherUserId to deps
 
   // Initialize peer connection
   useEffect(() => {
-    if (!socket || !currentChat) return;
-    
+    if (!socket || !currentChat || !otherUserId) return;  // ADDED: otherUserId check
+   
     initializePeerConnection();
-    
+   
     return () => {
       if (peerConnectionRef.current) {
         peerConnectionRef.current.close();
       }
     };
-  }, [socket, currentChat, initializePeerConnection]);
+  }, [socket, currentChat, otherUserId, initializePeerConnection]);  // ADDED: otherUserId
 
   return {
     callState,

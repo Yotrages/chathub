@@ -167,7 +167,7 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
               className="p-2 hover:bg-white/20 rounded-full transition-all duration-200 hover:scale-110"
               disabled={isPending}
             >
-              <XCircleIcon fontSize={24} />
+              <XCircleIcon className='text-black' fontSize={24} />
             </button>
           </div>
           
@@ -295,6 +295,7 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={isPending}
                   maxLength={100}
+                  border='none'
                   className="pr-16 text-lg border-2 border-gray-200 focus:border-purple-500 rounded-lg transition-all duration-200"
                 />
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">

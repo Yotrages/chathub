@@ -102,7 +102,7 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 sm:ml-[250px] max-w-full overflow-hidden lg:mr-80 min-h-screen pt-20">
+        <div className="flex-1 sm:ml-[250px] max-w-full overflow-hidden lg:mr-80 min-h-screen pt-24">
           {/* Main Content */}
           <div className="md:py-6 sm:px-6 max-w-full overflow-hidden space-y-6">
             {/* Create Post Section */}

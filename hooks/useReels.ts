@@ -25,12 +25,12 @@ import {
   removeReel,
   selectComments,
   removeComment,
-  EMPTY_COMMENTS,
+  // EMPTY_COMMENTS,
 } from "@/libs/redux/reelsSlice";
 import { AppDispatch, RootState } from "@/libs/redux/store";
 import { IComment, Reel, ReactedUser } from "@/types";
 import { errorMessageHandler } from "@/libs/feedback/error-handler";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { store } from "@/libs/redux/store";
 
 const createReelSchema = z.object({
@@ -156,50 +156,82 @@ export const useGetSingleReel = (
   });
 };
 
+
+// Define these constants outside the hook to prevent recreating them
+const EMPTY_COMMENTS: any[] = [];
+const DEFAULT_QUERY_OPTIONS = {
+  staleTime: 0,
+};
+
 export const useGetReelComments = (
   reelId: string,
   options?: Partial<UseApiControllerOptions<Record<string, any>, CommentsResponse>>
 ): QueryResult<CommentsResponse> & { loadMoreComments: () => void; refetchComments: () => void } => {
   const dispatch: AppDispatch = useDispatch();
   const [page, setPage] = useState(1);
+  
+  // Early return with disabled hook if reelId is invalid
+  const isValidReelId = Boolean(reelId && reelId.trim() !== '');
+  
   const existingComments = useSelector((state: RootState) =>
-    reelId ? selectComments(state, reelId) : EMPTY_COMMENTS
+    isValidReelId ? selectComments(state, reelId) : EMPTY_COMMENTS
   );
-  console.log('useGetReelComments called, reelId:', reelId, 'page:', page); // Debug log
+
+  // Memoize the query options to prevent unnecessary re-renders
+  const queryOptions = useMemo(() => ({
+    enabled: isValidReelId,
+    ...DEFAULT_QUERY_OPTIONS,
+    ...options?.queryOptions,
+  }), [isValidReelId, options?.queryOptions]);
+
+  // Use useCallback for the success handler to prevent recreation
+  const onSuccess = useCallback((data: CommentsResponse) => {
+    if (!isValidReelId) return;
+    
+    const updatedComments = page === 1
+      ? data.comments
+      : [...(existingComments || []), ...data.comments];
+    
+    dispatch(setComments({
+      reelId,
+      comments: updatedComments,
+    }));
+    
+    dispatch(setPagination({ reelId, pagination: data.pagination }));
+  }, [dispatch, reelId, page, existingComments, isValidReelId]);
+
+  // Memoize the URL to prevent unnecessary re-renders
+  const url = useMemo(() => {
+    if (!isValidReelId) return '';
+    return `/reels/${reelId}/comments?page=${page}&limit=10`;
+  }, [reelId, page, isValidReelId]);
+
   const result = useApiController<CommentsResponse>({
     method: "GET",
-    url: `/reels/${reelId}/comments?page=${page}&limit=10`,
-    queryOptions: {
-      enabled: !!reelId,
-      staleTime: 0, // Force fetch for debugging
-      ...options?.queryOptions,
-    },
-    onSuccess: (data: CommentsResponse) => {
-      console.log('useGetReelComments success:', data); // Debug log
-      const updatedComments = page === 1
-        ? data.comments
-        : [...(existingComments || []), ...data.comments];
-      dispatch(
-        setComments({
-          reelId,
-          comments: updatedComments,
-        })
-      );
-      dispatch(setPagination({ reelId, pagination: data.pagination }));
-    },
+    url,
+    queryOptions,
+    onSuccess,
   });
-  const loadMoreComments = () => {
+
+  // Use useCallback for these functions to maintain referential equality
+  const loadMoreComments = useCallback(() => {
     if (!result.isLoading && result.data?.pagination.hasNextPage) {
       setPage((prev) => prev + 1);
     }
-  };
-  const refetchComments = () => {
+  }, [result.isLoading, result.data?.pagination.hasNextPage]);
+
+  const refetchComments = useCallback(() => {
     setPage(1);
     result.refetch();
-  };
-  return { ...result, loadMoreComments, refetchComments };
-};
+  }, [result.refetch]);
 
+  // Return stable object reference
+  return useMemo(() => ({
+    ...result,
+    loadMoreComments,
+    refetchComments
+  }), [result, loadMoreComments, refetchComments]);
+};
 
 export const useGetSingleReelComment = (
   reelId: string,
