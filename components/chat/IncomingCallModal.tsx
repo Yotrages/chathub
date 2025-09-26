@@ -1,4 +1,4 @@
-import { Phone, PhoneOff, Video, VideoOff } from 'lucide-react';
+import { Phone, PhoneOff, Video } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface IncomingCallModalProps {

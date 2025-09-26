@@ -83,7 +83,6 @@ export const CallInterface = ({
             callState={callState}
             callDuration={callDuration}
             formatDuration={formatDuration}
-            isCallMinimized={isCallMinimized}
           />
         )}
       </div>
@@ -213,7 +212,7 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
   </div>
 );
 
-const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration, isCallMinimized }: any) => (
+const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration }: any) => (
   <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 to-gray-900">
     <div className="text-center">
       <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
