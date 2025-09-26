@@ -1,4 +1,3 @@
-// store configuration file
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistStore, persistReducer } from "redux-persist";
 import { createTransform } from "redux-persist";
@@ -20,9 +19,7 @@ const rootReducer = combineReducers({
 
 export type RootState = ReturnType<typeof rootReducer>;
 
-// Transform that preserves all data for offline support
 const offlineStorageTransform = createTransform<any, any, RootState>(
-  // Inbound: what gets saved to storage
   (inboundState: any, key: string | number | symbol) => {
     console.log(`Persisting ${String(key)}:`, { 
       type: typeof inboundState, 
@@ -30,10 +27,8 @@ const offlineStorageTransform = createTransform<any, any, RootState>(
       dataSize: JSON.stringify(inboundState).length 
     });
     
-    // Keep ALL data for offline support - no limits
     return inboundState;
   },
-  // Outbound: what gets loaded from storage
   (outboundState: any, key: string | number | symbol) => {
     console.log(`Rehydrating ${String(key)}:`, { 
       type: typeof outboundState, 
@@ -41,7 +36,6 @@ const offlineStorageTransform = createTransform<any, any, RootState>(
       dataSize: JSON.stringify(outboundState).length 
     });
     
-    // Reset loading states when rehydrating
     return {
       ...outboundState,
       loading: false,
@@ -50,21 +44,18 @@ const offlineStorageTransform = createTransform<any, any, RootState>(
   }
 );
 
-// Create storage instance
 const storage = createInvisibleStorage();
 
 const persistConfig = {
   key: "root",
   storage: storage,
   transforms: [offlineStorageTransform],
-  throttle: 1000, // Save every second for better offline support
-  serialize: true, // Ensure proper serialization
-  debug: process.env.NODE_ENV === 'development', // Enable debug in development
-  // Don't blacklist anything - we want everything for offline support
+  throttle: 1000, 
+  serialize: true, 
+  debug: process.env.NODE_ENV === 'development', 
   whitelist: ['auth', 'chat', 'post', 'stories', 'reels'], 
 };
 
-// Enhanced error handling for persist
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
@@ -80,19 +71,16 @@ export const store = configureStore({
   devTools: process.env.NODE_ENV === 'development',
 });
 
-// Enhanced persistor with better error handling
 export const persistor = persistStore(store, null, () => {
   console.log('Redux persist rehydration complete');
 });
 
-// Listen for persist events
 persistor.subscribe(() => {
   console.log('Persistor state changed:', persistor.getState());
 });
 
 export type AppDispatch = typeof store.dispatch;
 
-// Enhanced hook for monitoring storage with offline status
 export const useInvisibleStorageInfo = () => {
   const [storageInfo, setStorageInfo] = useState({ 
     totalItems: 0, 
@@ -108,12 +96,10 @@ export const useInvisibleStorageInfo = () => {
       try {
         const storage = createInvisibleStorage();
         
-        // Check if storage is working
         const isWorking = 'isWorking' in storage && typeof storage.isWorking === 'function' 
           ? await (storage as any).isWorking() 
           : true;
         
-        // Get storage info
         let info = { totalItems: 0, totalSize: 0 };
         if ('getStorageInfo' in storage && typeof storage.getStorageInfo === 'function') {
           info = await (storage as any).getStorageInfo();
@@ -134,13 +120,10 @@ export const useInvisibleStorageInfo = () => {
       }
     };
 
-    // Update immediately
     updateStorageInfo();
 
-    // Set up periodic updates
     const interval = setInterval(updateStorageInfo, 5000);
 
-    // Listen for online/offline events
     const handleOnline = () => {
       console.log('App came online');
       updateStorageInfo();
@@ -166,12 +149,10 @@ export const useInvisibleStorageInfo = () => {
   };
 };
 
-// Helper function to manually persist current state
 export const manualPersist = () => {
   persistor.persist();
 };
 
-// Helper function to check if data is properly persisted
 export const checkPersistedData = async () => {
   const storage = createInvisibleStorage();
   try {
@@ -189,7 +170,6 @@ export const checkPersistedData = async () => {
   return null;
 };
 
-// Debug helper to clear all persisted data
 export const clearPersistedData = async () => {
   try {
     const storage = createInvisibleStorage();
@@ -198,7 +178,6 @@ export const clearPersistedData = async () => {
       console.log('All persisted data cleared');
     }
     
-    // Also clear from persistor
     persistor.purge();
   } catch (error) {
     console.error('Failed to clear persisted data:', error);

@@ -138,7 +138,6 @@ const PendingRequestsList = ({
   onReject: (followId: string) => void;
 }) => {
 
-  // Ensure requests is an array before checking length
   if (!Array.isArray(requests) || requests.length === 0) {
     return (
       <div className="text-center py-12">

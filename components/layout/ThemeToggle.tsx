@@ -1,4 +1,3 @@
-// components/ui/ThemeToggle.tsx
 'use client';
 import { useState } from 'react';
 import { useTheme } from '@/context/ThemeContext';
@@ -60,13 +59,11 @@ export const ThemeToggleDropdown = () => {
 
       {isOpen && (
         <>
-          {/* Backdrop */}
           <div 
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Dropdown */}
           <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20">
             <div className="p-2">
               {themes.map(({ value, icon: Icon, label }) => (

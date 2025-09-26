@@ -17,11 +17,9 @@ const StorySection: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    // Fetch reels when component mounts
     dispatch(fetchStory({ page: 1, limit: 50 }));
   }, []);
 
-  // // Open modal when there's an error
   // useEffect(() => {
   //   if (error) {
   //     setIsModalOpen(true);
@@ -29,9 +27,7 @@ const StorySection: React.FC = () => {
   // }, [error]);
 
   const handleReelClick = (reelId: string) => {
-    // Call API to add view when reel is clicked
     dispatch(addViewToStory(reelId));
-    // Navigate to full reel view
     router.push(`/stories/${reelId}`);
   };
 
@@ -45,15 +41,12 @@ const StorySection: React.FC = () => {
         <h2 className="text-lg font-semibold text-gray-900">Stories</h2>
       </div>
       
-      {/* Horizontal scrollable reels */}
       <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
-        {/* Create Reel Button - Always first */}
         <div className="flex-shrink-0">
           <div 
             onClick={handleCreateStory}
             className="relative w-24 xs:w-32 h-48 bg-white rounded-xl border border-gray-200 cursor-pointer overflow-hidden group hover:shadow-md transition-all duration-200"
           >
-            {/* User profile background */}
             <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200 relative">
               {user?.avatar? (
                 <img 
@@ -67,7 +60,6 @@ const StorySection: React.FC = () => {
                 </div>
               )}
               
-              {/* Plus icon overlay */}
               <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
                 <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center border-4 border-white shadow-lg group-hover:bg-blue-600 transition-colors">
                   <PlusIcon className="h-4 w-4 text-white font-bold" />
@@ -80,7 +72,6 @@ const StorySection: React.FC = () => {
           </div>
         </div>
         
-        {/* Reels */}
         {stories.map((story) => (
           <div key={story._id} className="flex-shrink-0">
             <div
@@ -93,7 +84,6 @@ const StorySection: React.FC = () => {
         ))}
       </div>
       
-      {/* Create Reel Modal */}
       <CreateStoryModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 

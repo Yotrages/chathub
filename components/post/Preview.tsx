@@ -1,7 +1,6 @@
 import { Download, FileText, Play, Video} from "lucide-react";
 
 export const FilePreview = ({url} : {url: string}) => {
-    //  const mediaFiles: MediaFile = () => {
     const extension = url.split(".").pop()?.toLowerCase();
     let type: "image" | "video" | "document" | "audio" = "image";
     if (["mp4", "webm", "ogg", "mov", "avi"].includes(extension || "")) {

@@ -1,4 +1,3 @@
-// components/common/UserAvatar.tsx
 'use client';
 import { cn } from '@/libs/utils';
 

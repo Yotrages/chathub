@@ -61,12 +61,11 @@ const PostComments: React.FC<PostCommentsProps> = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showMemories, setShowMemories] = useState(false);
 
-  // Auto-resize textarea
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 120; // Maximum height in pixels
+      const maxHeight = 120; 
       textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   };
@@ -75,7 +74,6 @@ const PostComments: React.FC<PostCommentsProps> = ({
     adjustTextareaHeight();
   }, [commentContent]);
 
-  // Extract keywords from comment text
   const extractKeywords = (text: string): string[] => {
     const stopWords = new Set(['the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of', 'as', 'by']);
     
@@ -257,7 +255,6 @@ const PostComments: React.FC<PostCommentsProps> = ({
     );
   };
 
-  // Find the post author's username for display
   const postAuthor = comments.find(comment => comment.authorId._id === postAuthorId);
   const participantUsername = postAuthor?.authorId?.username;
 

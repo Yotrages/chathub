@@ -29,7 +29,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   const [isUserOnline, setIsUserOnline] = useState(navigator.onLine);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
 
-  // Enhanced timer states
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [pausedDuration, setPausedDuration] = useState(0);
   const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
@@ -43,7 +42,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   const dispatch = useDispatch();
   const { sendMessage, startTyping, stopTyping, uploadFile } = useChat();
 
-  // Monitor online/offline status
   useEffect(() => {
     const handleOnline = () => setIsUserOnline(true);
     const handleOffline = () => {
@@ -58,7 +56,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     };
   }, []);
 
-  // Enhanced responsive detection
   useEffect(() => {
     const checkResponsiveLayout = () => {
       const width = window.innerWidth;
@@ -104,17 +101,15 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     };
   }, []);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 120; // Max 5 lines approximately
+      const maxHeight = 120; 
       textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
     }
   }, [message]);
 
-  // Click outside handler for emoji picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
@@ -125,7 +120,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (typingTimeout) clearTimeout(typingTimeout);
@@ -133,7 +127,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     };
   }, [typingTimeout, currentChat?._id, stopTyping]);
 
-  // Enhanced timer calculation
   const calculateRecordingDuration = useCallback(() => {
     if (!recordingStartTime) return 0;
     const now = Date.now();
@@ -142,7 +135,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     return Math.max(0, actualDuration);
   }, [recordingStartTime, pausedDuration]);
 
-  // Update timer every 100ms for smoother display
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isRecording && !isPaused) {
@@ -155,7 +147,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     };
   }, [isRecording, isPaused, calculateRecordingDuration]);
 
-  // Enhanced emoji picker positioning
   const getEmojiPickerStyles = () => {
     const width = window.innerWidth;
     if (width <= 320) {
@@ -213,7 +204,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         setMessage('');
         stopTyping(currentChat._id);
         if (replyingTo) dispatch(clearReplyingTo());
-        // Reset textarea height
         if (textareaRef.current) {
           textareaRef.current.style.height = 'auto';
         }
@@ -505,7 +495,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     return null;
   };
 
-  // Determine which buttons to show based on screen size and focus state
   const showFileButtons = !isInputFocused || (!isVerySmallScreen && window.innerWidth > 300);
   const showVoiceButton = !isVerySmallScreen && (!isInputFocused || window.innerWidth > 300);
 

@@ -13,7 +13,7 @@ interface PostListProps {
   isLoading?: boolean;
   type?: "posts" | "likes" | "saved";
   userId: string;
-  sortType?: string; // Add sortType prop
+  sortType?: string; 
 }
 
 
@@ -27,17 +27,14 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
   );
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Get all hooks but only use the one we need
   const { trigger: triggerUserPosts } = useGetUserPosts(1, userId);
   const { trigger: triggerLikedPosts } = useGetLikedPosts(1, userId);
-  const { trigger: triggerSavedPosts } = useGetSavedPosts(1, userId, sortType); // Pass sortType
+  const { trigger: triggerSavedPosts } = useGetSavedPosts(1, userId, sortType); 
 
-  // Use refs to track previous values to prevent unnecessary effects
   const prevTypeRef = useRef(type);
   const prevUserIdRef = useRef(userId);
   const prevSortTypeRef = useRef(sortType);
 
-  // Get posts based on type
   const posts = useMemo(() => {
     switch (type) {
       case "likes":
@@ -52,7 +49,6 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
   const [ref, inView] = useInView();
   const hasMore = pagination?.hasNextPage ?? false;
 
-  // Reset posts and load initial data when type, userId, or sortType changes
   useEffect(() => {
     if (
       prevTypeRef.current !== type ||
@@ -74,14 +70,12 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
           break;
       }
 
-      // Update refs
       prevTypeRef.current = type;
       prevUserIdRef.current = userId;
       prevSortTypeRef.current = sortType;
     }
   }, [type, userId, sortType, dispatch, triggerUserPosts, triggerLikedPosts, triggerSavedPosts]);
 
-  // Infinite scroll
   useEffect(() => {
     if (inView && hasMore && !postsLoading) {
       switch (type) {

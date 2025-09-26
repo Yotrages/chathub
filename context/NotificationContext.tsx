@@ -49,7 +49,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
 
   useEffect(() => {
-    // Only initialize socket if we have userId and token
     if (!userId || !token) {
       return;
     }
@@ -99,7 +98,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   }, [userId, token]);
 
   const fetchNotifications = async (pageNum: number = 1) => {
-    // Don't fetch if not authenticated
     if (!userId || !token) {
       return;
     }
@@ -182,7 +180,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   const showNotificationPopup = (notification: Notification) => {
     setPopupNotification(notification);
-    // Auto-hide after 5 seconds
     setTimeout(() => setPopupNotification(null), 5000);
   };
 

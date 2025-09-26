@@ -69,7 +69,7 @@ export default function SettingsPage() {
     setSaving(true);
     setError(null);
     try {
-      const response = await api.put(`/settings/${section}`, settingsData); // Removed { data } wrapper
+      const response = await api.put(`/settings/${section}`, settingsData); 
       setSettings(response.data);
     } catch (error) {
       console.error(`Error updating ${section} settings:`, error);

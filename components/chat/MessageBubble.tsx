@@ -38,7 +38,6 @@ export const MessageBubble = ({
     : message.senderId;
 
     const router = useRouter()
-  // Calculate smart context menu position
   const calculateContextMenuPosition = (clientX: number, clientY: number) => {
     const contextMenuWidth = 240;
     const contextMenuHeight = 400;
@@ -66,7 +65,6 @@ export const MessageBubble = ({
     return { x, y };
   };
 
-  // Handle click outside for context menu
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -82,7 +80,6 @@ export const MessageBubble = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showContextMenu]);
 
-  // Handle click outside for reactions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -96,7 +93,6 @@ export const MessageBubble = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showReactions]);
 
-  // Close context menu on scroll
   useEffect(() => {
     const handleScroll = () => {
       if (showContextMenu) {

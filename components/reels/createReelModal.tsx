@@ -32,13 +32,11 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
     setIsPlaying(true);
   };
 
-  // Move hook calls before any conditional returns
   const { mutate, isPending } = useCreateReel(() => {
     resetForm();
     onClose();
   });
 
-  // Cleanup preview URL when component unmounts or file changes
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -47,14 +45,12 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
     };
   }, [previewUrl]);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       resetForm();
     }
   }, [isOpen]);
 
-  // Early return after all hooks
   if (!isOpen) return null;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,20 +61,17 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
   };
 
   const validateAndSetFile = (selectedFile: File) => {
-    // Validate file type
     if (!selectedFile.type.startsWith('video/')) {
       toast.error('Please select a valid video file');
       return;
     }
 
-    // Validate file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 50 * 1024 * 1024; 
     if (selectedFile.size > maxSize) {
       toast.error('File size must be less than 50MB');
       return;
     }
 
-    // Clean up previous preview URL
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }

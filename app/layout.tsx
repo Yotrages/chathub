@@ -25,14 +25,12 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user || !token || !socket || !isConnected) return;
 
-    // Send initial online status
     socket.emit('user_online');
     socket.on('online_success', () => {
       dispatch(updateUserOnlineStatus(true));
       toast.success('You are now connected');
     });
 
-    // Send heartbeats every 30 seconds
     const heartbeatInterval = setInterval(() => {
       socket.emit('heartbeat');
       api.post(
@@ -41,7 +39,6 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
       ).catch((err) => console.error('HTTP heartbeat error:', err));
     }, 120000);
 
-    // Handle network changes
     const handleOnline = () => {
       socket.emit('user_online');
       api.post(
@@ -62,20 +59,18 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
       toast.error('You are not connected to the internet');
     };
 
-    // Handle browser close
     const handleBeforeUnload = () => {
       socket.emit('user_offline');
       api.post(
         '/auth/online-status',
         { status: 'offline', device: navigator.userAgent },
-      ).catch(() => {}); // Synchronous XHR is deprecated, so errors are ignored
+      ).catch(() => {});
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // Handle socket errors and reconnection
     socket.on('error', (err) => {
       console.error('Socket error:', err);
       if (err.error === 'Authentication failed') {
@@ -100,7 +95,6 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
     };
   }, [user, token, socket, isConnected, dispatch]);
   
-  // Always render NotificationProvider, but pass null values when user/token don't exist
   return (
     <NotificationProvider userId={user?._id || null} token={token || null}>
       {children}

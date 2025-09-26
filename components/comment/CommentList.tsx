@@ -25,11 +25,9 @@ export const CommentList: React.FC<CommentListProps> = ({
     selectReelPagination("comment", dynamicId)
   );
 
-  // Only call the hook that matches the type
   const postCommentsHook = useGetComments(type === "post" ? dynamicId : "");
   const reelCommentsHook = useGetReelComments(type === "reel" ? dynamicId : "");
 
-  // Use the appropriate hook based on type
   const { isLoading, loadMoreComments } = type === "post" ? postCommentsHook : { isLoading: false, loadMoreComments: () => {} };
   const { isLoading: commentLoading, loadMoreComments: loadMore } = type === "reel" ? reelCommentsHook : { isLoading: false, loadMoreComments: () => {} };
 
@@ -53,7 +51,6 @@ export const CommentList: React.FC<CommentListProps> = ({
     setLikesModal({ isOpen: false, reactions: [], type: "comment" });
   }, []);
 
-  // Memoize the comments rendering to prevent unnecessary re-renders
   const renderedComments = useMemo(() => {
     if (!comments || comments.length === 0) {
       return (
@@ -78,7 +75,6 @@ export const CommentList: React.FC<CommentListProps> = ({
     ));
   }, [comments, type, dynamicId, handleShowLikes]);
 
-  // Memoize the load more button to prevent unnecessary re-renders
   const loadMoreButton = useMemo(() => {
     if (type === "post") {
       return commentPagination?.hasNextPage ? (

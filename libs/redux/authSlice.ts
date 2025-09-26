@@ -25,7 +25,6 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.isAuthenticated = true;
       state.isLoading = false;
-      sessionStorage.setItem('user', JSON.stringify(action.payload.user));
     },
 
     updateUserOnlineStatus: (state, action: PayloadAction<boolean>) => {
@@ -38,7 +37,6 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.isLoading = false;
-      sessionStorage.removeItem('user');
     },
 
     addSuggestedUsers: (state, action: PayloadAction<User[]>) => {

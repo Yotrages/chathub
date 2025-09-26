@@ -40,27 +40,22 @@ const Header: React.FC = () => {
         }
       } catch (error) {
         console.error("Failed to fetch frequent searches:", error);
-        // Fallback to empty array or default searches
         setFrequentSearches([]);
       }
     };
     fetchFrequentSearches();
   }, []);
 
-  // Handle search submit - FIXED
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Clear focus and close modals
       setIsFocused(false);
       setShowSearch(false);
       
-      // Navigate to search results
       router.push(`/search/${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
-  // Track search for frequent searches - NEW
   const trackSearch = async (query: string) => {
     try {
       await api.post("/search/tracking", { query });
@@ -69,32 +64,26 @@ const Header: React.FC = () => {
     }
   };
 
-  // Handle frequent search click - FIXED
   const handleFrequentSearchClick = (query: string) => {
     setSearchQuery(query);
     setIsFocused(false);
     setShowSearch(false);
     
-    // Navigate to search results
     router.push(`/search/${encodeURIComponent(query)}`);
     
-    // Track the search
     trackSearch(query);
   };
 
-  // Handle search input change - ENHANCED
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  // Handle search input key press - NEW
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearchSubmit(e as any);
     }
   };
 
-  // Handle search modal close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

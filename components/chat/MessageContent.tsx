@@ -291,6 +291,20 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
   };
 
   const renderMessageContent = () => {
+     const getCallIcon = (callStatus: string | undefined, isVideo: boolean) => {
+    switch (callStatus) {
+      case "missed":
+        return isVideo ? "📹❌" : "📞❌";
+      case "ended":
+        return isVideo ? "📹✅" : "📞✅";
+      case "declined":
+        return isVideo ? "📹🚫" : "📞🚫";
+      case "failed":
+        return isVideo ? "📹⚠️" : "📞⚠️";
+      default:
+        return isVideo ? "📹" : "📞";
+    }
+  };
     switch (message.messageType) {
       case 'image':
         return (
@@ -458,6 +472,14 @@ export const MessageContent = ({ message, isOwn, onClose, isEditing, otherPartic
             )}
           </div>
         );
+
+        case 'call': 
+        return (
+          <div className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg text-sm max-w-xs text-center">
+              <span className="mr-2">{getCallIcon(message.callStatus, message.content.includes("Video"))}</span>
+              {message.content}
+            </div>
+        )
         
       case 'file':
         return (

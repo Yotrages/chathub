@@ -46,8 +46,8 @@ export const CallInterface = ({
   if (callState === 'idle') return null;
 
   return (
-    <div className={`bg-gray-900 text-white py-3 transition-all duration-300 ${
-      isCallMinimized ? 'h-16' : isVideoCall ? 'h-80' : 'h-32'
+    <div className={`fixed inset-0 z-[9999] bg-gray-900 text-white flex flex-col transition-all duration-300 ${
+      isCallMinimized ? 'bottom-0 right-4 left-auto top-auto w-80 h-60 rounded-t-lg shadow-2xl' : ''
     }`}>
       <CallHeader
         currentChat={currentChat}
@@ -59,76 +59,114 @@ export const CallInterface = ({
         formatDuration={formatDuration}
       />
 
-      {!isCallMinimized && (
-        <>
-          {callError && (
-            <div className="bg-red-600 text-white px-4 py-2 text-sm">
-              {callError}
-            </div>
-          )}
+      {callError && (
+        <div className="bg-red-600 text-white px-4 py-2 text-sm border-l-4 border-red-800">
+          <div className="flex items-center">
+            <div className="animate-pulse w-2 h-2 bg-red-300 rounded-full mr-2"></div>
+            {callError}
+          </div>
+        </div>
+      )}
 
-          {isVideoCall ? (
-            <VideoCallDisplay
-              localVideoRef={localVideoRef}
-              remoteVideoRef={remoteVideoRef}
-              isVideoMuted={isVideoMuted}
-            />
-          ) : (
-            <AudioCallDisplay
-              currentChat={currentChat}
-              callState={callState}
-              callDuration={callDuration}
-              formatDuration={formatDuration}
-            />
-          )}
-
-          <CallControls
-            isAudioMuted={isAudioMuted}
+      {/* Main call content - fills remaining space */}
+      <div className="flex-1 relative overflow-hidden">
+        {isVideoCall ? (
+          <VideoCallDisplay
+            localVideoRef={localVideoRef}
+            remoteVideoRef={remoteVideoRef}
             isVideoMuted={isVideoMuted}
-            isRemoteAudioMuted={isRemoteAudioMuted}
-            isVideoCall={isVideoCall}
-            callState={callState}
-            onToggleAudioMute={onToggleAudioMute}
-            onToggleVideoMute={onToggleVideoMute}
-            onToggleRemoteAudio={onToggleRemoteAudio}
-            onSwitchCallType={onSwitchCallType}
-            onEndCall={onEndCall}
+            isCallMinimized={isCallMinimized}
           />
-        </>
+        ) : (
+          <AudioCallDisplay
+            currentChat={currentChat}
+            callState={callState}
+            callDuration={callDuration}
+            formatDuration={formatDuration}
+            isCallMinimized={isCallMinimized}
+          />
+        )}
+      </div>
+
+      {/* Call controls at bottom */}
+      {!isCallMinimized && (
+        <CallControls
+          isAudioMuted={isAudioMuted}
+          isVideoMuted={isVideoMuted}
+          isRemoteAudioMuted={isRemoteAudioMuted}
+          isVideoCall={isVideoCall}
+          callState={callState}
+          onToggleAudioMute={onToggleAudioMute}
+          onToggleVideoMute={onToggleVideoMute}
+          onToggleRemoteAudio={onToggleRemoteAudio}
+          onSwitchCallType={onSwitchCallType}
+          onEndCall={onEndCall}
+        />
       )}
     </div>
   );
 };
 
 const CallHeader = ({ currentChat, callState, connectionState, callDuration, isCallMinimized, onToggleMinimize, formatDuration }: any) => (
-  <div className="flex items-center justify-between p-4 bg-gray-800">
-    <div className="flex items-center">
-      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3">
+  <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
+    <div className="flex items-center min-w-0">
+      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
         <span className="text-white text-sm font-semibold">
           {currentChat.name?.charAt(0) || 'U'}
         </span>
       </div>
-      <div>
-        <h4 className="font-medium">{currentChat.name}</h4>
+      <div className="min-w-0">
+        <h4 className="font-medium text-white truncate">{currentChat.name}</h4>
         <p className="text-xs text-gray-300">
-          {callState === 'calling' && 'Calling...'}
-          {callState === 'ringing' && 'Ringing...'}
-          {callState === 'connected' && formatDuration(callDuration)}
-          {callState === 'failed' && 'Call Failed'}
+          {callState === 'calling' && (
+            <span className="flex items-center">
+              <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
+              Calling...
+            </span>
+          )}
+          {callState === 'ringing' && (
+            <span className="flex items-center">
+              <div className="animate-pulse w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+              Ringing...
+            </span>
+          )}
+          {callState === 'connected' && (
+            <span className="flex items-center">
+              <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+              {formatDuration(callDuration)}
+            </span>
+          )}
+          {callState === 'failed' && (
+            <span className="flex items-center">
+              <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+              Call Failed
+            </span>
+          )}
+          {callState === 'ended' && (
+            <span className="flex items-center">
+              <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+              Call Ended
+            </span>
+          )}
         </p>
       </div>
     </div>
    
     <div className="flex items-center space-x-2">
-      <span className="text-xs text-gray-300">
+      <span className="text-xs text-gray-300 hidden sm:block">
         {connectionState === 'connecting' && 'Connecting...'}
         {connectionState === 'connected' && 'Connected'}
-        {connectionState === 'disconnected' && 'Reconnecting...'}
-        {connectionState === 'failed' && 'Connection Failed'}
+        {connectionState === 'disconnected' && (
+          <span className="text-yellow-400">Reconnecting...</span>
+        )}
+        {connectionState === 'failed' && (
+          <span className="text-red-400">Connection Failed</span>
+        )}
       </span>
       <button
         onClick={onToggleMinimize}
-        className="p-1 text-gray-300 hover:text-white"
+        className="p-1 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors"
+        title={isCallMinimized ? 'Maximize call' : 'Minimize call'}
       >
         {isCallMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
       </button>
@@ -136,51 +174,87 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
   </div>
 );
 
-const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted }: any) => (
-  <div className="relative h-48 bg-black">
+const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: any) => (
+  <div className="relative w-full h-full bg-black">
+    {/* Remote video - full screen */}
     <video
       ref={remoteVideoRef}
       autoPlay
       playsInline
       className="w-full h-full object-cover"
     />
-   
-    <div className="absolute top-4 right-4 w-24 h-18 bg-gray-800 rounded-lg overflow-hidden">
-      <video
-        ref={localVideoRef}
-        autoPlay
-        muted
-        playsInline
-        className="w-full h-full object-cover"
-      />
-      {isVideoMuted && (
-        <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-          <VideoOff size={16} className="text-gray-400" />
-        </div>
-      )}
+    
+    {/* Local video - picture in picture */}
+    {!isCallMinimized && (
+      <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg">
+        <video
+          ref={localVideoRef}
+          autoPlay
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        />
+        {isVideoMuted && (
+          <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+            <VideoOff size={20} className="text-gray-400" />
+          </div>
+        )}
+      </div>
+    )}
+    
+    {/* No remote video placeholder */}
+    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400" 
+         style={{ display: remoteVideoRef.current?.srcObject ? 'none' : 'flex' }}>
+      <div className="text-center">
+        <Video size={48} className="mx-auto mb-4 opacity-50" />
+        <p>Waiting for video...</p>
+      </div>
     </div>
   </div>
 );
 
-const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration }: any) => {
-  if (callState !== 'connected') return null;
-  
-  return (
-    <div className="flex items-center justify-center h-16 bg-gray-800">
-      <div className="flex items-center space-x-4">
-        <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-          <span className="text-white font-semibold">
-            {currentChat.name?.charAt(0) || 'U'}
-          </span>
-        </div>
-        <div>
-          <h4 className="font-medium">{currentChat.name}</h4>
-          <p className="text-sm text-gray-300">Voice call - {formatDuration(callDuration)}</p>
-        </div>
+const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration, isCallMinimized }: any) => (
+  <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 to-gray-900">
+    <div className="text-center">
+      <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+        <span className="text-white text-3xl font-semibold">
+          {currentChat.name?.charAt(0) || 'U'}
+        </span>
+      </div>
+      <h3 className="text-2xl font-semibold text-white mb-2">{currentChat.name}</h3>
+      <div className="text-lg text-gray-300">
+        {callState === 'calling' && (
+          <div className="flex items-center justify-center">
+            <div className="animate-pulse flex space-x-1">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
+            <span className="ml-2">Calling...</span>
+          </div>
+        )}
+        {callState === 'ringing' && (
+          <div className="flex items-center justify-center">
+            <div className="animate-pulse w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+            <span>Incoming call...</span>
+          </div>
+        )}
+        {callState === 'connected' && (
+          <div className="flex items-center justify-center">
+            <div className="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
+            <span>Voice call • {formatDuration(callDuration)}</span>
+          </div>
+        )}
+        {(callState === 'failed' || callState === 'ended') && (
+          <div className="flex items-center justify-center">
+            <div className="w-3 h-3 bg-red-400 rounded-full mr-2"></div>
+            <span>Call {callState}</span>
+          </div>
+        )}
       </div>
     </div>
-  );
-};
+  </div>
+);
 
 const CallControls = ({
   isAudioMuted,
@@ -193,56 +267,67 @@ const CallControls = ({
   onToggleRemoteAudio,
   onSwitchCallType,
   onEndCall
-} : any) => (
-  <div className="flex items-center justify-center space-x-4 p-4 bg-gray-800">
+}: any) => (
+  <div className="flex items-center justify-center space-x-4 p-6 bg-gray-800 border-t border-gray-700">
+    {/* Microphone toggle */}
     <button
       onClick={onToggleAudioMute}
-      className={`p-3 rounded-full transition-colors ${
-        isAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-600 hover:bg-gray-500'
+      className={`p-4 rounded-full transition-all transform hover:scale-105 ${
+        isAudioMuted 
+          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
+          : 'bg-gray-600 hover:bg-gray-500'
       }`}
-      title={isAudioMuted ? 'Unmute' : 'Mute'}
+      title={isAudioMuted ? 'Unmute microphone' : 'Mute microphone'}
     >
-      {isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
+      {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
     </button>
 
+    {/* Camera toggle (video calls only) */}
     {isVideoCall && (
       <button
         onClick={onToggleVideoMute}
-        className={`p-3 rounded-full transition-colors ${
-          isVideoMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-600 hover:bg-gray-500'
+        className={`p-4 rounded-full transition-all transform hover:scale-105 ${
+          isVideoMuted 
+            ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
+            : 'bg-gray-600 hover:bg-gray-500'
         }`}
         title={isVideoMuted ? 'Turn on camera' : 'Turn off camera'}
       >
-        {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
+        {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
       </button>
     )}
 
+    {/* Speaker toggle */}
     <button
       onClick={onToggleRemoteAudio}
-      className={`p-3 rounded-full transition-colors ${
-        isRemoteAudioMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-600 hover:bg-gray-500'
+      className={`p-4 rounded-full transition-all transform hover:scale-105 ${
+        isRemoteAudioMuted 
+          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
+          : 'bg-gray-600 hover:bg-gray-500'
       }`}
-      title={isRemoteAudioMuted ? 'Unmute remote' : 'Mute remote'}
+      title={isRemoteAudioMuted ? 'Unmute speaker' : 'Mute speaker'}
     >
-      {isRemoteAudioMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+      {isRemoteAudioMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
     </button>
 
+    {/* Call type switch (when connected) */}
     {callState === 'connected' && (
       <button
         onClick={onSwitchCallType}
-        className="p-3 bg-blue-500 hover:bg-blue-600 rounded-full transition-colors"
-        title={isVideoCall ? 'Switch to voice' : 'Switch to video'}
+        className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25"
+        title={isVideoCall ? 'Switch to voice call' : 'Switch to video call'}
       >
-        {isVideoCall ? <Phone size={20} /> : <Video size={20} />}
+        {isVideoCall ? <Phone size={24} /> : <Video size={24} />}
       </button>
     )}
 
+    {/* End call */}
     <button
       onClick={onEndCall}
-      className="p-3 bg-red-500 hover:bg-red-600 rounded-full transition-colors"
+      className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-red-500/50"
       title="End call"
     >
-      <PhoneOff size={20} />
+      <PhoneOff size={24} />
     </button>
   </div>
 );

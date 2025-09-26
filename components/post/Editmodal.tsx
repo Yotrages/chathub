@@ -35,7 +35,6 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
   const [existingFiles, setExistingFiles] = useState<ExistingFile[]>([]);
   const [removedFiles, setRemovedFiles] = useState<string[]>([]);
 
-  // Initialize existing files from post
   useEffect(() => {
     if (post?.images) {
       const processedFiles: ExistingFile[] = post.images.map((url: string) => {

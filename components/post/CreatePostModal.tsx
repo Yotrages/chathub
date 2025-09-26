@@ -173,7 +173,6 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
     return (
       <div key={`new-${index}`} className="relative group">
         <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
-          {/* Remove button */}
           <button
             type="button"
             onClick={() => removeNewFile(index)}

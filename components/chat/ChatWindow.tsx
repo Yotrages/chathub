@@ -59,19 +59,6 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   return (
     <div className="flex w-full max-w-full flex-col h-full relative overflow-hidden">
-      {/* Chat Header - Fixed at top */}
-      <div className="flex-shrink-0 z-40">
-        <ChatHeader
-          currentChat={currentChat}
-          typingUsers={typingUsers}
-          userStatuses={userStatuses}
-          callState={callState}
-          onShowProfile={onShowProfile}
-          onStartCall={startCall}
-        />
-      </div>
-
-      {/* Incoming Call Modal */}
       <IncomingCallModal
         incomingCall={incomingCall}
         callState={callState}
@@ -80,7 +67,6 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         onDecline={declineCall}
       />
 
-      {/* Call Interface */}
       <CallInterface
         callState={callState}
         connectionState={connectionState}
@@ -103,37 +89,49 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         formatDuration={formatDuration}
       />
 
-      {/* Messages Area - Scrollable content with bottom padding for input */}
-      <div className="flex-1 overflow-hidden relative">
-        <div 
-          className="h-full overflow-y-auto pb-20"
-          style={{
-            paddingBottom: '80px', // Space for MessageInput
-            // maxHeight: 'calc(100vh - 120px)' // Account for header and input
-          }}
-        >
-          <MessagesArea
+      {(callState === 'idle' || isCallMinimized) && (
+        <>
+          <div className="flex-shrink-0 z-40">
+            <ChatHeader
+              currentChat={currentChat}
+              typingUsers={typingUsers}
+              userStatuses={userStatuses}
+              callState={callState}
+              onShowProfile={onShowProfile}
+              onStartCall={startCall}
+            />
+          </div>
+
+          <div className="flex-1 overflow-hidden relative">
+            <div 
+              className="h-full overflow-y-auto pb-20"
+              style={{
+                paddingBottom: '80px', 
+              }}
+            >
+              <MessagesArea
+                currentChat={currentChat}
+                isUserOnline={currentUserOnline} 
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+
+          <MessageInput
             currentChat={currentChat}
-            isUserOnline={currentUserOnline} 
-            isLoading={isLoading}
+            onShowFileUpload={() => setShowFileUpload(true)}
           />
-        </div>
-      </div>
 
-      {/* Message Input - Positioned at bottom, scoped to ChatWindow */}
-      <MessageInput
-        currentChat={currentChat}
-        onShowFileUpload={() => setShowFileUpload(true)}
-      />
-
-      {/* File Upload Modal */}
-      {showFileUpload && (
-        <div className="absolute inset-0 z-60">
-          <FileUpload
-            onUpload={() => {}}
-            onClose={() => setShowFileUpload(false)}
-          />
-        </div>
+          {/* File Upload Modal */}
+          {showFileUpload && (
+            <div className="absolute inset-0 z-60">
+              <FileUpload
+                onUpload={() => {}}
+                onClose={() => setShowFileUpload(false)}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

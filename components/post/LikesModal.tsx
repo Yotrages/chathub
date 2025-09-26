@@ -10,7 +10,6 @@ export const ReactionsModal: React.FC<ReactionModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<string>("All");
 
-  // Reset to "All" tab when modal opens
   useEffect(() => {
     if (isOpen) {
       setActiveTab("All");
@@ -19,7 +18,6 @@ export const ReactionsModal: React.FC<ReactionModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Facebook-style emoji representations
   const emojiMap: Record<string, string> = {
     Like: "👍",
     Love: "❤️",
@@ -29,7 +27,6 @@ export const ReactionsModal: React.FC<ReactionModalProps> = ({
     Angry: "😠",
   };
 
-  // Facebook-style emoji colors
   const emojiColors: Record<string, string> = {
     Like: "text-blue-500",
     Love: "text-red-500",
@@ -39,25 +36,21 @@ export const ReactionsModal: React.FC<ReactionModalProps> = ({
     Angry: "text-orange-500",
   };
 
-  // Get reaction counts for each category
   const reactionCounts = reactions.reduce((acc: Record<string, number>, reaction) => {
     const category = reaction.emoji.category;
     acc[category] = (acc[category] || 0) + 1;
     return acc;
   }, {} as Record<string, number>) || {};
 
-  // Create tabs array with "All" first, then sorted by count (most popular first)
   const sortedReactionTypes = Object.keys(reactionCounts)
     .sort((a, b) => reactionCounts[b] - reactionCounts[a]);
 
   const reactionTabs = ["All", ...sortedReactionTypes];
 
-  // Filter reactions by active tab
   const filteredReactions = activeTab === "All"
     ? reactions
     : reactions.filter((r) => r.emoji.category === activeTab);
 
-  // Remove duplicate users (keep latest reaction)
   const uniqueReactions = filteredReactions.reduce((acc: typeof reactions, reaction) => {
     const existingIndex = acc.findIndex((r) => r.userId._id === reaction.userId._id);
     if (existingIndex >= 0) {

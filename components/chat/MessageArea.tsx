@@ -11,7 +11,6 @@ interface LikesModalState {
   type: string;
 }
 
-// Utility function to format date (e.g., "Today", "Yesterday", or "MM/DD/YYYY")
 const formatDate = (date: Date): string => {
   const today = new Date();
   const yesterday = new Date(today);
@@ -29,7 +28,6 @@ const formatDate = (date: Date): string => {
   });
 };
 
-// Utility function to check if two dates are different
 const isNewDate = (current: Date, previous: Date | null): boolean => {
   if (!previous) return true;
   return current.toDateString() !== previous.toDateString();

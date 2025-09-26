@@ -181,7 +181,7 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
           if (value[0] instanceof File) {
             value.forEach((file) => {
               if (file instanceof File) {
-                formData.append(key, file); // Multiple files with same key "images"
+                formData.append(key, file); 
                 console.log(`✅ Appended file: ${key} ->`, file.name, `(${file.size} bytes)`);
               }
             });
@@ -449,10 +449,10 @@ export const useLogin = (options?: Partial<Omit<UseApiControllerOptions<LoginDat
     isAuthEndpoint: true,
     successMessage: "Login successful!",
         onSuccess: (data) => {
-      console.log('🎉 Login onSuccess called with:', data);
+      console.log('Login onSuccess called with:', data);
     },
     onError: (error) => {
-      console.error('❌ Login onError called with:', error);
+      console.error('Login onError called with:', error);
     },
     redirectTo: "/",
     ...options,

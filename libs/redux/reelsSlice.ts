@@ -196,12 +196,12 @@ const reelsSlice = createSlice({
       }
     },
     setComments: (state, action: PayloadAction<{ reelId: string; comments: IComment[] }>) => {
-      console.log(`Setting comments for reelId ${action.payload.reelId}:`, action.payload.comments); // Debug log
+      console.log(`Setting comments for reelId ${action.payload.reelId}:`, action.payload.comments); 
       state.comments[action.payload.reelId] = action.payload.comments;
     },
     addComment: (state, action: PayloadAction<{ reelId: string; comment: IComment }>) => {
       const { reelId, comment } = action.payload;
-      console.log(`Adding comment for reelId ${reelId}:`, comment); // Debug log
+      console.log(`Adding comment for reelId ${reelId}:`, comment); 
       if (!state.comments[reelId]) {
         state.comments[reelId] = [];
       }

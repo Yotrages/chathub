@@ -24,28 +24,6 @@ import Link from 'next/link';
 import { User } from '@/types';
 import UserReelsComponent from '@/components/reels/UserReels';
 
-// interface ProfileUser {
-//   _id: string;
-//   username: string;
-//   email?: string;
-//   avatar?: string;
-//   coverImage?: string;
-//   bio?: string;
-//   location?: string;
-//   website?: string;
-//   online?: boolean;
-//   lastSeen?: string;
-//   createdAt?: string;
-//   isVerified?: boolean;
-//   followers?: User[];
-//   following?: User[]
-//   isPrivate?: boolean;
-//   followersCount?: number;
-//   followingCount?: number;
-//   postsCount?: number;
-//   isFollowing?: boolean;
-// }
-
 const UserProfilePage = () => {
   const { id } = useParams();
   const router = useRouter();

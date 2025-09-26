@@ -70,13 +70,11 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setReplyContent(e.target.value);
     
-    // Auto-resize textarea
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
   };
 
-  // Auto-resize on content change
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';

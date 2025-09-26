@@ -53,14 +53,12 @@ const ReelsPage: React.FC = () => {
     }
   }, [currentIndex, isLoading, hasMore, reels.length, trigger]);
 
-  // Adjust currentIndex if it's out of bounds
   useEffect(() => {
     if (reels.length > 0 && currentIndex >= reels.length) {
       setCurrentIndex(reels.length - 1);
     }
   }, [reels.length, currentIndex]);
 
-  // Touch navigation
   useEffect(() => {
     let startY = 0;
     let startTime = 0;
@@ -103,7 +101,6 @@ const ReelsPage: React.FC = () => {
     };
   }, [currentIndex, reels.length]);
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowUp" && currentIndex > 0) {
@@ -117,7 +114,6 @@ const ReelsPage: React.FC = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [currentIndex, reels.length]);
 
-  // Wheel navigation
   useEffect(() => {
     const handleWheel = debounce((e: WheelEvent) => {
       e.preventDefault();
@@ -135,7 +131,6 @@ const ReelsPage: React.FC = () => {
     };
   }, [currentIndex, reels.length]);
 
-  // Video play/pause control
   useEffect(() => {
     reelRefs.current.forEach((reelRef, index) => {
       if (reelRef) {
@@ -155,7 +150,6 @@ const ReelsPage: React.FC = () => {
     reactToReel({ emoji, name });
   };
 
-  // Loading state
   if (isLoading && !reels.length) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -167,7 +161,6 @@ const ReelsPage: React.FC = () => {
     );
   }
 
-  // Empty state
   if (!isLoading && reels.length === 0) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">

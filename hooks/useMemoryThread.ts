@@ -33,7 +33,7 @@ export const useMemoryThreads = () => {
       return response.json();
     },
     enabled: isEnabled && !!params,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, 
   });
 
   const processContentMutation = useMutation({

@@ -30,13 +30,13 @@ const ReelsPage: React.FC = () => {
 
   useEffect(() => {
     if (reels.length === 0 && !reelsLoading) {
-      trigger(); // Fetch reels, prioritizing the id if provided
+      trigger();
     }
     const initialIndex = reels.findIndex((reel) => reel._id === id);
     if (initialIndex !== -1 && currentIndex === -1) {
-      setCurrentIndex(initialIndex); // Set to the id-matched reel if found
+      setCurrentIndex(initialIndex); 
     } else if (reels.length > 0 && currentIndex === -1) {
-      setCurrentIndex(0); // Default to first reel if id not found
+      setCurrentIndex(0); 
     }
   }, [id, reels, reelsLoading, trigger, currentIndex]);
 
@@ -109,12 +109,12 @@ const ReelsPage: React.FC = () => {
         setCurrentIndex((prev) => prev + 1);
         router.push(`/reels/${reels[currentIndex]._id}`);
       }
-    }, 200); // 200ms debounce
+    }, 200); 
 
     document.addEventListener("wheel", handleWheel, { passive: false });
     return () => {
       document.removeEventListener("wheel", handleWheel);
-      handleWheel.cancel(); // Cancel debounce on cleanup
+      handleWheel.cancel(); 
     };
   }, [currentIndex, reels.length]);
 

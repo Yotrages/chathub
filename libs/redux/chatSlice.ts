@@ -1,4 +1,3 @@
-// Updated chatSlice
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Message, Chat } from '@/types';
 interface ChatState {
@@ -193,3 +192,5 @@ export const {
   removeStarredMessage,
 } = chatSlice.actions;
 export default chatSlice.reducer;
+
+export const selectChat = (state: {chat: ChatState}) => state.chat.chats

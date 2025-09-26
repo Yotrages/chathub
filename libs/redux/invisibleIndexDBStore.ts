@@ -1,4 +1,3 @@
-// libs/redux/invisibleIndexDBStore.ts
 import { WebStorage } from "redux-persist/es/types";
 
 class InvisibleIndexedDBStorage implements WebStorage {
@@ -50,26 +49,22 @@ class InvisibleIndexedDBStorage implements WebStorage {
 
   private obfuscate(data: string): string {
     try {
-      // First encode Unicode to UTF-8, then to base64, then reverse
       const utf8Encoded = encodeURIComponent(data);
       const base64 = btoa(utf8Encoded);
       return base64.split('').reverse().join('');
     } catch (error) {
       console.warn('Obfuscation failed, using simple reversal:', error);
-      // Fallback: just reverse the string without base64
       return data.split('').reverse().join('');
     }
   }
 
   private deobfuscate(data: string): string {
     try {
-      // Reverse the process: reverse string, decode base64, then decode UTF-8
       const reversed = data.split('').reverse().join('');
       const decoded = atob(reversed);
       return decodeURIComponent(decoded);
     } catch (error) {
       console.warn('Deobfuscation failed, trying simple reversal:', error);
-      // Fallback: just reverse the string back
       try {
         return data.split('').reverse().join('');
       } catch (fallbackError) {
@@ -173,7 +168,6 @@ class InvisibleIndexedDBStorage implements WebStorage {
             resolve();
           };
           
-          // Clean up old data periodically
           setTimeout(() => this.cleanupOldData(), 1000);
         } catch (error) {
           console.error('setItem failed for key:', key, error);
@@ -235,7 +229,6 @@ class InvisibleIndexedDBStorage implements WebStorage {
     if (!this.isClient || !this.db) return;
 
     try {
-      // Remove data older than 30 days to keep more data for offline use
       const cutoffTime = Date.now() - (30 * 24 * 60 * 60 * 1000);
       
       const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -324,7 +317,6 @@ class InvisibleIndexedDBStorage implements WebStorage {
     }
   }
 
-  // Method to check if storage is working
   async isWorking(): Promise<boolean> {
     if (!this.isClient) return false;
     
@@ -338,14 +330,12 @@ class InvisibleIndexedDBStorage implements WebStorage {
   }
 }
 
-// Fallback storage for SSR and when IndexedDB fails
 const fallbackStorage: WebStorage = {
   getItem: () => Promise.resolve(null),
   setItem: () => Promise.resolve(),
   removeItem: () => Promise.resolve(),
 };
 
-// Factory function with better error handling
 export function createInvisibleStorage(): WebStorage {
   if (typeof window === 'undefined') {
     console.log('SSR detected, using fallback storage');

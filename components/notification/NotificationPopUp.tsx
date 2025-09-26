@@ -9,10 +9,10 @@ const NotificationPopup: React.FC = () => {
 
   useEffect(() => {
     if (popupNotification) {
-      // Play notification sound (optional)
+      // notification sound (optional)
       const audio = new Audio('/notification-sound.mp3');
       audio.play().catch(() => {
-        // Ignore errors if sound can't be played
+
       });
     }
   }, [popupNotification]);

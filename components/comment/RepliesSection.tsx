@@ -28,11 +28,9 @@ export const RepliesSection: React.FC<RepliesSectionProps> = ({
 
   const handleViewReplies = () => {
     if (isSmallScreen) {
-      // Route to reply page with all necessary parameters
-      const replyId = replies[0]._id; // Get first reply ID
+      const replyId = replies[0]._id; 
       router.push(`/reply?commentId=${commentId}&dynamicId=${dynamicId}&type=${type}&replyId=${replyId}`);
     } else {
-      // Toggle replies on desktop
       onViewReplies();
     }
   };

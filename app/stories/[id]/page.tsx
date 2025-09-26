@@ -47,7 +47,6 @@ const StoriesPage: React.FC = () => {
 
     if (reelId) {
       dispatch(setStoryViewers(reelId));
-      // Fetch viewers for the owner
       if (currentStory && user?._id === currentStory.authorId._id) {
         dispatch(getStoryViewers(reelId));
       }
@@ -126,7 +125,6 @@ const StoriesPage: React.FC = () => {
     }
   };
 
-  // Touch/Swipe handlers
   
   if (loading && stories.length === 0) {
     return (

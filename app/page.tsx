@@ -35,7 +35,6 @@ const HomePage: React.FC = () => {
     validateAuth();
   }, [isAuthenticated, router, dispatch]);
 
-  // Handle scroll to show/hide header
   useEffect(() => {
     let lastScrollY = window.scrollY;
 
@@ -43,10 +42,8 @@ const HomePage: React.FC = () => {
       const currentScrollY = window.scrollY;
 
       if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        // Scrolling down and past 100px
         setIsHeaderVisible(false);
       } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
         setIsHeaderVisible(true);
       }
 

@@ -93,7 +93,6 @@ export const MessageContextMenu = forwardRef<
         toast.error("Failed to forward message");
       }
       setShowForwardModal(false);
-      // Do NOT call onClose() here to keep context menu open
     };
 
     const handleCopy = () => {
@@ -158,21 +157,19 @@ export const MessageContextMenu = forwardRef<
     const handleInfo = async () => {
       try {
         const info = await getMessageInfo(message._id);
-        console.log("Message info received:", info); // Debug log
+        console.log("Message info received:", info); 
         setMessageInfo(info);
         setShowInfoModal(true);
       } catch (error) {
-        console.log("Error fetching message info:", error); // Debug log
+        console.log("Error fetching message info:", error); 
         toast.error("Failed to get message info");
       }
-      // Do NOT call onClose() here to keep context menu open
     };
 
     const handleModalClose = (
       modalSetter: React.Dispatch<SetStateAction<boolean>>
     ) => {
       modalSetter(false);
-      // Explicitly prevent closing context menu
     };
 
     const menuItems = [

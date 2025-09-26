@@ -174,17 +174,15 @@ export const useGetComments = (
   const [page, setPage] = useState(1);
   const [hasSuccessfullyFetched, setHasSuccessfullyFetched] = useState(false);
   
-  // Get existing comments from Redux state using the corrected selector
   const existingComments = useSelector(selectComments(postId));
   
   const result = useApiController<CommentsResponse>({
     method: "GET",
     url: `/posts/${postId}/comments?page=${page}&limit=10`,
     queryOptions: {
-      enabled: !!postId && navigator.onLine, // Only enable if online
-      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      enabled: !!postId && navigator.onLine, 
+      staleTime: 5 * 60 * 1000, 
       retry: (failureCount: number, error: any) => {
-        // Retry up to 3 times, but only if online
         return failureCount < 3 && navigator.onLine;
       },
       retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -193,7 +191,6 @@ export const useGetComments = (
     onSuccess: (data: CommentsResponse) => {
       console.log(`Successfully fetched comments for postId ${postId}:`, data.comments);
       
-      // For page 1, replace all comments. For subsequent pages, append to existing comments
       const updatedComments = page === 1 
         ? data.comments 
         : [...(existingComments || []), ...data.comments];
@@ -346,16 +343,16 @@ export const useAddComment = (
   options?: Partial<UseApiControllerOptions<CommentPayload, CommentResponse>>
 ): MutationResult<CommentPayload, CommentResponse> => {
   const dispatch: AppDispatch = useDispatch();
-  const { refetchComments } = useGetComments(postId); // Get refetchComments
+  const { refetchComments } = useGetComments(postId); 
 
   return useApiController<CommentPayload, CommentResponse>({
     method: "POST",
     url: `/posts/${postId}/comment`,
     schema: commentSchema,
     onSuccess: (data: CommentResponse) => {
-      console.log(`Adding comment for postId ${postId}:`, data.comment); // Debug log
+      console.log(`Adding comment for postId ${postId}:`, data.comment); 
       dispatch(addComment({ postId, comment: { ...data.comment, dynamicId: postId } }));
-      refetchComments(); // Refetch comments after adding
+      refetchComments(); 
       onSuccess(data);
       successNotification(data.message);
     },

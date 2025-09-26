@@ -142,7 +142,6 @@ const SavedPage = () => {
   );
 };
 
-// Wrapper component that handles the sorting display
 const SavedPostsWrapper = ({ userId, sortType }: { userId: string; sortType: string }) => {
   const { savedPosts, isLoading } = useSelector((state: RootState) => state.post);
 
@@ -191,7 +190,6 @@ const SavedPostsWrapper = ({ userId, sortType }: { userId: string; sortType: str
   );
 };
 
-// Enhanced wrapper around the existing UserPostsList
 const EnhancedUserPostsList = ({ userId, sortType }: { userId: string; sortType: string }) => {
   return (
     <div className="space-y-6">
@@ -221,7 +219,6 @@ const EnhancedUserPostsList = ({ userId, sortType }: { userId: string; sortType:
         </div>
       </div>
 
-      {/* The actual UserPostsList component */}
       <div className="space-y-6">
         <UserPostsList userId={userId} type="saved" />
       </div>
@@ -229,7 +226,6 @@ const EnhancedUserPostsList = ({ userId, sortType }: { userId: string; sortType:
   );
 };
 
-// Beautiful loading skeleton
 const SavedPostsSkeleton = () => (
   <div className="space-y-8">
     {/* Header skeleton */}
@@ -291,7 +287,6 @@ const SavedPostsSkeleton = () => (
   </div>
 );
 
-// Beautiful empty state
 const EmptySavedPosts = () => (
   <div className="text-center py-20">
     <div className="relative mb-8">

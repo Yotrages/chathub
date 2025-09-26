@@ -39,12 +39,10 @@ interface EnhancedReelCardProps {
   isFullscreen?: boolean;
 }
 
-// Expose video element through ref
 export interface ReelCardRef {
   getVideoElement: () => HTMLVideoElement | null;
 }
 
-// Custom hook for online status
 const useOnlineStatus = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   useEffect(() => {
@@ -60,22 +58,15 @@ const useOnlineStatus = () => {
   return isOnline;
 };
 
-// Smart video fitting logic - like Facebook Reels
 const getSmartVideoStyle = (videoAR: number, containerAR: number) => {
-  // Container dimensions
   // const containerWidth = window.innerWidth;
   // const containerHeight = window.innerHeight;
   
-  // Tolerance for "close enough" aspect ratios
   const tolerance = 0.15;
   const arDifference = Math.abs(videoAR - containerAR);
   
-  // If video is portrait (taller than wide) like most reels
   if (videoAR < 1) {
-    // For portrait videos, we want them to fill the height
-    // and be centered horizontally
     if (arDifference < tolerance) {
-      // Very close aspect ratios - use cover but with less aggressive cropping
       return {
         objectFit: 'cover' as const,
         objectPosition: 'center',
@@ -83,7 +74,6 @@ const getSmartVideoStyle = (videoAR: number, containerAR: number) => {
         height: '100%'
       };
     } else if (videoAR < containerAR) {
-      // Video is much taller than container - fill height, center horizontally
       return {
         objectFit: 'contain' as const,
         objectPosition: 'center',
@@ -91,7 +81,6 @@ const getSmartVideoStyle = (videoAR: number, containerAR: number) => {
         height: '100%'
       };
     } else {
-      // Use cover for a good fit
       return {
         objectFit: 'cover' as const,
         objectPosition: 'center',
@@ -101,10 +90,7 @@ const getSmartVideoStyle = (videoAR: number, containerAR: number) => {
     }
   }
   
-  // If video is landscape (wider than tall)
   else if (videoAR > 1.5) {
-    // Landscape videos in portrait container
-    // Facebook often shows these with black bars to avoid excessive cropping
     return {
       objectFit: 'contain' as const,
       objectPosition: 'center',
@@ -113,9 +99,7 @@ const getSmartVideoStyle = (videoAR: number, containerAR: number) => {
     };
   }
   
-  // Square-ish videos (aspect ratio close to 1:1)
   else {
-    // For square or near-square videos, cover usually works well
     return {
       objectFit: 'cover' as const,
       objectPosition: 'center',
@@ -130,14 +114,12 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     const { user } = useSelector((state: RootState) => state.auth);
     const isOnline = useOnlineStatus();
     
-    // Video dimensions state
     const [videoDimensions, setVideoDimensions] = useState({ 
       width: 0, 
       height: 0, 
       aspectRatio: 0 
     });
     
-    // Create memoized selector for this specific reel's comments
     const selectCommentsForReel = useMemo(() => makeSelectComments(), []);
     const comments = useSelector((state: RootState) =>
       reel?._id ? selectCommentsForReel(state, reel._id) : EMPTY_COMMENTS
@@ -170,12 +152,10 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       }
     );
 
-    // Expose video element through ref
     useImperativeHandle(ref, () => ({
       getVideoElement: () => videoRef.current
     }), []);
 
-    // Handle video metadata loading
     useEffect(() => {
       if (videoRef.current) {
         const video = videoRef.current;
@@ -212,7 +192,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       }
     }, [isMuted, reel?.fileUrl]);
 
-    // Calculate smart video style
     const videoStyle = useMemo(() => {
       if (!videoDimensions.aspectRatio) {
         return {
@@ -227,7 +206,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       return getSmartVideoStyle(videoDimensions.aspectRatio, containerAR);
     }, [videoDimensions.aspectRatio]);
 
-    // Comments loading logic
     const loadComments = useCallback(async () => {
       if (!isOnline || !reel?._id || commentsLoaded || isFetchingComments) {
         return;
@@ -275,7 +253,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       setIsMuted(!isMuted);
     };
 
-    // Download video functionality
     const handleDownload = async () => {
       if (!reel?.fileUrl) {
         toast.error("Video URL not available");
@@ -383,7 +360,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       }
     };
 
-    // Memoize grouped reactions to prevent recalculation on every render
     const groupedReactions = useMemo(() => {
       return (
         reel?.reactions?.reduce((acc, reaction) => {
@@ -396,7 +372,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       );
     }, [reel?.reactions]);
 
-    // Memoize user reaction to prevent recalculation
     const userReactionEmoji = useMemo(() => {
       return (
         reel?.reactions?.find((r) => r.userId?._id === user?._id)?.emoji || null
@@ -418,7 +393,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       );
     }
 
-    // Enhanced responsive classes with explicit aspect ratio
     const containerClasses = isFullscreen
       ? "w-full h-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-3xl mx-auto bg-black rounded-lg overflow-hidden relative aspect-[9/16]"
       : isCompact
@@ -428,7 +402,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     return (
       <div className={containerClasses}>
         <div className="relative w-full h-full overflow-hidden">
-          {/* Smart Video Element with Facebook-like fitting */}
           <video
             ref={videoRef}
             src={reel?.fileUrl}
@@ -451,7 +424,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
             </div>
           )} */}
           
-          {/* Enhanced Mute/Unmute Button - Top Right */}
           {!isCompact && (
             <button
               onClick={toggleMute}
@@ -481,12 +453,10 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
           
           {isFullscreen && (
             <>
-              {/* Action Buttons - Right Side */}
               <div
                 className="absolute right-2 sm:right-3 md:right-4 bottom-16 sm:bottom-20 md:bottom-24
                             flex flex-col space-y-2 sm:space-y-3 z-20"
               >
-                {/* Like Button */}
                 <button
                   onMouseDown={handleLongPressStart}
                   onMouseUp={handleLongPressEnd}
@@ -523,11 +493,10 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                   )}
                 </button>
                 
-                {/* Comment Button */}
                 <button
                   onClick={() => setShowComments(true)}
                   className="flex flex-col items-center space-y-1 bg-black bg-opacity-60
-                           backdrop-blur-sm rounded-sm p-2 sm:p-2.5 md:p-3
+                           backdrop-blur-sm rounded-sm p-1
                            hover:bg-opacity-80 transition-all duration-200
                            border border-white border-opacity-20
                            min-w-[44px] sm:min-w-[48px] md:min-w-[52px]
@@ -539,11 +508,10 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                   </span>
                 </button>
                 
-                {/* Share Button */}
                 <button
                   onClick={() => setShowShareModal(true)}
                   className="flex flex-col items-center space-y-1 bg-black bg-opacity-60
-                           backdrop-blur-sm rounded-sm p-2 sm:p-2.5 md:p-3
+                           backdrop-blur-sm rounded-sm p-1
                            hover:bg-opacity-80 transition-all duration-200
                            border border-white border-opacity-20
                            min-w-[44px] sm:min-w-[48px] md:min-w-[52px]
@@ -560,7 +528,7 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                   onClick={handleDownload}
                   disabled={isDownloading}
                   className="flex flex-col items-center space-y-1 bg-black bg-opacity-60
-                           backdrop-blur-sm rounded-sm p-2 sm:p-2.5 md:p-3
+                           backdrop-blur-sm rounded-sm p-1
                            hover:bg-opacity-80 transition-all duration-200
                            border border-white border-opacity-20 disabled:opacity-50
                            min-w-[44px] sm:min-w-[48px] md:min-w-[52px]
@@ -576,12 +544,11 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                   </span>
                 </button>
                 
-                {/* More Options Button */}
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex flex-col items-center space-y-1 bg-black bg-opacity-60
-                             backdrop-blur-sm rounded-sm p-2 sm:p-2.5 md:p-3
+                             backdrop-blur-sm rounded-sm p-1
                              hover:bg-opacity-80 transition-all duration-200
                              border border-white border-opacity-20
                              min-w-[44px] sm:min-w-[48px] md:min-w-[52px]
@@ -600,7 +567,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                 </div>
               </div>
               
-              {/* Author Info - Bottom Left */}
               <div
                 className="absolute bottom-2 sm:bottom-3 md:bottom-4 left-2 sm:left-3 md:left-4
                             right-16 sm:right-20 md:right-24 z-20"
@@ -685,7 +651,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                           h-[85vh] sm:h-[80vh] bg-white rounded-lg flex flex-col
                           sm:mx-4"
             >
-              {/* Header with close button */}
               <div
                 className="flex justify-between items-center p-3 sm:p-4
                             border-b border-gray-200 flex-shrink-0"

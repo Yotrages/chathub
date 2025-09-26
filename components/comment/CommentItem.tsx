@@ -57,7 +57,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   const { user } = useSelector((state: RootState) => state.auth);
   const router = useRouter();
 
-  // Auto-resize textarea for editing
   const adjustTextareaHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';

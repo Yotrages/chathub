@@ -1,4 +1,3 @@
-// context/ThemeContext.tsx
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
@@ -39,7 +38,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
   const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
 
-  // Get system preference
   const getSystemTheme = (): 'light' | 'dark' => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -47,7 +45,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     return 'light';
   };
 
-  // Initialize theme from localStorage or system
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem(storageKey) as Theme;
@@ -57,13 +54,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     }
   }, [storageKey]);
 
-  // Update effective theme when theme changes or system preference changes
   useEffect(() => {
     const updateEffectiveTheme = () => {
       const newEffectiveTheme = theme === 'system' ? getSystemTheme() : theme;
       setEffectiveTheme(newEffectiveTheme);
 
-      // Apply theme to document
       if (typeof window !== 'undefined') {
         const root = window.document.documentElement;
         
@@ -78,7 +73,6 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
     updateEffectiveTheme();
 
-    // Listen for system theme changes
     if (enableSystem && theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleChange = () => updateEffectiveTheme();

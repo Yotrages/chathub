@@ -47,7 +47,6 @@ const CreateReelPage: React.FC = () => {
     router.push(`/reels/${data.reel._id}`)
   });
 
-  // Cleanup preview URL when component unmounts or file changes
   useEffect(() => {
     return () => {
       if (previewUrl) {
@@ -64,20 +63,17 @@ const CreateReelPage: React.FC = () => {
   };
 
   const validateAndSetFile = (selectedFile: File) => {
-    // Validate file type
     if (!selectedFile.type.startsWith('video/')) {
       toast.error('Please select a valid video file');
       return;
     }
 
-    // Validate file size (50MB limit)
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 50 * 1024 * 1024; 
     if (selectedFile.size > maxSize) {
       toast.error('File size must be less than 50MB');
       return;
     }
 
-    // Clean up previous preview URL
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }

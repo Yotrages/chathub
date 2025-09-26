@@ -27,10 +27,8 @@ export const ChatHeader = ({
   
   const otherUserId = currentChat.participants.find((u) => u._id !== user?._id);
   
-  // Get the other user's online status from API data
   const getOtherUserOnlineStatus = () => {
     if (currentChat.type === 'group') {
-      // For groups, we'll show this in the group member list
       return false;
     }
     
@@ -44,7 +42,6 @@ export const ChatHeader = ({
   const isOtherUserOnline = getOtherUserOnlineStatus();
 
   const renderStatus = () => {
-    // Show typing indicator first (highest priority)
     if (typingUsers.length > 0) {
       return (
         <span className="text-blue-500 text-xs sm:text-sm truncate">
@@ -127,10 +124,9 @@ export const ChatHeader = ({
         <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           {callState === 'idle' && (
             <>
-              {/* Voice call button - hidden on very small screens */}
               <button
                 onClick={() => onStartCall(false)}
-                className={`hidden xs:block p-1.5 sm:p-2 rounded-full transition-colors ${
+                className={`p-1.5 sm:p-2 rounded-full transition-colors ${
                   isOtherUserOnline
                     ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     : 'text-gray-300 cursor-not-allowed'

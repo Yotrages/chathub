@@ -73,7 +73,6 @@ export const likeStory = createAsyncThunk(
   }
 );
 
-// New: Add view to reel
 export const addViewToStory = createAsyncThunk(
   'stories/addViewToStory',
   async (reelId: string, { rejectWithValue }) => {
@@ -86,7 +85,6 @@ export const addViewToStory = createAsyncThunk(
   }
 );
 
-// New: Add reaction to reel
 export const addReactionToStory = createAsyncThunk(
   'stories/addReactionToStory',
   async ({ reelId, reactionType }: { reelId: string; reactionType: string }, { rejectWithValue }) => {
@@ -99,7 +97,6 @@ export const addReactionToStory = createAsyncThunk(
   }
 );
 
-// New: Set reel viewers (for tracking who viewed)
 export const setStoryViewers = createAsyncThunk(
   'stories/setStoryViewers',
   async (reelId: string, { rejectWithValue }) => {
@@ -146,12 +143,10 @@ const storiesSlice = createSlice({
       state.hasMore = true;
       state.total = 0;
     },
-    // Add a new reel at the beginning (for real-time updates)
     addNewStory: (state, action: PayloadAction<Story>) => {
       state.stories = [action.payload, ...state.stories];
       state.total += 1;
     },
-    // Update reel data locally (for optimistic updates)
     updateStoryLocally: (state, action: PayloadAction<{ reelId: string; updates: Partial<Story> }>) => {
       const { reelId, updates } = action.payload;
       const reel = state.stories.find((r) => r._id === reelId);
@@ -162,7 +157,6 @@ const storiesSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch stories
       .addCase(fetchStory.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -170,10 +164,8 @@ const storiesSlice = createSlice({
       .addCase(fetchStory.fulfilled, (state, action: PayloadAction<StoryResponse>) => {
         state.loading = false;
         if (action.payload.pagination.page === 1) {
-          // If it's the first page, replace all stories
           state.stories = action.payload.data;
         } else {
-          // If it's not the first page, append to existing stories
           state.stories = [...state.stories, ...action.payload.data];
         }
         state.page = action.payload.pagination.page + 1;
@@ -185,9 +177,7 @@ const storiesSlice = createSlice({
         state.error = action.payload as string;
       })
       
-      // Create reel
       .addCase(createStory.fulfilled, (state, action: PayloadAction<Story>) => {
-        // Add the new reel at the beginning
         state.stories = [action.payload, ...state.stories];
         state.total += 1;
         state.closeForm = true
@@ -199,7 +189,6 @@ const storiesSlice = createSlice({
         state.closeForm = false
       })
       
-      // Like reel
       .addCase(likeStory.fulfilled, (state, action) => {
         const { reelId, data } = action.payload;
         const reel = state.stories.find((r) => r._id === reelId);
@@ -216,19 +205,17 @@ const storiesSlice = createSlice({
         state.stories = state.stories.filter((story) => story._id !== action.payload.storyId )
       })
       
-      // Add view to reel
       .addCase(addViewToStory.fulfilled, (state, action) => {
         const { reelId, data } = action.payload;
-        const reel = state.stories.find((r) => r._id === reelId);
-        if (reel) {
-          reel.viewers = data.viewers;
+        const story = state.stories.find((r) => r._id === reelId);
+        if (story) {
+          story.viewers = data.viewers;
         }
       })
       .addCase(addViewToStory.rejected, (state, action) => {
         state.error = action.payload as string;
       })
       
-      // Add reaction to reel
       .addCase(addReactionToStory.fulfilled, (state, action) => {
         const { reelId, data } = action.payload;
         const reel = state.stories.find((r) => r._id === reelId);
@@ -240,7 +227,6 @@ const storiesSlice = createSlice({
         state.error = action.payload as string;
       })
       
-      // Set reel viewers
       .addCase(setStoryViewers.fulfilled, (state, action) => {
         const { reelId, data } = action.payload;
         const reel = state.stories.find((r) => r._id === reelId);

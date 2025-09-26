@@ -12,14 +12,12 @@ export const useMessageManagement = (currentChat: any) => {
   const [markedAsReadChats, setMarkedAsReadChats] = useState<Set<string>>(new Set());
   const [userStatuses, setUserStatuses] = useState<Map<string, { isOnline: boolean; username: string }>>(new Map());
   
-  // Use refs to track loading and loaded state to avoid stale closures
   const loadingChatsRef = useRef<Set<string>>(new Set());
   const loadedChatsRef = useRef<Set<string>>(new Set());
   
-  // Add refs to track failed loads and auth failures
   const failedChatsRef = useRef<Set<string>>(new Set());
   const lastFailureTimeRef = useRef<Map<string, number>>(new Map());
-  const authFailedRef = useRef<boolean>(false); // Track if auth has failed
+  const authFailedRef = useRef<boolean>(false); 
   const retryTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   const { socket } = useSocket();
@@ -29,7 +27,6 @@ export const useMessageManagement = (currentChat: any) => {
   
   const chatMessages = activeChat ? messages[activeChat] || [] : [];
 
-  // Debounced mark as read function
   const debouncedMarkAsRead = useCallback(
     debounce((chatId: string) => {
       if (!markedAsReadChats.has(chatId) && !authFailedRef.current) {
@@ -39,7 +36,6 @@ export const useMessageManagement = (currentChat: any) => {
     [markMessagesAsRead, markedAsReadChats]
   );
 
-  // Check if error is authentication related
   const isAuthError = (error: any): boolean => {
     return error?.response?.status === 401 || 
            error?.response?.status === 403 ||
@@ -48,12 +44,10 @@ export const useMessageManagement = (currentChat: any) => {
            error?.message?.toLowerCase().includes('session expired');
   };
 
-  // Check if error indicates rate limiting
   const isRateLimitError = (error: any): boolean => {
     return error?.response?.status === 429;
   };
 
-  // Clear retry timeout for a chat
   const clearRetryTimeout = (chatId: string) => {
     const timeout = retryTimeoutRef.current.get(chatId);
     if (timeout) {
@@ -62,24 +56,20 @@ export const useMessageManagement = (currentChat: any) => {
     }
   };
 
-  // Load chat messages with comprehensive error handling
   const loadChatMessages = useCallback(async (chatId: string, isRetry: boolean = false) => {
-    // Stop all operations if auth has failed
     if (authFailedRef.current) {
       console.log('Auth failed, stopping message loading');
       return;
     }
 
-    // Prevent duplicate loading using refs
     if (loadedChatsRef.current.has(chatId) || loadingChatsRef.current.has(chatId)) {
       console.log(`Skipping load for ${chatId} - already loaded or loading`);
       return;
     }
 
-    // Check if we've failed too recently (prevent rapid retries)
     const lastFailure = lastFailureTimeRef.current.get(chatId);
     const now = Date.now();
-    const minRetryInterval = isRetry ? 5000 : 2000; // 5s for manual retry, 2s for auto
+    const minRetryInterval = isRetry ? 5000 : 2000; 
 
     if (lastFailure && (now - lastFailure) < minRetryInterval) {
       console.log(`Skipping load for ${chatId} - too soon since last failure`);
@@ -94,7 +84,6 @@ export const useMessageManagement = (currentChat: any) => {
       setIsLoading(true);
       await loadMessages(chatId);
       
-      // Success - clear failure tracking
       loadedChatsRef.current.add(chatId);
       failedChatsRef.current.delete(chatId);
       lastFailureTimeRef.current.delete(chatId);
@@ -103,41 +92,34 @@ export const useMessageManagement = (currentChat: any) => {
     } catch (error: any) {
       console.error(`Failed to load messages for ${chatId}:`, error);
       
-      // Track failure time
       lastFailureTimeRef.current.set(chatId, now);
       failedChatsRef.current.add(chatId);
 
-      // Handle different types of errors
       if (isAuthError(error)) {
         console.log('Authentication error detected - stopping all message loading');
         authFailedRef.current = true;
         
-        // Clear all tracking to prevent further attempts
         loadingChatsRef.current.clear();
         failedChatsRef.current.clear();
         lastFailureTimeRef.current.clear();
         
-        // Clear all retry timeouts
         retryTimeoutRef.current.forEach(timeout => clearTimeout(timeout));
         retryTimeoutRef.current.clear();
         
-        // Don't schedule retry for auth errors - let the auth system handle redirect
         return;
       } else if (isRateLimitError(error)) {
         console.log('Rate limit error - will retry after longer delay');
-        // Schedule retry after longer delay for rate limiting
-        const retryDelay = 10000; // 10 seconds
+        const retryDelay = 10000; 
         const timeout = setTimeout(() => {
           console.log(`Retrying after rate limit for chat: ${chatId}`);
           loadChatMessages(chatId, true);
         }, retryDelay);
         retryTimeoutRef.current.set(chatId, timeout);
       } else if (navigator.onLine) {
-        // Network/server error but we're online - schedule retry with exponential backoff
         const failureCount = Array.from(lastFailureTimeRef.current.entries())
-          .filter(([_, time]) => now - time < 60000).length; // Count failures in last minute
+          .filter(([_, time]) => now - time < 60000).length; 
         
-        const retryDelay = Math.min(5000 * Math.pow(2, failureCount - 1), 30000); // Max 30s
+        const retryDelay = Math.min(5000 * Math.pow(2, failureCount - 1), 30000); 
         
         console.log(`Scheduling retry for ${chatId} in ${retryDelay}ms (attempt ${failureCount})`);
         
@@ -153,7 +135,6 @@ export const useMessageManagement = (currentChat: any) => {
     }
   }, [loadMessages]);
 
-  // Handle active chat changes
   useEffect(() => {
     if (!activeChat || !currentChat || authFailedRef.current) {
       console.log('No active chat, current chat, or auth failed - skipping');
@@ -162,7 +143,6 @@ export const useMessageManagement = (currentChat: any) => {
 
     console.log(`Active chat changed to: ${activeChat}`);
 
-    // Always join the chat (this should be safe even with auth issues)
     try {
       joinChat(activeChat);
     } catch (error) {
@@ -173,7 +153,6 @@ export const useMessageManagement = (currentChat: any) => {
       }
     }
 
-    // Load messages if not already loaded and online and auth is good
     if (!loadedChatsRef.current.has(activeChat) && navigator.onLine && !authFailedRef.current) {
       console.log(`Loading messages for new active chat: ${activeChat}`);
       loadChatMessages(activeChat);
@@ -182,7 +161,6 @@ export const useMessageManagement = (currentChat: any) => {
     }
   }, [activeChat, currentChat, joinChat, loadChatMessages]);
 
-  // Mark messages as read when new messages arrive
   useEffect(() => {
     if (!activeChat || chatMessages.length === 0 || authFailedRef.current) return;
 
@@ -200,7 +178,6 @@ export const useMessageManagement = (currentChat: any) => {
     }
   }, [chatMessages, activeChat, user?._id, markedAsReadChats, debouncedMarkAsRead]);
 
-  // Handle typing indicators
   useEffect(() => {
     if (!socket || !activeChat || authFailedRef.current) return;
 
@@ -225,7 +202,6 @@ export const useMessageManagement = (currentChat: any) => {
     };
   }, [socket, activeChat, user?._id]);
 
-  // Handle user status changes with auth error handling
   useEffect(() => {
     if (!socket || !activeChat || !currentChat || !user || authFailedRef.current) return;
 
@@ -241,7 +217,7 @@ export const useMessageManagement = (currentChat: any) => {
     };
 
     const handleUserOnline = async ({ userId }: { userId: string }) => {
-      if (authFailedRef.current) return; // Don't make API calls if auth failed
+      if (authFailedRef.current) return; 
       
       if (currentChat.participants.some((p: any) => p._id === userId)) {
         try {
@@ -280,7 +256,6 @@ export const useMessageManagement = (currentChat: any) => {
     socket.on('user_online', handleUserOnline);
     socket.on('user_offline', handleUserOffline);
 
-    // Fetch initial statuses with auth error handling
     const fetchInitialStatuses = async () => {
       for (const p of currentChat.participants) {
         if (p._id !== user._id && !authFailedRef.current) {
@@ -298,7 +273,7 @@ export const useMessageManagement = (currentChat: any) => {
             if (isAuthError(err)) {
               console.log('Auth error in initial status fetch - stopping');
               authFailedRef.current = true;
-              break; // Stop the loop
+              break; 
             } else if (err.response?.status === 403) {
               setUserStatuses((prev) => {
                 const newStatuses = new Map(prev);
@@ -325,12 +300,10 @@ export const useMessageManagement = (currentChat: any) => {
     };
   }, [socket, activeChat, currentChat, user]);
 
-  // Clear tracking when activeChat changes
   useEffect(() => {
     setMarkedAsReadChats(new Set());
   }, [activeChat]);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       retryTimeoutRef.current.forEach(timeout => clearTimeout(timeout));
@@ -338,7 +311,6 @@ export const useMessageManagement = (currentChat: any) => {
     };
   }, []);
 
-  // Reset auth failure state when user changes (re-login)
   useEffect(() => {
     if (user && authFailedRef.current) {
       console.log('User changed - resetting auth failure state');
@@ -348,14 +320,12 @@ export const useMessageManagement = (currentChat: any) => {
     }
   }, [user]);
 
-  // Retry function for failed loads
   const retryLoadChatMessages = useCallback((chatId: string) => {
     if (authFailedRef.current) {
       console.log('Cannot retry - authentication failed');
       return;
     }
     
-    // Clear failure tracking for this chat and retry
     failedChatsRef.current.delete(chatId);
     lastFailureTimeRef.current.delete(chatId);
     loadedChatsRef.current.delete(chatId);
@@ -370,6 +340,6 @@ export const useMessageManagement = (currentChat: any) => {
     userStatuses,
     retryLoadChatMessages,
     hasFailedChats: failedChatsRef.current.size > 0 && !authFailedRef.current,
-    isAuthFailed: authFailedRef.current, // Expose auth failure state
+    isAuthFailed: authFailedRef.current, 
   };
 };

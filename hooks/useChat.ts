@@ -38,7 +38,7 @@ export const useChat = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: conversations, isLoading } = useFetch("/chat/conversations");
   const [socketInitialized, setSocketInitialized] = useState(false);
-  const connectionAttempted = useRef(false); // Track connection attempts
+  const connectionAttempted = useRef(false); 
   const isSocketReady = () => {
     return socket && socket.connected && isConnected && user?._id;
   };
@@ -281,6 +281,7 @@ export const useChat = () => {
         createdAt: message.createdAt,
         updatedAt: message.updatedAt,
         postId: message.postId,
+        callStatus: message?.callStatus,
       };
       dispatch(addMessage(transformedMessage));
       if (message.conversationId !== activeChat) {

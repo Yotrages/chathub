@@ -67,30 +67,6 @@ export interface ReactedUser {
   updatedAt?: string;
 }
 
-// export interface IReply {
-//   _id: string;
-//   authorId: {
-//     _id: string;
-//     username: string;
-//     avatar: string;
-//   };
-//   content: string;
-//   reactions: Array<{
-//     userId: {
-//       _id: string;
-//       username: string;
-//       avatar: string;
-//     };
-//     emoji: {
-//       category: string;
-//       name: string;
-//     };
-//   }>;
-//   replies?: IReply[];
-//   createdAt?: Date;
-//   updatedAt?: Date;
-// }
-
 export interface Post {
   _id: string;
    authorId: {
@@ -120,7 +96,8 @@ export interface Message {
   conversationId: string;
   senderId: Sender | string;
   content: string;
-  messageType: "text" | "image" | "file" | "audio" | "video" | "post";
+  callStatus?: "missed" | "ended" | "declined" | "failed";
+  messageType: "text" | "image" | "file" | "audio" | "video" | "post" | "call";
   edited: boolean;
   readBy: Array<{
     userId: {
@@ -175,7 +152,6 @@ export interface Chat {
   pinnedMessages?: string[];
 }
 
-// API Response interfaces
 export interface SendMessageResponse {
   success: boolean;
   message: Message;

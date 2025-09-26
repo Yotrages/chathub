@@ -17,11 +17,11 @@ import { useGetComments } from "@/hooks/usePosts";
 
 interface PostItemProps {
   post: Post;
-  isModal?: boolean; // Add this prop to determine if it's in modal/page view
+  isModal?: boolean; 
 }
 
 export const PostItem = ({ post, isModal = false }: PostItemProps) => {
-  const [showComments, setShowComments] = useState(isModal); // Show comments by default in modal/page
+  const [showComments, setShowComments] = useState(isModal); 
   const [showPostModal, setShowPostModal] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -51,7 +51,6 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
       }
     );
 
-  // Listen for online/offline events
   useEffect(() => {
     const handleOnline = () => {
       console.log("Connection restored");
@@ -72,7 +71,6 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
     };
   }, []);
 
-  // Handle comment fetching with smart logic
   useEffect(() => {
     if (!isOnline) {
       console.log(
@@ -95,7 +93,6 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
       return;
     }
 
-    // Check if we already have comments in Redux store
     if (comments && comments.length > 0) {
       console.log(
         `Comments already exist in store for postId ${post._id}, marking as successfully fetched`
@@ -117,13 +114,11 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
     fetchComments,
   ]);
 
-  // Retry fetching when coming back online
   useEffect(() => {
     if (isOnline && !hasSuccessfullyFetched && !fetchAttempted) {
       console.log(
         `User came back online, attempting to fetch comments for postId ${post._id}`
       );
-      // Reset the fetch attempt flag to allow fetching when coming back online
       setFetchAttempted(false);
     }
   }, [isOnline, hasSuccessfullyFetched, fetchAttempted, post._id]);
@@ -131,26 +126,21 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
   useEffect(() => {
     console.log(`Comments updated for postId ${post._id}:`, comments);
 
-    // Mark as successfully fetched if we receive comments
     if (comments && comments.length > 0 && !hasSuccessfullyFetched) {
       setHasSuccessfullyFetched(true);
     }
   }, [comments, post._id, hasSuccessfullyFetched]);
 
   const toggleComments = () => {
-    // Check if we're already on the post page or in modal
     const isOnPostPage = window.location.href.includes(`/post/${post._id}`);
 
     if (window.innerWidth <= 768 && !isOnPostPage && !isModal) {
-      // Mobile: route to post page
       console.log(`Redirecting to /post/${post._id} for mobile view`);
       router.push(`/post/${post._id}`);
     } else if (window.innerWidth > 768 && !isOnPostPage && !isModal) {
-      // Desktop: show modal
       console.log(`Opening modal for postId ${post._id}`);
       setShowPostModal(true);
     } else {
-      // Toggle comments if already in modal or on post page
       console.log(
         `Toggling comments for postId ${
           post._id

@@ -18,7 +18,6 @@ const ReelContextMenu = ({ reel, onHide }: ReelContextProps) => {
   
   const isOwner = user?._id === reel.authorId._id;
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -32,7 +31,6 @@ const ReelContextMenu = ({ reel, onHide }: ReelContextProps) => {
     };
   }, [onHide]);
 
-  // Close menu on escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {

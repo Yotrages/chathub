@@ -72,7 +72,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
 
   if (!show) return null;
 
-  // Adjust position for small screens
   const adjustedPosition = {
     left: Math.min(position.x, window.innerWidth - (window.innerWidth > 768 ? 110 : 130)),
     top: Math.max(position.y - 180, 10),

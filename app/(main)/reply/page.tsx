@@ -29,14 +29,12 @@ const ReplyPage = () => {
   // const { data: commentsData, isLoading, error } = useGetSingleComment(dynamicId!, commentId!);
   // const {data: reelsCommentData, isLoading: reelsLoading, error: reelsError} = useGetSingleReelComment(dynamicId!, commentId!)
 
-  // Early return if required parameters are missing
   if (!commentId || !dynamicId || !replyId || !type) {
     <div className='min-h-screen items-center justify-center'>Error: Missing required parameters</div>;
     return;
   };
 
 
-  // Fetch comments if they don't exist in Redux
   const reduxPostComment = postComments[dynamicId].find((item) => item._id === commentId)
   const comment = reduxPostComment 
   const reduxReelComment = reelComments[dynamicId].find((item) => item._id === commentId)
@@ -55,12 +53,10 @@ const ReplyPage = () => {
     // originalIsLoading = reelsLoading
     // originalError = reelsError
   }
-  // Show loading state
   // if (originalIsLoading) {
   //   return <div>Loading replies...</div>;
   // }
   
-  // Show error state
   // if (originalError) {
   //   toast.error(originalError.message)
   //   return (
@@ -76,7 +72,6 @@ const ReplyPage = () => {
   //   )
   // }
   
-  // Get comments from Redux or API response
   
   if (!originalComment || originalComment.replies?.length === 0) {
     return (
