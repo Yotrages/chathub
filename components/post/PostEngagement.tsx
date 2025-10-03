@@ -170,7 +170,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
       <div className="px-6 py-3 border-t border-gray-50">
         <div className="flex justify-between items-center text-sm text-gray-600">
           <div className="flex items-center justify-center space-x-4">
-            <button className="p-0 m-0 flex items-center -space-x-0.5 cursor-pointer">
+            <button className="p-0 m-0 flex items-center xs:-space-x-0.5 cursor-pointer">
               {post.reactions &&
                 post.reactions.length > 0 &&
                 Object.entries(groupedReactions)
@@ -235,7 +235,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
             onMouseOver={() =>
               window.screen.availWidth > 768 && setShowReactions(true)
             }
-            onClick={() => handleLike("👍", "Like")}
+            onClick={() => userReactionEmoji ? handleLike(userReactionEmoji.category, userReactionEmoji.name) : handleLike("👍", "Like")}
             className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-xl transition-all duration-200 ${
               isLiked
                 ? "text-red-500 bg-red-50 hover:bg-red-100"

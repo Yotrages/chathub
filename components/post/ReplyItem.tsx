@@ -176,19 +176,19 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
   };
 
   useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-          if (
-            reactionRef.current &&
-            !reactionRef.current.contains(event.target as Node)
-          ) {
-            setShowReactions(false);
-          }
-        };
-        if (showReactions) {
-          document.addEventListener("mousedown", handleClickOutside);
-        }
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-      }, [showReactions]);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        reactionRef.current &&
+        !reactionRef.current.contains(event.target as Node)
+      ) {
+        setShowReactions(false);
+      }
+    };
+    if (showReactions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showReactions]);
 
   useEffect(() => {
     if (isEditing) {
@@ -285,7 +285,10 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
                   className="absolute -top-16 sm:-top-20 md:-top-24 left-0 right-0 flex justify-center z-20"
                 >
                   {showReactions && (
-                    <div ref={reactionRef} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg px-2 py-2 sm:py-3 flex items-center justify-center gap-1 backdrop-blur-sm">
+                    <div
+                      ref={reactionRef}
+                      className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg px-2 py-2 sm:py-3 flex items-center justify-center gap-1 backdrop-blur-sm"
+                    >
                       {reactionsIcon.map((item, index) => (
                         <button
                           key={index}
@@ -312,7 +315,14 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
                     onMouseOver={() =>
                       window.innerWidth > 768 && setShowReactions(true)
                     }
-                    onClick={() => handleReaction("👍", "Like")}
+                    onClick={() =>
+                      userReactionEmoji
+                        ? handleReaction(
+                            userReactionEmoji.category,
+                            userReactionEmoji.name
+                          )
+                        : handleReaction("👍", "Like")
+                    }
                     className={`font-semibold transition-colors min-w-0 ${
                       isLiked
                         ? "text-red-500"
@@ -345,7 +355,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
                     onShowReactions(reply.reactions, "reply")
                   }
                 >
-                  <div className="flex -space-x-1.5 items-center">
+                  <div className="flex -space-x-0.5 items-center">
                     {reply.reactions &&
                       reply.reactions.length > 0 &&
                       Object.entries(groupedReactions)

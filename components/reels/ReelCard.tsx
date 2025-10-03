@@ -58,10 +58,7 @@ const useOnlineStatus = () => {
   return isOnline;
 };
 
-const getSmartVideoStyle = (videoAR: number, containerAR: number) => {
-  // const containerWidth = window.innerWidth;
-  // const containerHeight = window.innerHeight;
-  
+const getSmartVideoStyle = (videoAR: number, containerAR: number) => {  
   const tolerance = 0.15;
   const arDifference = Math.abs(videoAR - containerAR);
   
@@ -504,7 +501,7 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                 >
                   <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   <span className="text-white text-[10px] sm:text-xs font-medium leading-none">
-                    {comments?.length || 0}
+                    {reel.commentsCount || 0}
                   </span>
                 </button>
                 

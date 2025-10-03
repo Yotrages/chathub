@@ -156,7 +156,6 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
     dispatch(removePost(post._id));
   };
 
-  // Manual retry function for failed fetches
   const retryFetchComments = () => {
     if (!isOnline) {
       console.log("Cannot retry - user is offline");

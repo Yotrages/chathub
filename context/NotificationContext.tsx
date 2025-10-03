@@ -50,6 +50,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   useEffect(() => {
     if (!userId || !token) {
+      console.log('Skipping socket connection: userId or token missing');
       return;
     }
 
@@ -67,17 +68,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
-      console.log('✅ notification Connected to socket server, Socket ID:', newSocket.id);
+      console.log('notification Connected to socket server, Socket ID:', newSocket.id);
     });
 
-    // Listen for new notifications
     newSocket.on('new_notification', (notification: Notification) => {
       setNotifications(prev => [notification, ...prev]);
       setUnreadCount(prev => prev + 1);
       showNotificationPopup(notification);
     });
 
-    // Listen for notification updates
     newSocket.on('notification_read', (notificationId: string) => {
       setNotifications(prev => 
         prev.map(n => 
@@ -99,6 +98,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
   const fetchNotifications = async (pageNum: number = 1) => {
     if (!userId || !token) {
+      console.log('Skipping fetchNotifications: userId or token missing');
       return;
     }
 
@@ -208,3 +208,5 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     </NotificationContext.Provider>
   );
 };
+
+(() => {})

@@ -1,4 +1,6 @@
 import { FileText, Play, Pause, Volume2, VolumeX, Download, Music } from "lucide-react";
+import { MediaModal } from "../chat/MediaModal";
+import { useState } from "react";
 
 interface MediaFile {
   url: string;
@@ -40,6 +42,28 @@ const PostMediaGallery: React.FC<PostMediaGalleryProps> = ({
     return { url, type, name: url.split("/").pop() };
   });
 
+  const [mediaModal, setMediaModal] = useState<{
+      isOpen: boolean;
+      src: string;
+      type: 'image' | 'video';
+      fileName?: string;
+    }>({
+      isOpen: false,
+      src: '',
+      type: 'image',
+      fileName: ''
+    });
+
+    const handleOpenMediaModal = (src: string, type: 'image' | 'video', fileName?: string) => {
+    console.log('Opening media modal:', { src, type, fileName });
+    setMediaModal({ isOpen: true, src, type, fileName });
+  };
+
+  const handleCloseMediaModal = () => {
+    console.log('Closing media modal');
+    setMediaModal({ isOpen: false, src: '', type: 'image', fileName: '' });
+  };
+
   const toggleVideoPlay = () => {
     if (videoRef.current) {
       if (isVideoPlaying) {
@@ -63,6 +87,7 @@ const PostMediaGallery: React.FC<PostMediaGalleryProps> = ({
   const currentMedia = mediaFiles[currentMediaIndex];
 
   return (
+    <>
     <div className="relative mb-4 bg-black rounded-xl overflow-hidden">
       {mediaFiles.length > 1 && (
         <div className="absolute top-4 right-4 z-10 bg-black bg-opacity-50 backdrop-blur-sm rounded-full px-3 py-1">
@@ -75,6 +100,7 @@ const PostMediaGallery: React.FC<PostMediaGalleryProps> = ({
         {currentMedia.type === "image" && (
           <img
             src={currentMedia.url}
+            onClick={() => handleOpenMediaModal(currentMedia.url, "image", currentMedia.name)}
             alt={`Post media ${currentMediaIndex + 1}`}
             className="w-full h-full object-contain"
             onError={(e) => {
@@ -98,6 +124,7 @@ const PostMediaGallery: React.FC<PostMediaGalleryProps> = ({
             <video
               ref={videoRef}
               src={currentMedia.url}
+              onClick={() => handleOpenMediaModal(currentMedia.url, "video", currentMedia.name)}
               className="w-full h-full object-contain"
               muted={isVideoMuted}
               loop
@@ -181,6 +208,14 @@ const PostMediaGallery: React.FC<PostMediaGalleryProps> = ({
         </div>
       )}
     </div>
+    <MediaModal
+            isOpen={mediaModal.isOpen}
+            onClose={handleCloseMediaModal}
+            src={mediaModal.src}
+            type={mediaModal.type}
+            fileName={mediaModal.fileName}
+          />
+          </>
   );
 };
 

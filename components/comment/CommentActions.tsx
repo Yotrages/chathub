@@ -141,7 +141,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
           onTouchStart={handleLongPressStart}
           onTouchEnd={handleLongPressEnd}
           onMouseOver={() => !isSmallScreen && setShowReactions(true)}
-          onClick={() => handleReaction("👍", "Like")}
+          onClick={() => userReactionEmoji ? handleReaction(userReactionEmoji.category, userReactionEmoji.name) :  handleReaction("👍", "Like")}
           className={`font-semibold transition-colors min-w-0 ${
             isLiked ? "text-red-500" : "text-gray-600 hover:text-red-500"
           }`}
@@ -167,7 +167,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
         className="flex items-center min-w-0"
         onClick={() => comment.reactions.length > 0 && onShowReactions(comment.reactions, "comment")}
       >
-        <div className="flex -space-x-1.5 items-center">
+        <div className="flex -space-x-0.5 items-center">
           {comment.reactions &&
             comment.reactions.length > 0 &&
             Object.entries(groupedReactions).slice(0, 2).map(([emoji]) => (

@@ -25,6 +25,7 @@ import {
   removeReel,
   selectComments,
   removeComment,
+  addUserReels,
 } from "@/libs/redux/reelsSlice";
 import { AppDispatch, RootState } from "@/libs/redux/store";
 import { IComment, Reel, ReactedUser } from "@/types";
@@ -440,7 +441,11 @@ export const useGetUserReels = (
       staleTime: 2 * 60 * 1000,
     },
     onSuccess: (data) => {
-      dispatch(setUserReels(data.reels));
+      if (page === 1) {
+        dispatch(setUserReels(data));
+      } else {
+        dispatch(addUserReels(data.reels || []));
+      }
     },
   });
 

@@ -3,20 +3,22 @@
 import React from 'react';
 import { XMarkIcon, EyeIcon } from '@heroicons/react/24/outline';
 
-interface ReelViewersProps {
+interface StoryViewersProps {
   reelId: string;
   viewers: Array<{
-    _id: string;
+    viewer: {
+      _id: string;
     username: string;
     avatar?: string;
-    // viewedAt: string;
+    }
+    viewedAt: string;
   }>;
   viewersCount: number;
   isOwner: boolean;
   onClose: () => void;
 }
 
-const StoryViewers: React.FC<ReelViewersProps> = ({ 
+const StoryViewers: React.FC<StoryViewersProps> = ({ 
   viewers, 
   viewersCount, 
   isOwner, 
@@ -46,17 +48,17 @@ const StoryViewers: React.FC<ReelViewersProps> = ({
           ) : (
             <div className="space-y-3">
               {viewers.map((viewer) => (
-                <div key={viewer._id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                <div key={viewer.viewer._id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
                   <img
-                    src={viewer.avatar || ''}
-                    alt={viewer.username}
+                    src={viewer.viewer.avatar || ''}
+                    alt={viewer.viewer.username}
                     className="w-10 h-10 rounded-full"
                   />
                   <div className="flex-1">
-                    <p className="font-medium">{viewer.username}</p>
-                    {/* <p className="text-sm text-gray-500">
+                    <p className="font-medium">{viewer.viewer.username}</p>
+                    <p className="text-sm text-gray-500">
                       {new Date(viewer.viewedAt).toLocaleString()}
-                    </p> */}
+                    </p>
                   </div>
                 </div>
               ))}

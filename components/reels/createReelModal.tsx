@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { XCircleIcon, PhotoIcon, TrashIcon, PlayIcon, PauseIcon } from '@heroicons/react/24/outline';
+import { XCircleIcon, PhotoIcon, TrashIcon, PlayIcon, PauseIcon, LockClosedIcon, UserGroupIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { FilmIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { useCreateReel } from '@/hooks/useReels';
 import Input from '../ui/Input';
+import { EyeIcon } from 'lucide-react';
 
 interface CreateReelModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
   const [title, setTitle] = useState<string>('');
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
+   const [visibility, setVisibility] = useState<
+      "public" | "friends" | "private"
+    >("public");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -139,6 +143,27 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
       setIsPlaying(!isPlaying);
     }
   };
+
+  const visibilityOptions = [
+      {
+        value: "public",
+        label: "Public",
+        description: "Everyone can see this reel",
+        icon: GlobeAltIcon,
+      },
+      {
+        value: "friends",
+        label: "Followers",
+        description: "Only your followers can see this",
+        icon: UserGroupIcon,
+      },
+      {
+        value: "private",
+        label: "Private",
+        description: "Only you can see this reel",
+        icon: LockClosedIcon,
+      },
+    ];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
@@ -304,6 +329,66 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
                 </div>
               </div>
             </div>
+
+            {/* Visibility Section */}
+                        <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <EyeIcon className="h-5 w-5 text-purple-600" />
+                            <h2 className="text-lg font-semibold text-gray-800">
+                              Who can see this?
+                            </h2>
+                          </div>
+            
+                          <div className="space-y-3">
+                            {visibilityOptions.map((option) => {
+                              const IconComponent = option.icon;
+                              return (
+                                <label
+                                  key={option.value}
+                                  className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                    visibility === option.value
+                                      ? "border-purple-500 bg-purple-50"
+                                      : "border-gray-200 hover:border-gray-300"
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="visibility"
+                                    value={option.value}
+                                    checked={visibility === option.value}
+                                    onChange={(e) =>
+                                      setVisibility(e.target.value as typeof visibility)
+                                    }
+                                    className="sr-only"
+                                  />
+                                  <div
+                                    className={`p-2 rounded-lg ${
+                                      visibility === option.value
+                                        ? "bg-purple-500 text-white"
+                                        : "bg-gray-100 text-gray-600"
+                                    }`}
+                                  >
+                                    <IconComponent className="h-4 w-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div
+                                      className={`font-medium ${
+                                        visibility === option.value
+                                          ? "text-purple-700"
+                                          : "text-gray-700"
+                                      }`}
+                                    >
+                                      {option.label}
+                                    </div>
+                                    <div className="text-sm text-gray-500 leading-tight">
+                                      {option.description}
+                                    </div>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
 
             {/* Submit Button */}
             <button

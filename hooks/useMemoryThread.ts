@@ -1,3 +1,4 @@
+import { api } from '@/libs/axios/config';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -23,14 +24,10 @@ export const useMemoryThreads = () => {
     queryFn: async () => {
       if (!params) return [];
       
-      const response = await fetch('/api/memory-threads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      });
+      const response = await api.post('/api/memory-threads', params);
       
-      if (!response.ok) throw new Error('Failed to fetch memory threads');
-      return response.json();
+      if (!response.data) throw new Error('Failed to fetch memory threads');
+      return response.data;
     },
     enabled: isEnabled && !!params,
     staleTime: 5 * 60 * 1000, 
@@ -38,14 +35,10 @@ export const useMemoryThreads = () => {
 
   const processContentMutation = useMutation({
     mutationFn: async (data: ProcessContentParams) => {
-      const response = await fetch('/api/memory-threads/process', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+      const response = await api.post('/api/memory-threads/process', data);
       
-      if (!response.ok) throw new Error('Failed to process content');
-      return response.json();
+      if (!response.data) throw new Error('Failed to process content');
+      return response.data;
     },
   });
 

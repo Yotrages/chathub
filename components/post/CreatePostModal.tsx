@@ -1,7 +1,4 @@
-import {
-  fileUploadService,
-  useCreatePost,
-} from "@/hooks/usePosts";
+import { fileUploadService, useCreatePost } from "@/hooks/usePosts";
 import { AppDispatch } from "@/libs/redux/store";
 import {
   FileText,
@@ -13,10 +10,12 @@ import {
   Camera,
   Music,
   LucidePenBox,
+  EyeIcon,
 } from "lucide-react";
 import React, { useRef, useState } from "react";
-import { useDispatch} from "react-redux";
+import { useDispatch } from "react-redux";
 import { addPost } from "@/libs/redux/postSlice";
+import { GlobeAltIcon, LockClosedIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
 interface CreatePostModalProps {
   onClose?: () => void;
@@ -28,13 +27,13 @@ interface FilePreview {
   type: "image" | "video" | "document" | "audio";
 }
 
-
-
 const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newFilePreviews, setNewFilePreviews] = useState<FilePreview[]>([]);
-  // const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [visibility, setVisibility] = useState<
+    "public" | "friends" | "private"
+  >("public");
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const dispatch: AppDispatch = useDispatch();
@@ -125,6 +124,27 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
     setNewFilePreviews((prev) => [...prev, ...newPreviews]);
   };
 
+  const visibilityOptions = [
+      {
+        value: 'public',
+        label: 'Public',
+        description: 'Anyone can see this post',
+        icon: GlobeAltIcon
+      },
+      {
+        value: 'friends',
+        label: 'Followers',
+        description: 'Only your followers can see this',
+        icon: UserGroupIcon
+      },
+      {
+        value: 'private',
+        label: 'Only me',
+        description: 'Only you can see this post',
+        icon: LockClosedIcon
+      }
+    ];
+
   // const toggleVideoPlay = () => {
   //   if (videoRef.current) {
   //     if (isVideoPlaying) {
@@ -156,6 +176,7 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
     const postData = {
       content: data.content,
       images: newFiles,
+      visibility: visibility,
     };
 
     console.log("🚀 Sending post data:", {
@@ -191,24 +212,24 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
               />
             )}
 
-             {type === "video" && (
-          <div className="relative">
-            {preview ? (
-              <video
-                ref={videoRef}
-                src={preview}
-                loop
-                controls
-                // onPlay={() => setIsVideoPlaying(true)}
-                // onPause={() => setIsVideoPlaying(false)}
-                className="w-full h-50 object-cover"
-              />
-            ) : (
-              <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
-                <Video size={32} className="text-gray-400" />
-              </div>
-            )}
-            {/* <div
+            {type === "video" && (
+              <div className="relative">
+                {preview ? (
+                  <video
+                    ref={videoRef}
+                    src={preview}
+                    loop
+                    controls
+                    // onPlay={() => setIsVideoPlaying(true)}
+                    // onPause={() => setIsVideoPlaying(false)}
+                    className="w-full h-50 object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
+                    <Video size={32} className="text-gray-400" />
+                  </div>
+                )}
+                {/* <div
               onClick={toggleVideoPlay}
               className="absolute  flex items-center justify-center"
             >
@@ -220,8 +241,8 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
                 )}
               </div>
             </div> */}
-          </div>
-        )}
+              </div>
+            )}
 
             {type === "audio" && (
               <div className="relative w-full h-full bg-gray-900 flex items-center justify-center">
@@ -346,12 +367,12 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
                         newFiles.filter((f) => f.type.startsWith("image/"))
                           .length
                       }{" "}
-                      images, {" "}
+                      images,{" "}
                       {
                         newFiles.filter((f) => f.type.startsWith("video/"))
                           .length
                       }{" "}
-                      videos, {" "}
+                      videos,{" "}
                       {
                         newFiles.filter(
                           (f) =>
@@ -399,6 +420,66 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
                     <span>Documents</span>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* Visibility Section */}
+            <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+              <div className="flex items-center space-x-2">
+                <EyeIcon className="h-5 w-5 text-blue-600" />
+                <h3 className="text-base font-semibold text-gray-800">
+                  Who can see this?
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {visibilityOptions.map((option) => {
+                  const IconComponent = option.icon;
+                  return (
+                    <label
+                      key={option.value}
+                      className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        visibility === option.value
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="visibility"
+                        value={option.value}
+                        checked={visibility === option.value}
+                        onChange={(e) =>
+                          setVisibility(e.target.value as typeof visibility)
+                        }
+                        className="sr-only"
+                      />
+                      <div
+                        className={`p-2 rounded-lg ${
+                          visibility === option.value
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className={`font-medium ${
+                            visibility === option.value
+                              ? "text-blue-700"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {option.label}
+                        </div>
+                        <div className="text-sm text-gray-500 leading-tight">
+                          {option.description}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 

@@ -88,7 +88,8 @@ export const CreatePost = () => {
         <input
         onFocus={handleShow}
         onClick={handleShow}
-          placeholder="What's on your mind?"
+        disabled={true}
+          placeholder="Share your thoughts..."
           className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
         />       
 

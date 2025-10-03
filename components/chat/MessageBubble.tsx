@@ -1,10 +1,15 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, SetStateAction } from "react";
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/libs/redux/store';
 import { Message } from "@/types";
 import { MessageContent } from "./MessageContent";
 import { MessageContextMenu } from "./MessageContextMenu";
 import { MessageReactions } from "./MessageReactions";
 import { useRouter } from "next/navigation";
+import { useChat } from "@/hooks/useChat";
+import { setReplyingTo } from "@/libs/redux/chatSlice";
+import toast from "react-hot-toast";
 
 interface MessageBubbleProps {
   message: Message;
@@ -13,6 +18,7 @@ interface MessageBubbleProps {
   currentUserId?: string;
   otherParticipantsCount: number;
   onOpenLikesModal: (reactions: Message['reactions'], type?: string) => void;
+  onOpenMediaModal?: (src: string, type: 'image' | 'video', fileName?: string) => void;
 }
 
 export const MessageBubble = ({
@@ -21,9 +27,11 @@ export const MessageBubble = ({
   showAvatar,
   currentUserId,
   otherParticipantsCount,
-  onOpenLikesModal
+  onOpenLikesModal,
+  onOpenMediaModal,
 }: MessageBubbleProps) => {
   const [showContextMenu, setShowContextMenu] = useState(false);
+  const [showMobileContextMenu, setShowMobileContextMenu] = useState(false);
   const [contextMenuPosition, setContextMenuPosition] = useState({
     x: 0,
     y: 0,
@@ -37,7 +45,8 @@ export const MessageBubble = ({
     ? { _id: message.senderId, username: "Unknown", avatar: "" }
     : message.senderId;
 
-    const router = useRouter()
+  const router = useRouter();
+
   const calculateContextMenuPosition = (clientX: number, clientY: number) => {
     const contextMenuWidth = 240;
     const contextMenuHeight = 400;
@@ -67,6 +76,26 @@ export const MessageBubble = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      const isModalClick = target.closest('.fixed.inset-0') !== null || 
+                          target.closest('[role="dialog"]') !== null ||
+                          (() => {
+                            let el: HTMLElement | null = target;
+                            while (el) {
+                              const zIndex = window.getComputedStyle(el).zIndex;
+                              if (zIndex !== 'auto' && parseInt(zIndex) >= 70) {
+                                return true;
+                              }
+                              el = el.parentElement;
+                            }
+                            return false;
+                          })();
+      
+      if (isModalClick) {
+        return; 
+      }
+      
       if (
         contextMenuRef.current &&
         !contextMenuRef.current.contains(event.target as Node)
@@ -98,20 +127,20 @@ export const MessageBubble = ({
       if (showContextMenu) {
         setShowContextMenu(false);
       }
+      if (showMobileContextMenu) {
+        setShowMobileContextMenu(false);
+      }
     };
-    if (showContextMenu) {
+    if (showContextMenu || showMobileContextMenu) {
       window.addEventListener('scroll', handleScroll, true);
     }
     return () => window.removeEventListener('scroll', handleScroll, true);
-  }, [showContextMenu]);
+  }, [showContextMenu, showMobileContextMenu]);
 
   const handleLongPressStart = (e: React.TouchEvent): void => {
     e.preventDefault();
     const timer = setTimeout(() => {
-      const touch = e.touches[0];
-      const position = calculateContextMenuPosition(touch.clientX, touch.clientY);
-      setContextMenuPosition(position);
-      setShowContextMenu(true);
+      setShowMobileContextMenu(true);
     }, 500);
     setLongPressTimer(timer);
   };
@@ -144,29 +173,43 @@ export const MessageBubble = ({
     setShowContextMenu(false);
   };
 
+  const handleCloseMobileContextMenu = (): void => {
+    setShowMobileContextMenu(false);
+  };
+
   const handleCloseReactions = (): void => {
     setShowReactions(false);
   };
 
+  const groupedReactions = message.reactions?.reduce((acc, reaction) => {
+    const emoji = reaction.emoji.category;
+    if (!acc[emoji]) acc[emoji] = [];
+    acc[emoji].push(reaction);
+    return acc;
+  }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) || {};
+
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-3 px-1 sm:px-4 `}>
+    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} w-full mb-1 px-1 sm:px-4`}>
       <div
         className={`flex max-w-[85%] sm:max-w-[75%] md:max-w-[65%] ${
           isOwn ? "flex-row-reverse" : "flex-row"
         } group relative`}
       >
-         {showAvatar && !isOwn && (
-          <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden shadow-md">
+        {showAvatar && !isOwn && (
+          <div className="w-8 h-8 rounded-full xs:flex hidden items-center justify-center mr-2 flex-shrink-0 overflow-hidden shadow-sm">
             {sender.avatar ? (
               <img
                 src={sender.avatar}
                 alt={sender.username}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover cursor-pointer"
                 onClick={() => router.push(`/profile/${sender._id}`)}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-purple-500 via-blue-500 to-teal-500 flex items-center justify-center">
-                <span onClick={() => router.push(`/profile/${sender._id}`)} className="text-white text-xs font-bold">
+                <span 
+                  onClick={() => router.push(`/profile/${sender._id}`)} 
+                  className="text-white text-xs font-bold cursor-pointer"
+                >
                   {sender.username.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -174,53 +217,87 @@ export const MessageBubble = ({
           </div>
         )}
 
-        {/* Message container with minimum width for reactions */}
-        <div
-          ref={messageRef}
-          className={`relative px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm transition-all duration-200 ease-out group-hover:shadow-xl w-full ${
-            isOwn
-              ? `bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-md
-                 shadow-blue-200 hover:shadow-blue-300 transform hover:scale-[1.02]`
-              : `bg-white text-gray-800 rounded-bl-md border border-gray-100
-                 shadow-gray-200 hover:shadow-gray-300 transform hover:scale-[1.02]`
-          } select-none`}
-          onTouchStart={handleLongPressStart}
-          onTouchEnd={handleLongPressEnd}
-          onContextMenu={handleContextMenu}
-        >
-          {/* Message tail/pointer */}
+        <div className="flex flex-col w-full">
           <div
-            className={`absolute w-3 h-3 transform rotate-45 ${
+            ref={messageRef}
+            className={`relative px-3 py-1.5 rounded-lg overflow-visible shadow-sm transition-all duration-200 ease-out group-hover:shadow-md ${
               isOwn
-                ? "bg-gradient-to-br from-blue-500 to-blue-600 -right-1 bottom-3"
-                : "bg-white border-l border-b border-gray-100 -left-1 bottom-3"
-            }`}
-          />
+                ? `bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm
+                   hover:shadow-blue-200`
+                : `bg-white text-gray-800 rounded-bl-sm border border-gray-100
+                   hover:shadow-gray-200`
+            } select-none`}
+            onTouchStart={handleLongPressStart}
+            onTouchEnd={handleLongPressEnd}
+            onContextMenu={handleContextMenu}
+          >
+            {/* Small message tail - like WhatsApp */}
+            <div
+              className={`absolute w-2 h-2 transform rotate-45 ${
+                isOwn
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 -right-1 bottom-2"
+                  : "bg-white border-l border-b border-gray-100 -left-1 bottom-2"
+              }`}
+            />
 
-          {!isOwn && showAvatar && (
-            <p className="text-xs font-semibold mb-2 text-blue-600 opacity-80">
-              {sender.username}
-            </p>
+            {!isOwn && showAvatar && (
+              <p className="text-xs font-medium mb-1 text-blue-600 opacity-80">
+                {sender.username}
+              </p>
+            )}
+
+            <MessageContent
+              isEditing={isEditing}
+              onClose={() => setIsEditing(false)}
+              message={message}
+              isOwn={isOwn}
+              otherParticipantsCount={otherParticipantsCount}
+              onOpenMediaModal={onOpenMediaModal}
+            />
+
+            <MessageReactions
+              showReactions={showReactions}
+              onToggleReactions={handleReactionToggle}
+              onCloseReactions={handleCloseReactions}
+              handleContextMenu={handleContextMenu}
+              message={message}
+              isOwn={isOwn}
+              currentUserId={currentUserId}
+              onOpenLikesModal={onOpenLikesModal}
+            />
+          </div>
+
+          {/* Grouped Reactions - Outside message bubble */}
+          {Object.keys(groupedReactions).length > 0 && (
+            <div className={`mt-1 ${isOwn ? "flex justify-end mr-2" : "flex justify-start ml-2"}`}>
+              <div className="flex flex-wrap gap-1">
+                {Object.entries(groupedReactions)
+                  .slice(0, 4)
+                  .map(([emoji, reactions]) => (
+                    <div
+                      key={emoji}
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs cursor-pointer transition-all duration-200 bg-gray-100 hover:bg-gray-200 border shadow-sm hover:shadow-md"
+                      onClick={() => onOpenLikesModal(message.reactions, 'message')}
+                    >
+                      <span className="text-xs">{emoji}</span>
+                      <span className="text-xs font-medium text-gray-600">
+                        {reactions.length}
+                      </span>
+                    </div>
+                  ))}
+                {Object.keys(groupedReactions).length > 4 && (
+                  <div
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                    onClick={() => onOpenLikesModal(message.reactions)}
+                  >
+                    <span className="text-xs font-medium text-gray-600">
+                      +{Object.keys(groupedReactions).length - 4}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
-
-          <MessageContent
-            isEditing={isEditing}
-            onClose={() => setIsEditing(false)}
-            message={message}
-            isOwn={isOwn}
-            otherParticipantsCount={otherParticipantsCount}
-          />
-
-          <MessageReactions
-            showReactions={showReactions}
-            onToggleReactions={handleReactionToggle}
-            onCloseReactions={handleCloseReactions}
-            handleContextMenu={handleContextMenu}
-            message={message}
-            isOwn={isOwn}
-            currentUserId={currentUserId}
-            onOpenLikesModal={onOpenLikesModal}
-          />
         </div>
       </div>
 
@@ -234,6 +311,288 @@ export const MessageBubble = ({
         position={contextMenuPosition}
         onClose={handleCloseContextMenu}
       />
+
+      {showMobileContextMenu && (
+        <MobileContextMenu
+          message={message}
+          isOwn={isOwn}
+          onClose={handleCloseMobileContextMenu}
+          setIsEditing={setIsEditing}
+          onOpenLikesModal={onOpenLikesModal}
+        />
+      )}
+    </div>
+  );
+};
+
+interface MobileContextMenuItemProps {
+  label: string;
+  icon: string;
+  onClick: () => void;
+  danger?: boolean;
+}
+
+const MobileContextMenuItem = ({ label, icon, onClick, danger = false }: MobileContextMenuItemProps) => (
+  <button
+    onClick={onClick}
+    className={`w-full flex items-center space-x-4 px-4 py-3 rounded-xl transition-colors ${
+      danger 
+        ? 'hover:bg-red-50 text-red-600' 
+        : 'hover:bg-gray-50 text-gray-700'
+    }`}
+  >
+    <span className="text-xl">{icon}</span>
+    <span className="font-medium text-left">{label}</span>
+  </button>
+);
+
+interface MobileContextMenuProps {
+  message: Message;
+  isOwn: boolean;
+  onClose: () => void;
+  setIsEditing: React.Dispatch<SetStateAction<boolean>>;
+  onOpenLikesModal: (reactions: Message['reactions'], type?: string) => void;
+}
+
+const MobileContextMenu = ({ message, isOwn, onClose, setIsEditing }: MobileContextMenuProps) => {
+  const dispatch = useDispatch();
+  const {
+    deleteMessage,
+    pinMessage,
+    unpinMessage,
+    forwardMessage,
+    starMessage,
+    unstarMessage,
+    addReaction,
+    removeReaction,
+  } = useChat();
+  const { chats, pinnedMessages, starredMessages } = useSelector((state: RootState) => state.chat);
+  const { user } = useSelector((state: RootState) => state.auth);
+  const [showForwardModal, setShowForwardModal] = useState(false);
+
+  const isPinned = pinnedMessages?.[message.conversationId]?.some((m) => m._id === message._id) || false;
+  const isStarred = starredMessages?.some((m) => m._id === message._id) || false;
+
+  const handleQuickReaction = async (emoji: string, name: string) => {
+    try {
+      const userReaction = message.reactions?.find((r) => {
+        const reactionUserId = typeof r.userId === "string" ? r.userId : r.userId?._id;
+        return reactionUserId === user?._id;
+      });
+
+      if (userReaction) {
+        await removeReaction(message._id);
+        toast.success("Reaction removed");
+      } else {
+        await addReaction(message._id, emoji, name);
+        toast.success("Reaction added");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to update reaction");
+    }
+    onClose();
+  };
+
+  const handleReply = () => {
+    dispatch(setReplyingTo({
+      messageId: message._id,
+      content: message.content,
+      sender: message.senderId,
+    }));
+    onClose();
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(message.content);
+    toast.success("Message copied successfully");
+    onClose();
+  };
+
+  const handleForward = async (chatId: string) => {
+    try {
+      await forwardMessage(message._id, chatId);
+      toast.success("Message forwarded successfully");
+      setShowForwardModal(false);
+      onClose();
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to forward message");
+    }
+  };
+
+  const handleStar = async () => {
+    try {
+      if (isStarred) {
+        await unstarMessage(message._id);
+        toast.success("Message unstarred");
+      } else {
+        await starMessage(message._id);
+        toast.success("Message starred");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to star/unstar message");
+    }
+    onClose();
+  };
+
+  const handlePin = async () => {
+    try {
+      if (isPinned) {
+        await unpinMessage(message.conversationId, message._id);
+        toast.success("Message unpinned");
+      } else {
+        await pinMessage(message.conversationId, message._id);
+        toast.success("Message pinned");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to pin/unpin message");
+    }
+    onClose();
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteMessage(message._id);
+      toast.success("Message deleted successfully");
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to delete message");
+    }
+    onClose();
+  };
+
+  if (showForwardModal) {
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden">
+          <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-500 to-purple-600">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Forward Message</h2>
+              <button
+                onClick={() => setShowForwardModal(false)}
+                className="p-2 rounded-full hover:bg-white/20 transition-colors"
+              >
+                <span className="text-white text-xl">&times;</span>
+              </button>
+            </div>
+          </div>
+          <div className="p-4 max-h-[60vh] overflow-y-auto">
+            {chats?.map((chat) => (
+              <button
+                key={chat._id}
+                onClick={() => handleForward(chat._id)}
+                className="w-full p-4 text-left hover:bg-gray-50 rounded-2xl flex items-center space-x-4 transition-all duration-200"
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-bold">
+                    {chat.name?.charAt(0) || "U"}
+                  </span>
+                </div>
+                <span className="font-semibold text-gray-800">{chat.name || "Unknown Chat"}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end justify-center md:hidden"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-t-3xl w-full max-w-md mx-auto shadow-2xl border-t border-gray-200 transform transition-all duration-300 ease-out"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Handle bar */}
+        <div className="flex justify-center pt-3 pb-2">
+          <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
+        </div>
+        
+        {/* Quick Reactions */}
+        <div className="px-4 py-3 border-b border-gray-100">
+          <div className="flex justify-around items-center">
+            {[
+              { emoji: "👍", name: "Like" },
+              { emoji: "❤️", name: "Love" },
+              { emoji: "😂", name: "Laugh" },
+              { emoji: "😮", name: "Wow" },
+              { emoji: "😢", name: "Sad" },
+              { emoji: "😡", name: "Angry" }
+            ].map((reaction, index) => (
+              <button
+                key={index}
+                className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors active:scale-95"
+                onClick={() => handleQuickReaction(reaction.emoji, reaction.name)}
+              >
+                <span className="text-2xl">{reaction.emoji}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Menu Items */}
+        <div className="px-2 py-2 max-h-80 overflow-y-auto">
+          <MobileContextMenuItem
+            label="Reply"
+            icon="↩️"
+            onClick={handleReply}
+          />
+          <MobileContextMenuItem
+            label="Copy"
+            icon="📋"
+            onClick={handleCopy}
+          />
+          <MobileContextMenuItem
+            label="Forward"
+            icon="📤"
+            onClick={() => setShowForwardModal(true)}
+          />
+          <MobileContextMenuItem
+            label={isStarred ? "Unstar" : "Star"}
+            icon={isStarred ? "⭐" : "☆"}
+            onClick={handleStar}
+          />
+          <MobileContextMenuItem
+            label={isPinned ? "Unpin" : "Pin"}
+            icon="📌"
+            onClick={handlePin}
+          />
+          {isOwn && message.messageType === "text" && (
+            <MobileContextMenuItem
+              label="Edit"
+              icon="✏️"
+              onClick={() => {
+                setIsEditing(true);
+                onClose();
+              }}
+            />
+          )}
+          {isOwn && (
+            <MobileContextMenuItem
+              label="Delete"
+              icon="🗑️"
+              onClick={handleDelete}
+              danger
+            />
+          )}
+        </div>
+
+        {/* Cancel Button */}
+        <div className="px-4 py-4 border-t border-gray-100">
+          <button
+            onClick={onClose}
+            className="w-full py-3 text-center text-gray-600 font-medium hover:bg-gray-50 rounded-xl transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

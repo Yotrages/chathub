@@ -104,10 +104,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
           <div className="flex-1 overflow-hidden relative">
             <div 
-              className="h-full overflow-y-auto pb-20"
-              style={{
-                paddingBottom: '80px', 
-              }}
+              className="h-full overflow-y-auto pb-16"
             >
               <MessagesArea
                 currentChat={currentChat}

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/redux/store";
@@ -11,6 +11,7 @@ import {
   Users,
   Video,
   X,
+  FileText,
 } from "lucide-react";
 import Input from "../ui/Input";
 import Link from "next/link";
@@ -18,32 +19,122 @@ import NotificationIcon from "@/components/notification/NotificationIcon";
 import NotificationDropdown from "@/components/notification/NotificationDropDown";
 import { api } from "@/libs/axios/config";
 
+interface User {
+  _id: string;
+  username: string;
+  name: string;
+  avatar?: string;
+  isVerified?: boolean;
+}
+
+interface Post {
+  _id: string;
+  content: string;
+  authorId: {
+    username: string;
+    avatar?: string;
+  };
+}
+
+interface Reel {
+  _id: string;
+  title: string;
+  authorId: {
+    username: string;
+    avatar?: string;
+  };
+}
+
+interface AutocompleteSuggestions {
+  users: User[];
+  posts: Post[];
+  reels: Reel[];
+  hashtags: string[];
+  recent: string[];
+}
+
+const MAX_QUERY_LENGTH = 100;
+
 const Header: React.FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [frequentSearches, setFrequentSearches] = useState<string[]>([]);
+  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<AutocompleteSuggestions | null>(null);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const inputSearchRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRef = useRef<HTMLDivElement | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    const fetchFrequentSearches = async () => {
-      try {
-        const res = await api.get("/search/tracking");
-        if (res.status === 200) {
-          const data = res.data;
-          setFrequentSearches(data.searches.map((s: any) => s.query));
-        }
-      } catch (error) {
-        console.error("Failed to fetch frequent searches:", error);
+  const fetchFrequentSearches = async () => {
+    if (!user) {
+      setFrequentSearches([]);
+      return;
+    }
+
+    try {
+      const res = await api.get("/search/tracking");
+      if (res.status === 200 && res.data.success) {
+        setFrequentSearches(res.data.searches.map((s: any) => s.query));
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setFrequentSearches([]);
+      } else {
         setFrequentSearches([]);
       }
-    };
-    fetchFrequentSearches();
+    }
+  };
+  
+  fetchFrequentSearches();
+}, [user]);
+
+  const fetchAutocompleteSuggestions = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2 || query.length > MAX_QUERY_LENGTH) {
+      setAutocompleteSuggestions(null);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    try {
+      setIsLoadingSuggestions(true);
+      
+      const [suggestionsRes, searchRes] = await Promise.all([
+        api.get(`/search/suggestions?query=${encodeURIComponent(query)}`),
+        api.get(`/search?query=${encodeURIComponent(query)}&type=all&limit=3`)
+      ]);
+
+      const suggestions: AutocompleteSuggestions = {
+        users: [],
+        posts: [],
+        reels: [],
+        hashtags: [],
+        recent: []
+      };
+
+      if (suggestionsRes.status === 200 && suggestionsRes.data.success) {
+        suggestions.users = suggestionsRes.data.suggestions.users || [];
+        suggestions.hashtags = suggestionsRes.data.suggestions.hashtags || [];
+        suggestions.recent = suggestionsRes.data.suggestions.recent || [];
+      }
+
+      if (searchRes.status === 200 && searchRes.data.success) {
+        suggestions.posts = searchRes.data.results.posts || [];
+        suggestions.reels = searchRes.data.results.reels || [];
+      }
+
+      setAutocompleteSuggestions(suggestions);
+    } catch (error) {
+      console.error("Failed to fetch autocomplete suggestions:", error);
+      setAutocompleteSuggestions(null);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
   }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -51,16 +142,9 @@ const Header: React.FC = () => {
     if (searchQuery.trim()) {
       setIsFocused(false);
       setShowSearch(false);
+      setAutocompleteSuggestions(null);
       
       router.push(`/search/${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
-  const trackSearch = async (query: string) => {
-    try {
-      await api.post("/search/tracking", { query });
-    } catch (error) {
-      console.error("Failed to track search:", error);
     }
   };
 
@@ -68,20 +152,64 @@ const Header: React.FC = () => {
     setSearchQuery(query);
     setIsFocused(false);
     setShowSearch(false);
+    setAutocompleteSuggestions(null);
     
     router.push(`/search/${encodeURIComponent(query)}`);
+  };
+
+  const handleSuggestionClick = (query: string) => {
+    setSearchQuery(query);
+    setIsFocused(false);
+    setShowSearch(false);
+    setAutocompleteSuggestions(null);
     
-    trackSearch(query);
+    router.push(`/search/${encodeURIComponent(query)}`);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (!value.trim()) {
+      setAutocompleteSuggestions(null);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    const matchesFrequentSearch = frequentSearches.some(
+      (q) => q.toLowerCase() === value.toLowerCase()
+    );
+
+    if (matchesFrequentSearch) {
+      setAutocompleteSuggestions(null);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    if (value.length > MAX_QUERY_LENGTH) {
+      setAutocompleteSuggestions(null);
+      setIsLoadingSuggestions(false);
+      return;
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      fetchAutocompleteSuggestions(value);
+    }, 300); 
   };
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearchSubmit(e as any);
     }
+  };
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   useEffect(() => {
@@ -105,6 +233,14 @@ const Header: React.FC = () => {
       document.body.style.overflow = 'unset';
     };
   }, [showSearch]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   const NavLinks = [
     {
@@ -148,6 +284,16 @@ const Header: React.FC = () => {
     setShowNotifications(false);
   };
 
+  const shouldShowFrequentSearches = isFocused && !searchQuery.trim() && frequentSearches.length > 0;
+  const shouldShowFilteredFrequentSearches = isFocused && searchQuery.trim() && frequentSearches.some(q => q.toLowerCase().includes(searchQuery.toLowerCase()));
+  const shouldShowAutocomplete = isFocused && searchQuery.trim() && autocompleteSuggestions && (
+    autocompleteSuggestions.users.length > 0 ||
+    autocompleteSuggestions.posts.length > 0 ||
+    autocompleteSuggestions.reels.length > 0 ||
+    autocompleteSuggestions.hashtags.length > 0 ||
+    autocompleteSuggestions.recent.length > 0
+  );
+
   return (
     <div className="bg-gray-50">
       <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
@@ -181,7 +327,7 @@ const Header: React.FC = () => {
               <form onSubmit={handleSearchSubmit} className="relative">
                 <div className="relative w-full">
                   <Input
-                  type="search"
+                    type="search"
                     className="border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
                     icon={<Search size={16} className="text-gray-400" />}
                     left_content
@@ -195,34 +341,144 @@ const Header: React.FC = () => {
                   />
                   
                   {/* Desktop Search Dropdown */}
-                  {isFocused && frequentSearches.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-64 overflow-y-auto z-50">
+                  {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches || shouldShowAutocomplete) && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-50">
                       <div className="p-2">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
-                          Recent Searches
-                        </p>
-                        {frequentSearches
-                          .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
-                          .slice(0, 5)
-                          .map((q, index) => (
-                            <div
-                              key={index}
-                              onClick={() => handleFrequentSearchClick(q)}
-                              className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
-                            >
-                              <Search size={14} className="text-gray-400 mr-3 flex-shrink-0" />
-                              <span className="text-gray-700 truncate">{q}</span>
-                            </div>
-                          ))}
+                        {/* Frequent/Recent Searches */}
+                        {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches) && (
+                          <>
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
+                              Recent Searches
+                            </p>
+                            {frequentSearches
+                              .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                              .slice(0, 5)
+                              .map((q, index) => (
+                                <div
+                                  key={`frequent-${index}`}
+                                  onClick={() => handleFrequentSearchClick(q)}
+                                  className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                >
+                                  <Search size={14} className="text-gray-400 mr-3 flex-shrink-0" />
+                                  <span className="text-gray-700 truncate">{q}</span>
+                                </div>
+                              ))}
+                          </>
+                        )}
+
+                        {/* Autocomplete Suggestions */}
+                        {shouldShowAutocomplete && (
+                          <>
+                            {/* Users */}
+                            {autocompleteSuggestions.users.length > 0 && (
+                              <>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                  Users
+                                </p>
+                                {autocompleteSuggestions.users.map((user) => (
+                                  <div
+                                    key={user._id}
+                                    onClick={() => handleSuggestionClick(user.username)}
+                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                  >
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
+                                      {user.avatar ? (
+                                        <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                                      ) : (
+                                        <span className="text-xs font-semibold text-white">
+                                          {user.username.charAt(0).toUpperCase()}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm text-gray-700 truncate font-medium">{user.username}</p>
+                                      {user.name && <p className="text-xs text-gray-500 truncate">{user.name}</p>}
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Posts */}
+                            {autocompleteSuggestions.posts.length > 0 && (
+                              <>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                  Posts
+                                </p>
+                                {autocompleteSuggestions.posts.map((post) => (
+                                  <div
+                                    key={post._id}
+                                    onClick={() => handleSuggestionClick(post.content.substring(0, 50))}
+                                    className="flex items-start px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                  >
+                                    <FileText size={16} className="text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm text-gray-700 line-clamp-2">{truncateText(post.content, 80)}</p>
+                                      <p className="text-xs text-gray-500 mt-1">by @{post.authorId.username}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Reels */}
+                            {autocompleteSuggestions.reels.length > 0 && (
+                              <>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                  Reels
+                                </p>
+                                {autocompleteSuggestions.reels.map((reel) => (
+                                  <div
+                                    key={reel._id}
+                                    onClick={() => handleSuggestionClick(reel.title)}
+                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                  >
+                                    <Video size={16} className="text-gray-400 mr-3 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm text-gray-700 truncate font-medium">{reel.title}</p>
+                                      <p className="text-xs text-gray-500 truncate">by @{reel.authorId.username}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+
+                            {/* Hashtags */}
+                            {autocompleteSuggestions.hashtags.length > 0 && (
+                              <>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                  Hashtags
+                                </p>
+                                {autocompleteSuggestions.hashtags.map((hashtag, index) => (
+                                  <div
+                                    key={`hashtag-${index}`}
+                                    onClick={() => handleSuggestionClick(hashtag)}
+                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                  >
+                                    <span className="text-blue-500 mr-3 font-semibold">#</span>
+                                    <span className="text-gray-700 truncate">{hashtag.slice(1)}</span>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                          </>
+                        )}
+
+                        {/* Loading state */}
+                        {isLoadingSuggestions && (
+                          <div className="px-3 py-4 text-center">
+                            <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                          </div>
+                        )}
                         
                         {/* Current search option */}
-                        {searchQuery && !frequentSearches.some(q => q.toLowerCase() === searchQuery.toLowerCase()) && (
+                        {searchQuery && (
                           <div
                             onClick={() => handleFrequentSearchClick(searchQuery)}
                             className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
                           >
                             <Search size={14} className="text-blue-500 mr-3 flex-shrink-0" />
-                            <span className="text-gray-700 truncate">Search for &qout;{searchQuery}&quot;</span>
+                            <span className="text-gray-700 truncate">Search for &quot;{searchQuery}&quot;</span>
                           </div>
                         )}
                       </div>
@@ -256,7 +512,7 @@ const Header: React.FC = () => {
                 <div className="relative max-w-full">
                   {user && (
                     <NotificationIcon 
-                      onClick={() => window.innerWidth >= 632 ? setShowNotifications(!showNotifications) : handleNotificationNavigate}
+                      onClick={() => window.innerWidth >= 632 ? setShowNotifications(!showNotifications) : handleNotificationNavigate()}
                       className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 transition-colors duration-150 min-w-0"
                     />
                   )}
@@ -319,7 +575,7 @@ const Header: React.FC = () => {
             <div className="p-4">
               <form onSubmit={handleSearchSubmit}>
                 <Input
-                type="search"
+                  type="search"
                   className="w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                   icon={<Search size={16} className="text-gray-400" />}
                   left_content
@@ -336,28 +592,138 @@ const Header: React.FC = () => {
             </div>
 
             {/* Mobile Search Results */}
-            {frequentSearches.length > 0 && (
-              <div className="max-h-64 overflow-y-auto">
+            {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches || shouldShowAutocomplete) && (
+              <div className="max-h-96 overflow-y-auto">
                 <div className="p-2">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
-                    Recent Searches
-                  </p>
-                  {frequentSearches
-                    .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
-                    .slice(0, 8)
-                    .map((q, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleFrequentSearchClick(q)}
-                        className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                      >
-                        <Search size={16} className="text-gray-400 mr-3 flex-shrink-0" />
-                        <span className="text-gray-700 truncate">{q}</span>
-                      </div>
-                    ))}
+                  {/* Frequent/Recent Searches */}
+                  {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches) && (
+                    <>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
+                        Recent Searches
+                      </p>
+                      {frequentSearches
+                        .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                        .slice(0, 8)
+                        .map((q, index) => (
+                          <div
+                            key={`mobile-frequent-${index}`}
+                            onClick={() => handleFrequentSearchClick(q)}
+                            className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                          >
+                            <Search size={16} className="text-gray-400 mr-3 flex-shrink-0" />
+                            <span className="text-gray-700 truncate">{q}</span>
+                          </div>
+                        ))}
+                    </>
+                  )}
+
+                  {/* Autocomplete Suggestions */}
+                  {shouldShowAutocomplete && (
+                    <>
+                      {/* Users */}
+                      {autocompleteSuggestions.users.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                            Users
+                          </p>
+                          {autocompleteSuggestions.users.map((user) => (
+                            <div
+                              key={`mobile-${user._id}`}
+                              onClick={() => handleSuggestionClick(user.username)}
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
+                                {user.avatar ? (
+                                  <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-sm font-semibold text-white">
+                                    {user.username.charAt(0).toUpperCase()}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700 truncate font-medium">{user.username}</p>
+                                {user.name && <p className="text-xs text-gray-500 truncate">{user.name}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Posts */}
+                      {autocompleteSuggestions.posts.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                            Posts
+                          </p>
+                          {autocompleteSuggestions.posts.map((post) => (
+                            <div
+                              key={`mobile-post-${post._id}`}
+                              onClick={() => handleSuggestionClick(post.content.substring(0, 50))}
+                              className="flex items-start px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <FileText size={18} className="text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700 line-clamp-2">{truncateText(post.content, 80)}</p>
+                                <p className="text-xs text-gray-500 mt-1">by @{post.authorId.username}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Reels */}
+                      {autocompleteSuggestions.reels.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                            Reels
+                          </p>
+                          {autocompleteSuggestions.reels.map((reel) => (
+                            <div
+                              key={`mobile-reel-${reel._id}`}
+                              onClick={() => handleSuggestionClick(reel.title)}
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <Video size={18} className="text-gray-400 mr-3 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700 truncate font-medium">{reel.title}</p>
+                                <p className="text-xs text-gray-500 truncate">by @{reel.authorId.username}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Hashtags */}
+                      {autocompleteSuggestions.hashtags.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                            Hashtags
+                          </p>
+                          {autocompleteSuggestions.hashtags.map((hashtag, index) => (
+                            <div
+                              key={`mobile-hashtag-${index}`}
+                              onClick={() => handleSuggestionClick(hashtag)}
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <span className="text-blue-500 mr-3 font-semibold text-lg">#</span>
+                              <span className="text-gray-700 truncate">{hashtag.slice(1)}</span>
+                            </div>
+                          ))}
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {/* Loading state */}
+                  {isLoadingSuggestions && (
+                    <div className="px-3 py-4 text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                    </div>
+                  )}
                   
                   {/* Current search option */}
-                  {searchQuery && !frequentSearches.some(q => q.toLowerCase() === searchQuery.toLowerCase()) && (
+                  {searchQuery && (
                     <div
                       onClick={() => handleFrequentSearchClick(searchQuery)}
                       className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
@@ -371,7 +737,7 @@ const Header: React.FC = () => {
             )}
 
             {/* Empty State */}
-            {frequentSearches.length === 0 && !searchQuery && (
+            {!shouldShowFrequentSearches && !shouldShowFilteredFrequentSearches && !shouldShowAutocomplete && !isLoadingSuggestions && (
               <div className="p-8 text-center">
                 <Search size={32} className="text-gray-300 mx-auto mb-4" />
                 <p className="text-gray-500">Start typing to search</p>

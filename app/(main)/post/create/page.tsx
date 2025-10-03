@@ -20,7 +20,7 @@ import {
 import React, { useRef, useState } from "react";
 import { useDispatch} from "react-redux";
 import { addPost } from "@/libs/redux/postSlice";
-import { GlobeAltIcon, LockClosedIcon, UserGroupIcon } from "@heroicons/react/24/solid";
+import { GlobeAltIcon, LockClosedIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
 interface FilePreview {
@@ -29,16 +29,15 @@ interface FilePreview {
   type: "image" | "video" | "document" | "audio";
 }
 
-
-
 const CreatePostPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [newFilePreviews, setNewFilePreviews] = useState<FilePreview[]>([]);
-  const [visibility, setVisibility] = useState<'public' | 'followers' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('public');
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const router = useRouter()
+
   const dispatch: AppDispatch = useDispatch();
+  const router = useRouter()
 
   const handleSuccess = (data: any) => {
     console.log("✅ Post creation successful:", data);
@@ -49,7 +48,7 @@ const CreatePostPage: React.FC = () => {
       fileInputRef.current.value = "";
     }
     dispatch(addPost(data.post));
-    router.push('/');
+    router.back()
   };
 
   const { mutate, isPending, register, handleSubmit, errors } =
@@ -266,7 +265,7 @@ const CreatePostPage: React.FC = () => {
       icon: GlobeAltIcon
     },
     {
-      value: 'followers',
+      value: 'friends',
       label: 'Followers',
       description: 'Only your followers can see this',
       icon: UserGroupIcon
@@ -308,8 +307,8 @@ const CreatePostPage: React.FC = () => {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto pb-24">
+        <div className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Content Input */}
             <div className="bg-white rounded-xl shadow-sm p-4">
@@ -319,7 +318,7 @@ const CreatePostPage: React.FC = () => {
               <textarea
                 {...register("content")}
                 placeholder="Share your thoughts..."
-                className="w-full p-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200 text-base"
+                className="w-full p-4 border overflow-hidden border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200 text-base"
                 rows={4}
               />
               {errors.content && (
@@ -460,23 +459,10 @@ const CreatePostPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Hidden File Input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*,.pdf,.doc,.docx"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </form>
-        </div>
-      </div>
-
-      {/* Fixed Bottom Button */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-2xl">
+      {/* Fixed Bottom Button - Outside Form */}
+      <div className="sticky min-w-full bottom-0 bg-white border-t border-gray-200 p-4 shadow-2xl z-10">
         <button
-          type="submit"
+        type="submit"
           onClick={() => handleSubmit(onSubmit)}
           disabled={isPending}
           className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-semibold text-lg shadow-xl active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:scale-100 flex items-center justify-center space-x-2"
@@ -494,6 +480,20 @@ const CreatePostPage: React.FC = () => {
           )}
         </button>
       </div>
+
+            {/* Hidden File Input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </form>
+        </div>
+      </div>
+
     </div>
   );
 };

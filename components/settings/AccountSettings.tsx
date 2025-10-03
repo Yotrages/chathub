@@ -1,5 +1,5 @@
 import React from 'react';
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Globe, Trash2 } from 'lucide-react';
 import { UserSettings } from '@/types';
 import { api } from '@/libs/axios/config';
 
@@ -19,15 +19,20 @@ export default function AccountSettings({
   requestDataDownload,
 }: AccountSettingsProps) {
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Account Status</h3>
+    <div className="space-y-6">
+      <div className="bg-gradient-to-br from-white to-blue-50 p-6 rounded-2xl border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
+            <Globe className="h-4 w-4 text-white" />
+          </div>
+          Account Status
+        </h3>
         {settings.account.isDeactivated ? (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-            <p className="text-sm text-yellow-800">
+          <div className="p-5 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl shadow-inner">
+            <p className="text-sm text-yellow-800 font-medium">
               Your account is currently deactivated.
               {settings.account.deactivatedAt && (
-                <span className="block mt-1">
+                <span className="block mt-2 text-xs opacity-80">
                   Deactivated on: {new Date(settings.account.deactivatedAt).toLocaleDateString()}
                 </span>
               )}
@@ -41,25 +46,28 @@ export default function AccountSettings({
                   console.error('Error reactivating account:', error);
                 }
               }}
-              className="mt-3 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+              className="mt-4 px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               Reactivate Account
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
-            <p className="text-sm text-gray-600">Your account is active</p>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl border border-green-200">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <p className="text-sm text-green-800 font-medium">Your account is active and healthy</p>
+            </div>
             <button
               onClick={deactivateAccount}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm"
+              className="px-6 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl hover:from-yellow-600 hover:to-orange-600 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               Deactivate Account
             </button>
           </div>
         )}
         {settings.account.deleteScheduledAt && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">
+          <div className="mt-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl shadow-inner">
+            <p className="text-sm text-red-800 font-medium">
               Account deletion scheduled for: {new Date(settings.account.deleteScheduledAt).toLocaleDateString()}
             </p>
             <button
@@ -71,39 +79,51 @@ export default function AccountSettings({
                   console.error('Error canceling deletion:', error);
                 }
               }}
-              className="mt-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm"
+              className="mt-3 px-6 py-2 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
             >
               Cancel Deletion
             </button>
           </div>
         )}
       </div>
-      <div className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Data Management</h3>
+
+      <div className="bg-gradient-to-br from-white to-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-lg hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
+            <Download className="h-4 w-4 text-white" />
+          </div>
+          Data Management
+        </h3>
         <div className="space-y-4">
           <button
             onClick={requestDataDownload}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <Download className="h-4 w-4 mr-2" />
             Request Data Download
           </button>
-          <div className="text-sm text-gray-600">
-            <p>Download a copy of your data including posts, messages, and profile information.</p>
+          <div className="text-sm text-gray-700 p-4 bg-white/70 rounded-xl border border-blue-100">
+            <p>Download a comprehensive archive of your data including posts, messages, and profile information.</p>
           </div>
         </div>
       </div>
-      <div className="bg-white p-4 sm:p-6 rounded-lg border border-red-200">
-        <h3 className="text-lg font-medium text-red-600 mb-4">Danger Zone</h3>
+
+      <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-2xl border border-red-200 shadow-lg hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-semibold text-red-600 mb-6 flex items-center">
+          <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-600 rounded-lg flex items-center justify-center mr-3">
+            <Trash2 className="h-4 w-4 text-white" />
+          </div>
+          Danger Zone
+        </h3>
         <div className="space-y-4">
           <button
             onClick={scheduleDelete}
-            className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+            className="flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Delete Account
           </button>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-700 p-4 bg-white/70 rounded-xl border border-red-200">
             <p>Permanently delete your account and all associated data. This action cannot be undone after 30 days.</p>
           </div>
         </div>

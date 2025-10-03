@@ -387,7 +387,6 @@ export const useCallManagement = (currentChat: any) => {
     }
   }, [remoteStream]);
 
-  // Switch call type (voice to video or vice versa)
   const switchCallType = useCallback(async () => {
     if (!peerConnectionRef.current || callState !== 'connected' || !otherUserId) return;
   

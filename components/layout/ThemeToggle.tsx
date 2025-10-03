@@ -35,7 +35,6 @@ const ThemeToggle = () => {
   );
 };
 
-// Alternative dropdown version
 export const ThemeToggleDropdown = () => {
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);

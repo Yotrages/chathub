@@ -20,7 +20,7 @@ const NotificationsPage: React.FC = () => {
 
   useEffect(() => {
     fetchNotifications(1);
-  }, []);
+  }, [navigator.onLine]);
 
   const handleLoadMore = () => {
     const nextPage = Math.floor(notifications.length / 20) + 1;

@@ -1,12 +1,22 @@
-import {
-  fileUploadService,
-  useUpdatePost,
-} from "@/hooks/usePosts";
+import { fileUploadService, useUpdatePost } from "@/hooks/usePosts";
 import { RootState } from "@/libs/redux/store";
-import { FileText, Image, Paperclip, Play, Video, X, Edit3, Save, Camera, Music } from "lucide-react";
+import {
+  FileText,
+  Image,
+  Paperclip,
+  Play,
+  Video,
+  X,
+  Edit3,
+  Save,
+  Camera,
+  Music,
+  EyeIcon,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { errorNotification } from "@/libs/feedback/notification";
+import { GlobeAltIcon, LockClosedIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 
 interface EditModalProps {
   postId: string;
@@ -16,21 +26,25 @@ interface EditModalProps {
 interface FilePreview {
   file: File;
   preview?: string;
-  type: 'image' | 'video' | 'document' | 'audio';
+  type: "image" | "video" | "document" | "audio";
 }
 
 interface ExistingFile {
   url: string;
-  type: 'image' | 'video' | 'document' | 'audio';
+  type: "image" | "video" | "document" | "audio";
   name: string;
 }
 
 const EditModal = ({ postId, onClose }: EditModalProps) => {
-  const { mutate, register, errors, handleSubmit, isPending } = useUpdatePost(postId);
+  const { mutate, register, errors, handleSubmit, isPending } =
+    useUpdatePost(postId);
   const { posts } = useSelector((state: RootState) => state.post);
   const post = posts.find((post) => post._id === postId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [visibility, setVisibility] = useState<
+    "public" | "friends" | "private"
+  >("public");
   const [newFilePreviews, setNewFilePreviews] = useState<FilePreview[]>([]);
   const [existingFiles, setExistingFiles] = useState<ExistingFile[]>([]);
   const [removedFiles, setRemovedFiles] = useState<string[]>([]);
@@ -38,26 +52,26 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
   useEffect(() => {
     if (post?.images) {
       const processedFiles: ExistingFile[] = post.images.map((url: string) => {
-        const fileName = url.split('/').pop() || 'unknown';
-        const extension = fileName.split('.').pop()?.toLowerCase();
-        
-        let type: 'image' | 'video' | 'document' = 'image';
-        if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension || '')) {
-          type = 'video';
-        } else if (['pdf', 'doc', 'docx', 'txt'].includes(extension || '')) {
-          type = 'document';
+        const fileName = url.split("/").pop() || "unknown";
+        const extension = fileName.split(".").pop()?.toLowerCase();
+
+        let type: "image" | "video" | "document" = "image";
+        if (["mp4", "webm", "ogg", "mov", "avi"].includes(extension || "")) {
+          type = "video";
+        } else if (["pdf", "doc", "docx", "txt"].includes(extension || "")) {
+          type = "document";
         }
-        
+
         return { url, type, name: fileName };
       });
-      
+
       setExistingFiles(processedFiles);
     }
   }, [post]);
 
   const removeExistingFile = (url: string) => {
-    setRemovedFiles(prev => [...prev, url]);
-    setExistingFiles(prev => prev.filter(file => file.url !== url));
+    setRemovedFiles((prev) => [...prev, url]);
+    setExistingFiles((prev) => prev.filter((file) => file.url !== url));
   };
 
   const removeNewFile = (index: number) => {
@@ -68,8 +82,8 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
     ) {
       URL.revokeObjectURL(newFilePreviews[index].preview!);
     }
-    setNewFiles(prev => prev.filter((_, i) => i !== index));
-    setNewFilePreviews(prev => prev.filter((_, i) => i !== index));
+    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewFilePreviews((prev) => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -96,14 +110,19 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
 
         try {
           if (fileType === "image") {
-            filePreview.preview = await fileUploadService.createImagePreview(file);
+            filePreview.preview = await fileUploadService.createImagePreview(
+              file
+            );
             console.log("🖼️ Created image preview for:", file.name);
           } else if (fileType === "video") {
-            filePreview.preview = await fileUploadService.createVideoPreview(file);
+            filePreview.preview = await fileUploadService.createVideoPreview(
+              file
+            );
             console.log("🎥 Created video thumbnail for:", file.name);
-          }
-           else if (fileType === "audio") {
-            filePreview.preview = await fileUploadService.createAudioPreview(file);
+          } else if (fileType === "audio") {
+            filePreview.preview = await fileUploadService.createAudioPreview(
+              file
+            );
             console.log("🎥 Created video thumbnail for:", file.name);
           }
         } catch (error) {
@@ -117,43 +136,46 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
       }
     }
 
-    setNewFiles(prev => {
+    setNewFiles((prev) => {
       const updatedFiles = [...prev, ...validFiles];
-      console.log("📦 Updated files array:", updatedFiles.map(f => f.name));
+      console.log(
+        "📦 Updated files array:",
+        updatedFiles.map((f) => f.name)
+      );
       return updatedFiles;
     });
-    setNewFilePreviews(prev => [...prev, ...newPreviews]);
+    setNewFilePreviews((prev) => [...prev, ...newPreviews]);
   };
 
   const onSubmit = (data: { content?: string }) => {
-    console.log('📝 Form submission started');
-    console.log('📄 Form data:', data);
-    
+    console.log("📝 Form submission started");
+    console.log("📄 Form data:", data);
+
     const hasContentChanged = data.content !== post?.content;
     const hasFilesChanged = newFiles.length > 0 || removedFiles.length > 0;
-    
+
     if (!hasContentChanged && !hasFilesChanged) {
-      errorNotification('You must change something to update');
+      errorNotification("You must change something to update");
       return;
     }
-    
+
     // Keep existing files that weren't removed
-    const keepFiles = existingFiles.map(file => file.url);
-    
+    const keepFiles = existingFiles.map((file) => file.url);
+
     const updatedData = {
       content: data.content,
       images: newFiles,
       existingImages: keepFiles,
-      removedImages: removedFiles
+      removedImages: removedFiles,
     };
-    
-    console.log('🚀 Sending post data:', {
+
+    console.log("🚀 Sending post data:", {
       content: updatedData.content,
       newFileCount: updatedData.images?.length || 0,
       existingFileCount: updatedData.existingImages?.length || 0,
-      removedFileCount: updatedData.removedImages?.length || 0
+      removedFileCount: updatedData.removedImages?.length || 0,
     });
-    
+
     mutate(updatedData);
   };
 
@@ -222,7 +244,9 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
 
           {/* File info */}
           <div className="p-2 bg-white bg-opacity-90 backdrop-blur-sm">
-            <p className="text-xs font-medium text-gray-800 truncate">{file.name}</p>
+            <p className="text-xs font-medium text-gray-800 truncate">
+              {file.name}
+            </p>
             <p className="text-xs text-gray-500 flex items-center">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
               Existing
@@ -308,7 +332,9 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
 
           {/* File info */}
           <div className="p-2 bg-white bg-opacity-90 backdrop-blur-sm">
-            <p className="text-xs font-medium text-gray-800 truncate">{file.name}</p>
+            <p className="text-xs font-medium text-gray-800 truncate">
+              {file.name}
+            </p>
             <div className="flex items-center justify-between">
               <p className="text-xs text-gray-500 flex items-center">
                 <span className="w-2 h-2 bg-blue-400 rounded-full mr-1.5"></span>
@@ -323,6 +349,27 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
       </div>
     );
   };
+
+  const visibilityOptions = [
+      {
+        value: 'public',
+        label: 'Public',
+        description: 'Anyone can see this post',
+        icon: GlobeAltIcon
+      },
+      {
+        value: 'friends',
+        label: 'Followers',
+        description: 'Only your followers can see this',
+        icon: UserGroupIcon
+      },
+      {
+        value: 'private',
+        label: 'Only me',
+        description: 'Only you can see this post',
+        icon: LockClosedIcon
+      }
+    ];
 
   const totalFiles = existingFiles.length + newFiles.length;
 
@@ -363,7 +410,9 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
                 rows={4}
               />
               {errors.content && (
-                <p className="text-red-500 text-sm mt-2">{errors.content.message}</p>
+                <p className="text-red-500 text-sm mt-2">
+                  {errors.content.message}
+                </p>
               )}
             </div>
 
@@ -371,7 +420,9 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
             {totalFiles > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">Media Files</h3>
+                  <h3 className="text-sm font-medium text-gray-700">
+                    Media Files
+                  </h3>
                   <div className="flex items-center space-x-4 text-xs text-gray-500">
                     <span className="flex items-center">
                       <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
@@ -385,14 +436,19 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {existingFiles.map((file, index) => renderExistingFilePreview(file, index))}
-                  {newFilePreviews.map((filePreview, index) => renderNewFilePreview(filePreview, index))}
+                  {existingFiles.map((file, index) =>
+                    renderExistingFilePreview(file, index)
+                  )}
+                  {newFilePreviews.map((filePreview, index) =>
+                    renderNewFilePreview(filePreview, index)
+                  )}
                 </div>
 
                 {/* File Summary */}
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-sm text-gray-600">
-                    <span className="font-medium">{totalFiles}</span> file{totalFiles > 1 ? 's' : ''} total
+                    <span className="font-medium">{totalFiles}</span> file
+                    {totalFiles > 1 ? "s" : ""} total
                     {removedFiles.length > 0 && (
                       <span className="text-red-600 ml-2">
                         • {removedFiles.length} will be removed
@@ -407,7 +463,9 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 hover:border-blue-300 transition-colors">
               <div className="text-center">
                 <Camera size={32} className="text-gray-400 mx-auto mb-3" />
-                <p className="text-sm text-gray-600 mb-4">Add more files to your post</p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Add more files to your post
+                </p>
                 <div className="flex flex-wrap justify-center gap-4">
                   <button
                     type="button"
@@ -436,6 +494,55 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
                 </div>
               </div>
             </div>
+
+             <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <EyeIcon className="h-5 w-5 text-blue-600" />
+                            <h3 className="text-base font-semibold text-gray-800">Who can see this?</h3>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            {visibilityOptions.map((option) => {
+                              const IconComponent = option.icon;
+                              return (
+                                <label 
+                                  key={option.value}
+                                  className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                                    visibility === option.value 
+                                      ? 'border-blue-500 bg-blue-50' 
+                                      : 'border-gray-200'
+                                  }`}
+                                >
+                                  <input
+                                    type="radio"
+                                    name="visibility"
+                                    value={option.value}
+                                    checked={visibility === option.value}
+                                    onChange={(e) => setVisibility(e.target.value as typeof visibility)}
+                                    className="sr-only"
+                                  />
+                                  <div className={`p-2 rounded-lg ${
+                                    visibility === option.value 
+                                      ? 'bg-blue-500 text-white' 
+                                      : 'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    <IconComponent className="h-4 w-4" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className={`font-medium ${
+                                      visibility === option.value ? 'text-blue-700' : 'text-gray-700'
+                                    }`}>
+                                      {option.label}
+                                    </div>
+                                    <div className="text-sm text-gray-500 leading-tight">
+                                      {option.description}
+                                    </div>
+                                  </div>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100">

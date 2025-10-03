@@ -74,7 +74,6 @@ export const ChatHeader = ({
       );
     }
 
-    // For direct messages, show the other user's online status
     return isOtherUserOnline ? (
       <span className="flex items-center text-xs sm:text-sm">
         <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1 flex-shrink-0"></span>

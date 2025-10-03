@@ -85,7 +85,6 @@ const PostComments: React.FC<PostCommentsProps> = ({
       .slice(0, 8);
   };
 
-  // Process new comment for memory thread creation
   const processNewComment = () => {
     if (user && postAuthorId && commentContent.trim()) {
       const participants = [user._id, postAuthorId].filter(id => id);
@@ -100,7 +99,6 @@ const PostComments: React.FC<PostCommentsProps> = ({
     }
   };
 
-  // Trigger memory search when comment content changes
   useEffect(() => {
     if (commentContent.length > 20 && user && postAuthorId && user._id !== postAuthorId) {
       const keywords = extractKeywords(commentContent);

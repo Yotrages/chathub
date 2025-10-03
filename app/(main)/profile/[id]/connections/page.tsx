@@ -43,7 +43,7 @@ const ConnectionsPage = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl min-h-screen mx-auto px-4 py-8">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <div className="border-b border-gray-100">
           <div className="flex">

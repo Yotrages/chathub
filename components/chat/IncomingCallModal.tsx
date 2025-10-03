@@ -28,11 +28,9 @@ export const IncomingCallModal = ({
 
     setIsRinging(true);
     
-    // Start countdown timer
     const timer = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          // Auto-decline when time runs out
           onDecline();
           return 30;
         }
@@ -47,7 +45,6 @@ export const IncomingCallModal = ({
     };
   }, [incomingCall, callState, onDecline]);
 
-  // Don't render if no incoming call or not in ringing state
   if (!incomingCall || callState !== 'ringing') return null;
 
   const handleAccept = () => {

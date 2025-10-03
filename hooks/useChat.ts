@@ -625,7 +625,7 @@ export const useChat = () => {
         }
         dispatch(removeMessage(messageId));
       } catch (error: any) {
-        console.error("❌ Failed to delete message via HTTP:", error);
+        console.error("Failed to delete message via HTTP:", error);
         errorMessageHandler(error);
       }
     }
@@ -640,7 +640,7 @@ export const useChat = () => {
       socket.emit("add_reaction", { messageId, emoji, name });
     } else {
       console.log(
-        "🌐 Socket not ready, implementing HTTP fallback for add reaction"
+        "Socket not ready, implementing HTTP fallback for add reaction"
       );
       try {
         const response = await api.post(
@@ -668,14 +668,14 @@ export const useChat = () => {
           })
         );
       } catch (error: any) {
-        console.error("❌ Failed to add reaction via HTTP:", error);
+        console.error("Failed to add reaction via HTTP:", error);
         errorMessageHandler(error);
       }
     }
   };
   const removeReaction = async (messageId: string) => {
     if (socket && isSocketReady()) {
-      console.log("🔌 Removing reaction via socket...");
+      console.log("Removing reaction via socket...");
       socket.emit("remove_reaction", { messageId });
     } else {
       console.log(

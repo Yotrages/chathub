@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Smartphone, Bell } from 'lucide-react';
 import { UserSettings } from '@/types';
+import { ToggleSwitch } from './ToggleSwitch';
 
 interface NotificationSettingsProps {
   settings: UserSettings;
@@ -8,37 +9,38 @@ interface NotificationSettingsProps {
 }
 
 export default function NotificationSettings({ settings, updateSettings }: NotificationSettingsProps) {
+  const notificationTypes = [
+    { key: 'email', label: 'Email', icon: Mail, gradient: 'from-blue-500 to-indigo-600' },
+    { key: 'push', label: 'Push', icon: Smartphone, gradient: 'from-green-500 to-emerald-600' },
+    { key: 'inApp', label: 'In-App', icon: Bell, gradient: 'from-purple-500 to-violet-600' },
+  ] as const;
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {['email', 'push', 'inApp'].map((type) => (
-        <div key={type} className="bg-white p-4 sm:p-6 rounded-lg border border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-            {type === 'email' && <Mail className="h-5 w-5 mr-2" />}
-            {type === 'push' && <Smartphone className="h-5 w-5 mr-2" />}
-            {type === 'inApp' && <Bell className="h-5 w-5 mr-2" />}
-            {type === 'email' ? 'Email' : type === 'push' ? 'Push' : 'In-App'} Notifications
+    <div className="space-y-6">
+      {notificationTypes.map(({ key, label, icon: Icon, gradient }) => (
+        <div key={key} className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
+          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <div className={`w-8 h-8 bg-gradient-to-r ${gradient} rounded-lg flex items-center justify-center mr-3`}>
+              <Icon className="h-4 w-4 text-white" />
+            </div>
+            {label} Notifications
           </h3>
           <div className="space-y-4">
-            {Object.entries(settings.notifications[type as keyof typeof settings.notifications]).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between">
-                <span className="text-sm text-gray-700">
-                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
+            {Object.entries(settings.notifications[key] as Record<string, boolean>).map(([settingKey, value]) => (
+              <div key={settingKey} className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-gray-200 hover:shadow-md transition-all duration-200">
+                <span className="text-sm font-medium text-gray-800">
+                  {settingKey.replace(/([A-Z])/g, ' $1').replace(/^./, (str) => str.toUpperCase())}
                 </span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={value as boolean}
-                    onChange={(e) => updateSettings('notifications', {
-                      ...settings.notifications,
-                      [type]: {
-                        ...settings.notifications[type as keyof typeof settings.notifications],
-                        [key]: e.target.checked,
-                      },
-                    })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                </label>
+                <ToggleSwitch
+                  checked={value as boolean}
+                  onChange={(e: any) => updateSettings('notifications', {
+                    ...settings.notifications,
+                    [key]: {
+                      ...settings.notifications[key],
+                      [settingKey]: e.target.checked,
+                    },
+                  })}
+                />
               </div>
             ))}
           </div>

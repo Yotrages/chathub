@@ -46,7 +46,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     const handleOnline = () => setIsUserOnline(true);
     const handleOffline = () => {
       setIsUserOnline(false);
-      toast.error('Network error - You are offline');
     };
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -67,7 +66,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       
       setIsMobile(isMobileDevice || isSmallScreen || isTouchDevice);
-      setIsVerySmallScreen(width <= 300);
+      setIsVerySmallScreen(width <= 250);
     };
 
     const checkMicrophonePermission = async () => {
@@ -103,10 +102,21 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 120; 
-      textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+      const textarea = textareaRef.current;
+      
+      if (message.trim() === '') {
+        textarea.style.height = 'auto';
+        const computedStyle = window.getComputedStyle(textarea);
+        const singleLineHeight = parseFloat(computedStyle.lineHeight) || 20;
+        const paddingTop = parseFloat(computedStyle.paddingTop) || 0;
+        const paddingBottom = parseFloat(computedStyle.paddingBottom) || 0;
+        textarea.style.height = (singleLineHeight + paddingTop + paddingBottom) + 'px';
+      } else {
+        textarea.style.height = 'auto';
+        const scrollHeight = textarea.scrollHeight;
+        const maxHeight = 120;
+        textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+      }
     }
   }, [message]);
 
@@ -204,9 +214,6 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         setMessage('');
         stopTyping(currentChat._id);
         if (replyingTo) dispatch(clearReplyingTo());
-        if (textareaRef.current) {
-          textareaRef.current.style.height = 'auto';
-        }
       } catch (error) {
         console.error('Failed to send message:', error);
         toast.error('Failed to send message');
@@ -495,18 +502,15 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
     return null;
   };
 
-  const showFileButtons = !isInputFocused || (!isVerySmallScreen && window.innerWidth > 300);
-  const showVoiceButton = !isVerySmallScreen && (!isInputFocused || window.innerWidth > 300);
+  const shouldHideUploaders = isMobile && isInputFocused && message.trim().length > 0;
+  const shouldShowRecorders = !isVerySmallScreen || !shouldHideUploaders;
 
   return (
     <div 
       ref={containerRef}
       className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 w-full"
-      style={{ 
-        width: '100%'
-      }}
     >
-      <div className="px-2 py-2 max-w-full">
+      <div className="px-0.5 xs:px-2 py-2 max-w-full">
         <PermissionStatus />
         
         {/* Recording Controls */}
@@ -585,9 +589,9 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         )}
         
         {/* Input Form */}
-        <form onSubmit={handleSendMessage} className="flex items-center justify-center space-x-1 w-full">
-          {/* File Upload Buttons - Hidden when input is focused on very small screens */}
-          {showFileButtons && (
+        <form onSubmit={handleSendMessage} className="flex items-center space-x-1 w-full">
+          {/* File Upload Buttons - Hidden when typing on mobile */}
+          {!shouldHideUploaders && (
             <>
               <button
                 type="button"
@@ -609,8 +613,51 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             </>
           )}
           
-          {/* Voice Recording Button - Hidden when input is focused on very small screens */}
-          {showVoiceButton && (
+          {/* Message Input Container */}
+          <div className="flex-1 relative min-w-0">
+            <div className="relative">
+              <textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  handleTyping();
+                }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
+                placeholder={`Message ${currentChat?.name || 'chat'}...`}
+                className="w-full placeholder:truncate px-3 py-2 pr-10 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-hidden"
+                style={{
+                  fontSize: isMobile ? '16px' : '14px',
+                  lineHeight: '1.4',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none'
+                }}
+                disabled={isRecording || !isUserOnline}
+                rows={1}
+              />
+              <button
+                type="button"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
+                title="Add emoji"
+              >
+                <Smile size={isVerySmallScreen ? 14 : 16} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Voice Recording Button */}
+          {shouldShowRecorders && (
             <button
               type="button"
               onClick={isMobile ? undefined : isRecording ? stopRecording : startRecording}
@@ -635,56 +682,11 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             </button>
           )}
           
-          {/* Message Input Container */}
-          <div className="flex-1 relative min-w-0">
-            <textarea
-              ref={textareaRef}
-              value={message}
-              onChange={(e) => {
-                setMessage(e.target.value);
-                handleTyping();
-              }}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
-              placeholder={`Message ${currentChat?.name || 'chat'}...`}
-              className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-y-auto"
-              style={{
-                fontSize: isMobile ? '16px' : '14px',
-                minHeight: isMobile ? '44px' : '40px',
-                maxHeight: '120px',
-                lineHeight: '1.4',
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word',
-                whiteSpace: 'pre-wrap'
-              }}
-              disabled={isRecording || !isUserOnline}
-              rows={1}
-            />
-            <button
-              type="button"
-              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
-              title="Add emoji"
-            >
-              <Smile size={isVerySmallScreen ? 14 : 16} />
-            </button>
-          </div>
-          
           {/* Send Button */}
           <button
             type="submit"
             disabled={!message.trim() || isRecording || !isUserOnline}
-            className="p-1 bg-blue-500 flex items-center justify-center text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex-shrink-0"
-            style={{ 
-              minHeight: isMobile ? '44px' : '40px', 
-              minWidth: isMobile ? '44px' : '40px' 
-            }}
+            className="p-2 bg-blue-500 flex items-center justify-center text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex-shrink-0"
             title="Send message"
           >
             <Send size={isVerySmallScreen ? 16 : 18} />
@@ -692,11 +694,11 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         </form>
         
         {/* Mobile Instructions */}
-        {isMobile && microphonePermission === 'granted' && !isRecording && showVoiceButton && (
+        {/* {isMobile && microphonePermission === 'granted' && !isRecording && shouldShowRecorders && (
           <div className="mt-1 text-center">
             <p className="text-xs text-gray-500">Tap and hold mic to record</p>
           </div>
-        )}
+        )} */}
         
         {/* Hidden File Input */}
         <input

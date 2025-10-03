@@ -28,14 +28,14 @@ export interface AuthState {
   background: string;
   user: User | null;
   isAuthenticated: boolean;
-  pagination: PaginationInfo | null
+  pagination: PaginationInfo | null;
   isLoading: boolean;
-  suggestedUsers: User[] | null
+  suggestedUsers: User[] | null;
 }
 
 export interface IComment {
   _id: string;
-  dynamicId: string; 
+  dynamicId: string;
   parentCommentId?: string | null;
   authorId: {
     _id: string;
@@ -69,7 +69,7 @@ export interface ReactedUser {
 
 export interface Post {
   _id: string;
-   authorId: {
+  authorId: {
     _id: string;
     username: string;
     avatar: string | null;
@@ -78,7 +78,7 @@ export interface Post {
   images?: string[];
   reactions: ReactedUser[];
   isDeleted?: boolean;
-  commentsCount: number
+  commentsCount: number;
   createdAt: string | Date;
   updatedAt?: string | Date;
   shareCount: number;
@@ -106,7 +106,7 @@ export interface Message {
       avatar?: string;
     };
     readAt: string;
-  }>
+  }>;
   reactions: Array<{
     userId: { _id: string; username: string; avatar: string };
     emoji: {
@@ -267,14 +267,20 @@ export interface Story {
     emoji: string;
   }>;
   isLiked: boolean;
-  viewers: Array<{ _id: string; username: string; avatar?: string }>;
+  viewers: Array<{
+    viewer: {
+      _id: string;
+      username: string;
+      avatar?: string;
+    };
+    viewedAt: string;
+  }>;
   authorId: {
     _id: string;
     username: string;
     name?: string;
     avatar?: string;
   };
-  viewedAt?: Date;
   textPosition?: { x: number; y: number };
   background?: string;
   createdAt: string;
@@ -346,16 +352,15 @@ export interface MemoryContextData {
   content: string;
   authorUsername: string;
   createdAt: string;
-  type: 'post' | 'comment' | 'reel';
+  type: "post" | "comment" | "reel";
 }
-
 
 export interface UserSettings {
   _id: string;
   userId: string;
   privacy: {
-    profileVisibility: 'public' | 'friends' | 'private';
-    allowMessagesFrom: 'everyone' | 'friends' | 'none';
+    profileVisibility: "public" | "friends" | "private";
+    allowMessagesFrom: "everyone" | "friends" | "none";
     showOnlineStatus: boolean;
     allowTagging: boolean;
     showEmail: boolean;
@@ -389,9 +394,9 @@ export interface UserSettings {
     };
   };
   appearance: {
-    theme: 'light' | 'dark' | 'auto';
+    theme: "light" | "dark" | "auto";
     language: string;
-    fontSize: 'small' | 'medium' | 'large';
+    fontSize: "small" | "medium" | "large";
     backgroundImage: string;
     accentColor: string;
   };
@@ -419,7 +424,7 @@ export interface UserSettings {
     deleteScheduledAt?: string;
     dataDownloadRequests: {
       requestedAt: string;
-      status: 'pending' | 'processing' | 'completed' | 'failed';
+      status: "pending" | "processing" | "completed" | "failed";
       downloadUrl?: string;
       expiresAt?: string;
     }[];
@@ -447,5 +452,17 @@ export interface IncomingCall {
   isVideo: boolean;
 }
 
-export type CallState = 'idle' | 'calling' | 'ringing' | 'connected' | 'ended' | 'failed';
-export type ConnectionState = 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed';
+export type CallState =
+  | "idle"
+  | "calling"
+  | "ringing"
+  | "connected"
+  | "ended"
+  | "failed";
+export type ConnectionState =
+  | "new"
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "failed"
+  | "closed";
