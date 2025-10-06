@@ -542,8 +542,8 @@ export const MessageContent = ({
             </span>
           )}
         </span>
-        {isOwn && (
-          <div className={`flex items-center space-x-1 ${allRead ? 'text-blue-200' : 'text-gray-300'}`}>
+        {isOwn && message.readBy.length >= 1 && (
+          <div className={`flex items-center space-x-1 ${allRead ? 'text-green-200' : 'text-gray-300'}`}>
             <span>✓</span>
             <span className="-ml-3">✓</span>
           </div>

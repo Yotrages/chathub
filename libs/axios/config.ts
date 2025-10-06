@@ -1,5 +1,7 @@
 import axios from "axios";
 import { getCookie } from "cookies-next";
+import { store } from "../redux/store";
+import { logout } from "../redux/authSlice";
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -44,6 +46,11 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401) {
+      store.dispatch(logout());
+      
+      window.location.href = '/login';
+    }
     // Global error handling
     // handleLogout(error);
     return Promise.reject(error);

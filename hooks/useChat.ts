@@ -214,7 +214,7 @@ export const useChat = () => {
   });
   useEffect(() => {
     if (conversations) {
-      const transformedChats: Chat[] = conversations.map((conv: any) => ({
+      const transformedChats: Chat[] = conversations?.map((conv: any) => ({
         _id: conv._id,
         name:
           conv.type === "direct"

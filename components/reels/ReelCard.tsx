@@ -640,12 +640,12 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                 setShowComments(false);
               }
             }}
-            className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center
+            className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-end justify-center
                       sm:p-4"
           >
             <div
               className="w-full max-w-xs sm:max-w-sm md:max-w-lg
-                          h-[85vh] sm:h-[80vh] bg-white rounded-lg flex flex-col
+                          h-[85vh] sm:h-[80vh] overflow-y-auto bg-white rounded-lg flex flex-col
                           sm:mx-4"
             >
               <div

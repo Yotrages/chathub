@@ -64,7 +64,7 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
   }
   return (
     <div className="space-y-4">
-      {posts.map((post) => (
+      {posts?.map((post) => (
         <PostItem key={post._id} post={post} />
       ))}
       {hasMore && (

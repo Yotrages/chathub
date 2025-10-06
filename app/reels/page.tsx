@@ -13,6 +13,7 @@ import {
   selectReelsPagination,
   selectReelsLoading,
 } from "@/libs/redux/reelsSlice";
+import { useRouter } from "next/navigation";
 
 const ReelsPage: React.FC = () => {
   const reels = useSelector(selectReelsArray);
@@ -23,6 +24,7 @@ const ReelsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const reelRefs = useRef<(ReelCardRef | null)[]>([]);
+  const router = useRouter()
 
   const currentPage = pagination.reels?.currentPage || 1;
 
@@ -187,7 +189,7 @@ const ReelsPage: React.FC = () => {
       <div className="fixed top-0 left-0 w-full z-30 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex justify-between items-center">
         <h1 className="text-2xl sm:visible invisible font-bold text-white">Reels</h1>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => window.innerWidth <= 768 ? router.push(`/reels/create`) : setIsModalOpen(true)}
           className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition-colors"
         >
           <PlusCircleIcon className="h-5 w-5 mr-2" />
@@ -195,7 +197,6 @@ const ReelsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Reel Container - FIXED for full screen */}
       <div className="relative w-full h-screen overflow-hidden">
         {reels.map((reel, index) => (
           <div

@@ -1,6 +1,7 @@
 import { AuthState, User } from "@/types/index";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { PaginationInfo } from "./postSlice";
+import { deleteCookie } from "cookies-next";
 
 const initialState: AuthState = {
   user: null,
@@ -37,6 +38,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       state.isLoading = false;
+      deleteCookie('auth-token')
     },
 
     addSuggestedUsers: (state, action: PayloadAction<User[]>) => {

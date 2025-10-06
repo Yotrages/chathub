@@ -31,7 +31,7 @@ interface MessageContextMenuProps {
   setIsEditing: React.Dispatch<SetStateAction<boolean>>;
 }
 
-interface MessageInfo {
+export interface MessageInfo {
   messageId: string;
   content: string;
   sender: { _id: string; username: string; avatar?: string };
@@ -152,14 +152,11 @@ export const MessageContextMenu = forwardRef<
       try {
         if (isPinned) {
           await unpinMessage(message.conversationId, message._id);
-          toast.success("Message unpinned");
         } else {
           await pinMessage(message.conversationId, message._id);
-          toast.success("Message pinned");
         }
       } catch (error) {
         console.log(error);
-        toast.error("Failed to pin/unpin message");
       }
       onClose();
     };

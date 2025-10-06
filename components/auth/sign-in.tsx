@@ -19,7 +19,7 @@ const SignIn = () => {
       timestamp: Date.now()
     }));
     
-    window.location.href = `http://localhost:5000/api/auth/${provider}?state=${state}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/${provider}?state=${state}`;
   };
   return (
     <div className="qy:w-[500px] w-full px-7 flex flex-col items-center justify-center">
