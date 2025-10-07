@@ -200,7 +200,7 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
   };
 
   return (
-    <div className="mt-3 sm:mt-4 flex-col ml-1 sm:ml-3 w-full max-w-full overflow-hidden">
+    <div className="mt-5 sm:mt-4 flex-col ml-1 sm:ml-3 w-full max-w-full">
       {preview && <span className="block w-full">{renderFilePreview(preview, previewType, originalFile)}</span>}
       <div className="flex gap-1 sm:gap-2 items-start w-full min-w-0">
         <UserAvatar 

@@ -265,7 +265,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
             </div>
           ) : (
             <>
-              <div className="bg-gray-50 rounded-2xl px-3 py-2 hover:bg-gray-100 transition-colors">
+              <div className="bg-gray-50 select-none rounded-2xl px-3 py-2 hover:bg-gray-100 transition-colors">
                 <div className="font-semibold text-sm text-gray-900">
                   {reply.authorId.username}
                 </div>
@@ -274,7 +274,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
                 </div>
                 {reply.file && <FilePreview url={reply.file} />}
               </div>
-              <div className="flex relative items-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
+              <div className="flex select-none relative items-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
                 <span className="text-gray-500 flex-shrink-0">
                   {formatTimeAgo(reply.createdAt)}
                 </span>
@@ -386,7 +386,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
         </div>
       </div>
       {showReplyForm && (
-        <div className="relative mt-3">
+        <div className="relative mt-5">
           <ReplyForm
             type={type}
             dynamicId={dynamicId}

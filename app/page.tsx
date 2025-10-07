@@ -78,7 +78,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Full Width Header */}
       <div
         className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-sm transition-transform duration-300 ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-full"
@@ -87,9 +86,7 @@ const HomePage: React.FC = () => {
         <Header />
       </div>
 
-      {/* Main Layout Container */}
       <div className="flex">
-        {/* Left Sidebar - Adaptive positioning */}
         <div
           className={`fixed sm:flex hidden left-0 bottom-0 sm:w-[250px] z-40 overflow-y-auto bg-white border-r border-gray-200 transition-all duration-300 ${
             isHeaderVisible ? "top-[88px]" : "top-0"
@@ -98,16 +95,13 @@ const HomePage: React.FC = () => {
           <SideBar />
         </div>
 
-        {/* Main Content Area */}
         <div className="flex-1 sm:ml-[250px] max-w-full overflow-hidden lg:mr-80 min-h-screen pt-24">
           {/* Main Content */}
           <div className="md:py-6 sm:px-6 max-w-full overflow-hidden space-y-6">
-            {/* Create Post Section */}
             <div className="bg-white px-2 rounded-lg shadow-sm p-6">
               <CreatePost />
             </div>
 
-            {/* Stories/Reels Section */}
             <div className="max-w-full overflow-auto">
               <StorySection />
             </div>
@@ -116,14 +110,12 @@ const HomePage: React.FC = () => {
               <SuggestedFollow />
             </div>
 
-            {/* Posts Feed */}
-            <div className="space-y-4">
+            <div className="space-y-4 overflow-auto">
               <PostList />
             </div>
           </div>
         </div>
 
-        {/* Right Chat Sidebar - Adaptive positioning */}
         <div
           className={`fixed right-0 bottom-0 w-80 z-40 overflow-y-auto bg-white border-l border-gray-200 hidden lg:flex flex-col transition-all duration-300 ${
             isHeaderVisible ? "top-[88px]" : "top-0"

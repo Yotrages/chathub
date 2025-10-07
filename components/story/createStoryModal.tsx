@@ -210,12 +210,8 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
     setStep('type');
   };
 
-  
-  
- 
-
   return (
-    <div  tabIndex={-1} role='dialog' aria-labelledby='emoji-picker' aria-modal="true"  className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div tabIndex={-1} role='dialog' aria-labelledby='emoji-picker' aria-modal="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[95vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100">

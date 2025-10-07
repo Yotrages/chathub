@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Calendar, Hash, MessageCircle, Heart, Share, Clock, Brain, Sparkles } from 'lucide-react';
 import { MemoryThread } from '@/types';
 import { UserAvatar } from '../constant/UserAvatar';
+import { api } from '@/libs/axios/config';
 
 interface MemoryContextItem {
   _id: string;
@@ -43,13 +44,10 @@ export const MemoryDetailModal: React.FC<MemoryDetailModalProps> = ({
     
     setLoading(true);
     try {
-      const response = await fetch(`/api/memory-threads/${memory._id}/details`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await api.get(`/memory-threads/${memory._id}/details`);
       
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200) {
+        const data = response.data;
         setMemoryDetails(data.contextItems || []);
       }
     } catch (error) {

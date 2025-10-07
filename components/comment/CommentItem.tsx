@@ -217,7 +217,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 createdAt={formatTimeAgo(comment.createdAt)}
               />
               {showReplyForm && (
-                <div className="relative mt-2">
+                <div className="relative mt-3">
                   <div className="absolute left-[-0.75rem] sm:left-[-1.25rem] top-0 bottom-0 w-0.5 bg-gray-200"></div>
                   <ReplyForm
                     type={type}

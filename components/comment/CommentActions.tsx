@@ -107,7 +107,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
   }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) || {};
 
   return (
-    <div className="flex relative items-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
+    <div className="flex select-none relative items-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
       <span className="text-gray-500 flex-shrink-0">{createdAt}</span>
       
       {/* Reactions popup */}
@@ -121,7 +121,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
               <button
                 key={index}
                 onClick={() => handleReaction(item.emoji, item.name)}
-                className="flex flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex select-none flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <span className="text-base sm:text-xl hover:scale-125 transition-transform duration-200">
                   {item.emoji}
@@ -147,9 +147,9 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
           }`}
         >
           {userReactionEmoji ? (
-            <span className="capitalize truncate">{userReactionEmoji.name}</span>
+            <span className="capitalize select-none truncate">{userReactionEmoji.name}</span>
           ) : (
-            <span>Like</span>
+            <span className="select-none">Like</span>
           )}
         </button>
       </div>

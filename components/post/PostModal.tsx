@@ -1,8 +1,9 @@
 'use client';
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Post } from "@/types";
 import { X } from "lucide-react";
 import { PostItem } from "./PostItem";
+import { createPortal } from "react-dom";
 
 interface PostModalProps {
   isOpen: boolean;
@@ -16,7 +17,8 @@ export const PostModal: React.FC<PostModalProps> = ({
   post,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
-
+  const [mounted, setMounted] = useState(false);
+  
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
@@ -43,16 +45,16 @@ export const PostModal: React.FC<PostModalProps> = ({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+      setMounted(true);
+    }, []);
 
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black bg-opacity-50 p-4 h-full">
+if (!mounted || !isOpen) return null;
+  const postContent = (
+    <div tabIndex={-1} role="dialog" aria-labelledby="post-modal" aria-modal="true" className="fixed inset-0 z-[150] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 h-full">
       <div
         ref={modalRef}
         className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl"
-        role="dialog"
-        aria-labelledby="post-modal-title"
-        aria-modal="true"
       >
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -76,4 +78,5 @@ export const PostModal: React.FC<PostModalProps> = ({
       </div>
     </div>
   );
+  return createPortal(postContent, document.body)
 };

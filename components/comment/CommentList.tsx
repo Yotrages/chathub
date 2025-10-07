@@ -126,7 +126,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   ]);
 
   return (
-    <div className="bg-white xs:p-4 py-4 px-1">
+    <div className="bg-white xs:p-4 py-4 px-0.5">
       <div className="space-y-4">
         {renderedComments}
         {loadMoreButton}

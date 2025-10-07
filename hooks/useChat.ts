@@ -38,9 +38,15 @@ export const useChat = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: conversations, isLoading } = useFetch("/chat/conversations");
   const [socketInitialized, setSocketInitialized] = useState(false);
-  const connectionAttempted = useRef(false); 
+  const connectionAttempted = useRef(false);
   const isSocketReady = () => {
-    return socket && socket.connected && isConnected && user?._id;
+    return (
+      socket &&
+      socket.connected &&
+      isConnected &&
+      user?._id &&
+      socketInitialized
+    );
   };
   useEffect(() => {
     if (
@@ -52,12 +58,25 @@ export const useChat = () => {
     ) {
       console.log("Socket connected, initializing...");
       connectionAttempted.current = true;
-      const initTimer = setTimeout(() => {
-        console.log("Emitting new_connection event...");
-        socket.emit("new_connection");
+      const confirmationHandler = (data: any) => {
+        console.log("✅ Connection confirmed:", data);
         setSocketInitialized(true);
-      }, 500);
-      return () => clearTimeout(initTimer);
+        socket.off("connection_confirmed", confirmationHandler);
+      };
+      socket.on("connection_confirmed", confirmationHandler);
+      const timeout = setTimeout(() => {
+        if (!socketInitialized) {
+          console.warn(
+            "⚠️ No connection confirmation received, assuming connected"
+          );
+          setSocketInitialized(true);
+        }
+        socket.off("connection_confirmed", confirmationHandler);
+      }, 3000);
+      return () => {
+        clearTimeout(timeout);
+        socket.off("connection_confirmed", confirmationHandler);
+      };
     }
   }, [socket, isConnected, user?._id, socketInitialized]);
   useEffect(() => {
@@ -300,7 +319,7 @@ export const useChat = () => {
           messageType: message.messageType || "text",
           fileUrl: message.fileUrl,
           fileName: message.fileName,
-         readBy: message.readBy,
+          readBy: message.readBy,
           edited: message.edited,
           editedAt: message.editedAt,
           reactions: message.reactions || [],
@@ -360,8 +379,16 @@ export const useChat = () => {
     });
     socket.on(
       "messages_read",
-      (data: { conversationId: string; userId: { username: string, _id: string, avatar?: string} }) => {
-        dispatch(markMessageAsRead({conversationId: data.conversationId, userId: data.userId}));
+      (data: {
+        conversationId: string;
+        userId: { username: string; _id: string; avatar?: string };
+      }) => {
+        dispatch(
+          markMessageAsRead({
+            conversationId: data.conversationId,
+            userId: data.userId,
+          })
+        );
       }
     );
     socket.on(
@@ -619,9 +646,9 @@ export const useChat = () => {
         "🌐 Socket not ready, implementing HTTP fallback for delete message"
       );
       try {
-       const response = await api.delete(`/chat/messages/${messageId}`);
+        const response = await api.delete(`/chat/messages/${messageId}`);
         if (response.status === 200) {
-                  toast.success("Message deleted successfully");
+          toast.success("Message deleted successfully");
         }
         dispatch(removeMessage(messageId));
       } catch (error: any) {
@@ -630,7 +657,11 @@ export const useChat = () => {
       }
     }
   };
-  const addReaction = async (messageId: string, emoji: string, name: string) => {
+  const addReaction = async (
+    messageId: string,
+    emoji: string,
+    name: string
+  ) => {
     console.log("Add reaction called", {
       socketExists: !!socket,
       isConnected: socket?.connected,
@@ -732,11 +763,11 @@ export const useChat = () => {
   };
   const unpinMessage = async (conversationId: string, messageId: string) => {
     try {
-     const response = await api.post(
+      const response = await api.post(
         `/chat/conversations/${conversationId}/messages/${messageId}/unpin`
       );
       if (response.status === 200) {
-                  toast.success("Message unpinned");
+        toast.success("Message unpinned");
       }
       dispatch(removePinnedMessage({ chatId: conversationId, messageId }));
     } catch (error: any) {
@@ -764,10 +795,10 @@ export const useChat = () => {
   };
   const starMessage = async (messageId: string) => {
     try {
-     const response = await api.post(`/chat/messages/${messageId}/star`);
-     if (response.status === 200) {
-                toast.success("Message starred");
-     }
+      const response = await api.post(`/chat/messages/${messageId}/star`);
+      if (response.status === 200) {
+        toast.success("Message starred");
+      }
       const message = Object.values(messages)
         .flat()
         .find((m: Message) => m._id === messageId);
@@ -781,10 +812,10 @@ export const useChat = () => {
   };
   const unstarMessage = async (messageId: string) => {
     try {
-     const response = await api.post(`/chat/messages/${messageId}/unstar`);
+      const response = await api.post(`/chat/messages/${messageId}/unstar`);
       if (response.status === 200) {
-            toast.success("Message unstarred")
-     }
+        toast.success("Message unstarred");
+      }
       dispatch(removeStarredMessage(messageId));
     } catch (error: any) {
       console.error("❌ Failed to unstar message:", error);
@@ -814,7 +845,12 @@ export const useChat = () => {
       const res = await api.post(`/chat/conversations/${chatId}/read`);
       console.log("✅ Messages marked as read via HTTP");
       const read = res.data;
-      dispatch(markMessageAsRead({conversationId: read.conversationId, userId: read.userId}));
+      dispatch(
+        markMessageAsRead({
+          conversationId: read.conversationId,
+          userId: read.userId,
+        })
+      );
     } catch (error) {
       console.error("❌ Failed to mark messages as read via HTTP:", error);
     }

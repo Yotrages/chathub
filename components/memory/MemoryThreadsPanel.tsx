@@ -89,7 +89,6 @@ export const MemoryThreadsPanel: React.FC<MemoryThreadsPanelProps> = ({
         )}
       </div>
 
-      {/* Memory Detail Modal */}
       <MemoryDetailModal
         memory={selectedMemory}
         isOpen={isModalOpen}
