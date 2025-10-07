@@ -62,7 +62,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const userIdRef = useRef(user?._id);
   const tokenRef = useRef(token);
 
-  // Update refs when values change
   useEffect(() => {
     userIdRef.current = user?._id;
     tokenRef.current = token;

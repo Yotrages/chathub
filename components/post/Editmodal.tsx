@@ -159,7 +159,6 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
       return;
     }
 
-    // Keep existing files that weren't removed
     const keepFiles = existingFiles.map((file) => file.url);
 
     const updatedData = {

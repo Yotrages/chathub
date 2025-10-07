@@ -1,3 +1,4 @@
+'use client'
 import { fileUploadService, useUpdatePost } from "@/hooks/usePosts";
 import { RootState } from "@/libs/redux/store";
 import {
@@ -7,7 +8,6 @@ import {
   Play,
   Video,
   X,
-  Save,
   Camera,
   Music,
   Eye,
@@ -17,11 +17,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { errorNotification } from "@/libs/feedback/notification";
 import { GlobeAltIcon, LockClosedIcon, UserGroupIcon } from "@heroicons/react/24/outline";
+import { useParams, useRouter } from "next/navigation";
 
-interface EditModalProps {
-  postId: string;
-  onClose: () => void;
-}
 
 interface FilePreview {
   file: File;
@@ -35,9 +32,11 @@ interface ExistingFile {
   name: string;
 }
 
-const EditModal = ({ postId, onClose }: EditModalProps) => {
+const EditModal = () => {
+    const { id: postId } = useParams()
   const { mutate, register, errors, handleSubmit, isPending } =
-    useUpdatePost(postId);
+    useUpdatePost(postId as any);
+    const router = useRouter()
   const { posts } = useSelector((state: RootState) => state.post);
   const post = posts.find((post) => post._id === postId);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -345,7 +344,7 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
       <div className="sticky top-0 bg-white border-b border-gray-200 z-10">
         <div className="flex items-center justify-between px-3 py-3">
           <button
-            onClick={onClose}
+            onClick={() => router.back()}
             className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
             type="button"
           >

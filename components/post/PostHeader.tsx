@@ -48,7 +48,6 @@ const PostHeader: React.FC<PostHeaderProps> = ({
 
   const isOwner = user?._id === authorId._id;
 
-  // Format time ago
   const formatTimeAgo = (date: string | Date) => {
     const now = new Date();
     const past = new Date(date);
@@ -62,7 +61,6 @@ const PostHeader: React.FC<PostHeaderProps> = ({
     return `${Math.floor(seconds / 2592000)}mo`;
   };
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -105,7 +103,11 @@ const PostHeader: React.FC<PostHeaderProps> = ({
       icon: Edit3,
       label: "Edit post",
       onClick: () => {
-        setShowDropdown(false);
+        if (window.innerWidth <= 600) {
+          router.push(`/post/${postId}/edit`)
+        } else {
+          setShowDropdown(false);
+        }
         onEdit();
       },
       color: "text-blue-600",
