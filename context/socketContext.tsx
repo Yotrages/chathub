@@ -91,10 +91,17 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     const socketUrl =
       process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+       
+      console.log('🔌 Creating socket connection:', {
+      url: socketUrl,
+      hasToken: !!token,
+      tokenLength: token ? String(token).length : 0,
+      userId: user._id,
+    });
 
     const newSocket = io(socketUrl, {
       auth: {
-        token: token,
+        token: String(token), 
         userId: user._id,
       },
       transports: ["websocket", "polling"], 
