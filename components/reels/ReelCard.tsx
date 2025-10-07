@@ -645,7 +645,7 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
           >
             <div
               className="w-full max-w-xs sm:max-w-sm md:max-w-lg
-                          h-[85vh] sm:h-[80vh] overflow-y-auto bg-white rounded-lg flex flex-col
+                          h-[65vh] sm:h-[80vh] overflow-y-auto bg-white rounded-lg flex flex-col
                           sm:mx-4"
             >
               <div

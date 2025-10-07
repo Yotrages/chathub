@@ -167,7 +167,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
 
   return (
     <>
-      <div className="px-6 py-3 border-t border-gray-50">
+      <div className="px-2 xs:px-6 py-3 border-t border-gray-50">
         <div className="flex justify-between items-center text-sm text-gray-600">
           <div className="flex items-center justify-center space-x-4">
             <button className="p-0 m-0 flex items-center xs:-space-x-0.5 cursor-pointer">
@@ -201,7 +201,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           </div>
         </div>
       </div>
-      <div className="px-3 relative py-3 border-t border-gray-50">
+      <div className="px-2 xs:px-3 relative py-3 border-t border-gray-50">
         <div
           onMouseLeave={() => setShowReactions(false)}
           className="absolute -top-24"

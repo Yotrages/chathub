@@ -257,97 +257,101 @@ const PostComments: React.FC<PostCommentsProps> = ({
   const participantUsername = postAuthor?.authorId?.username;
 
   return (
-    <div className="border-t border-gray-50 bg-gray-50 w-full">
-      {preview && <span>{renderFilePreview(preview, previewType, originalFile)}</span>}
-      
-      {user && (
-        <div className="py-3 sm:py-4 md:py-6 px-2 sm:px-4 md:px-6 pb-3 sm:pb-4 w-full">
-          <form onSubmit={handleAddComment} className="flex items-end gap-2 w-full">
-            <UserAvatar
-              username={user?.username || "User"}
-              avatar={user?.avatar}
-              className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 hidden xs:flex"
-            />
-            
-            <button 
-              className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors" 
-              type="button" 
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Image size={16} className="sm:w-5 sm:h-5" />
-            </button>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*,.pdf,.doc,.docx,.txt,audio/*"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            
-            <div className="flex-1 relative min-w-0">
-              <div className="flex relative">
-                <textarea
-                  ref={textareaRef}
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Write a comment..."
-                  rows={1}
-                  className="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none overflow-hidden text-sm sm:text-base pr-8"
-                  style={{ minHeight: '38px' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 hover:scale-110 transition-transform text-lg"
-                >
-                  😊
-                </button>
+    <div className="flex flex-col border-t border-gray-50 bg-gray-50 w-full">
+      {/* Scrollable Comments Section */}
+      <div className="flex-1 overflow-y-auto px-1 sm:px-4 md:px-6 w-full pb-4 sm:pb-6">
+        <CommentList type={type} dynamicId={dynamicId} comments={comments} />
+      </div>
+
+      {/* Sticky Comment Input Area */}
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10">
+        {preview && <div className="pt-3">{renderFilePreview(preview, previewType, originalFile)}</div>}
+        
+        {user && (
+          <div className="py-3 sm:py-4 md:py-6 px-1 xs:px-2 sm:px-4 md:px-6 w-full">
+            <form onSubmit={handleAddComment} className="flex items-end gap-2 w-full">
+              <UserAvatar
+                username={user?.username || "User"}
+                avatar={user?.avatar}
+                className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 hidden xs:flex"
+              />
+              
+              <button 
+                className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Image size={16} className="sm:w-5 sm:h-5" />
+              </button>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*,.pdf,.doc,.docx,.txt,audio/*"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              
+              <div className="flex-1 relative min-w-0">
+                <div className="flex relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="Write a comment..."
+                    rows={1}
+                    className="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none overflow-hidden text-sm sm:text-base pr-8"
+                    style={{ minHeight: '38px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 hover:scale-110 transition-transform text-lg"
+                  >
+                    😊
+                  </button>
+                </div>
+                
+                {showEmojiPicker && (
+                  <div ref={emojiRef} className="absolute bottom-full mb-2 right-0 z-[150]">
+                    <div className="scale-75 sm:scale-100 origin-bottom-right">
+                      <EmojiPicker onEmojiClick={handleEmojiClick} />
+                    </div>
+                  </div>
+                )}
               </div>
               
-              {showEmojiPicker && (
-                <div ref={emojiRef} className="absolute bottom-full mb-2 right-0 z-50">
-                  <div className="scale-75 sm:scale-100 origin-bottom-right">
-                    <EmojiPicker onEmojiClick={handleEmojiClick} />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <button
-              type="submit"
-              disabled={!commentContent.trim()}
-              className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 flex items-center justify-center text-white rounded-lg sm:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 active:scale-95"
-            >
-              <Send size={16} className="sm:w-5 sm:h-5" />
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={!commentContent.trim()}
+                className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 flex items-center justify-center text-white rounded-lg sm:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 active:scale-95"
+              >
+                <Send size={16} className="sm:w-5 sm:h-5" />
+              </button>
+            </form>
 
-          {/* Memory Threads Panel */}
-          {showMemories && (
-            <div className="mt-3 sm:mt-4">
-              <MemoryThreadsPanel
-                memories={memoryThreads}
-                isLoading={memoryLoading}
-                onExpandMemory={handleExpandMemory}
-                participantUsername={participantUsername}
-              />
-            </div>
-          )}
+            {/* Memory Threads Panel */}
+            {showMemories && (
+              <div className="mt-3 sm:mt-4">
+                <MemoryThreadsPanel
+                  memories={memoryThreads}
+                  isLoading={memoryLoading}
+                  onExpandMemory={handleExpandMemory}
+                  participantUsername={participantUsername}
+                />
+              </div>
+            )}
 
-          {(postErrors.content || reelErrors.content) && (
-            <div className="mt-2 text-center">
-              <span className="text-red-500 text-sm">
-                {postErrors.content?.message || reelErrors.content?.message}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-      
-      <div className="px-1 sm:px-4 md:px-6 w-full pb-4 sm:pb-6">
-        <CommentList type={type} dynamicId={dynamicId} comments={comments} />
+            {(postErrors.content || reelErrors.content) && (
+              <div className="mt-2 text-center">
+                <span className="text-red-500 text-sm">
+                  {postErrors.content?.message || reelErrors.content?.message}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

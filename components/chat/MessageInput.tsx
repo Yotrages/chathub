@@ -574,7 +574,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         {showEmojiPicker && (
           <div
             ref={emojiPickerRef}
-            className="absolute z-50"
+            className="absolute z-[150]"
             style={getEmojiPickerStyles()}
           >
             <EmojiPicker

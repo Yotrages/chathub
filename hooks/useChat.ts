@@ -40,7 +40,7 @@ export const useChat = () => {
   const [socketInitialized, setSocketInitialized] = useState(false);
   const connectionAttempted = useRef(false); 
   const isSocketReady = () => {
-    return socket && socket.connected && isConnected && user?._id;
+    return socket && socket.connected && isConnected && user?._id && socketInitialized;
   };
   useEffect(() => {
     if (
@@ -56,6 +56,8 @@ export const useChat = () => {
         console.log("Emitting new_connection event...");
         socket.emit("new_connection");
         setSocketInitialized(true);
+                socket.emit("connection_confirmed");
+
       }, 500);
       return () => clearTimeout(initTimer);
     }

@@ -226,79 +226,110 @@ export const useCallManagement = (currentChat: any) => {
   }, [socket, currentChat, user?._id, otherUserId, startCallTimer, attemptReconnection, reconnectAttempts, maxReconnectAttempts, callState]);
 
   const startCall = useCallback(async (isVideo: boolean = false) => {
-    if (!currentChat || !socket || !otherUserId) {
-      toast.error('Cannot start call - connection or peer unavailable');
-      return;
-    }
-    if (currentChat.type === 'group') {
-      toast.error('Group calls are not supported yet');
-      return;
+  if (!currentChat || !socket || !otherUserId) {
+    toast.error('Cannot start call - connection or peer unavailable');
+    return;
+  }
+  
+  if (!socket.connected) {
+    toast.error('Connection not established. Please wait and try again.');
+    return;
+  }
+  
+  if (currentChat.type === 'group') {
+    toast.error('Group calls are not supported yet');
+    return;
+  }
+
+  try {
+    setCallError(null);
+    setCallState('calling');
+    setIsVideoCall(isVideo);
+    setReconnectAttempts(0);
+
+    console.log('Starting call to:', otherUserId);
+    
+    const callId = `${user?._id}-${otherUserId}-${Date.now()}`;
+
+    const pc = initializePeerConnection();
+   
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: isVideo,
+    });
+   
+    setLocalStream(stream);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
     }
 
-    try {
-      setCallError(null);
-      setCallState('calling');
-      setIsVideoCall(isVideo);
-      setReconnectAttempts(0);
+    stream.getTracks().forEach((track) => {
+      pc.addTrack(track, stream);
+    });
 
-      const pc = initializePeerConnection();
-     
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: isVideo,
+    const offer = await pc.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: isVideo,
+    });
+  
+    await pc.setLocalDescription(offer);
+   
+    console.log('Sending call_request and offer to:', otherUserId);
+    
+    socket.emit('call_request', { 
+      to: otherUserId, 
+      isVideo,
+      callId 
+    });
+    
+    setTimeout(() => {
+      socket.emit('offer', { 
+        sdp: offer, 
+        to: otherUserId, 
+        isVideo,
+        callId 
       });
-     
-      setLocalStream(stream);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
+    }, 100);
+
+    const timeout = setTimeout(() => {
+      if (callState === 'calling') {
+        setCallError('Call not answered - you can still wait or end the call');
+        socket.emit('call_timeout', { 
+          to: otherUserId, 
+          callId 
+        });
+        toast.error('Call not answered');
       }
+    }, 30000);
+    setCallTimeout(timeout);
 
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
-      });
-
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: isVideo,
-      });
-    
-      await pc.setLocalDescription(offer);
-     
-      console.log('Sending offer to:', otherUserId);
-      socket.emit('offer', { sdp: offer, to: otherUserId, isVideo });
-      socket.emit('call_request', { to: otherUserId, isVideo });
-
-      const timeout = setTimeout(() => {
-        if (callState === 'calling') {
-          setCallError('Call not answered - you can still wait or end the call');
-          socket.emit('call_timeout', { to: otherUserId, callId: `${user?._id}-${otherUserId}-${Date.now()}` });
-          toast.error('Call not answered');
-        }
-      }, 30000);
-      setCallTimeout(timeout);
-
-    } catch (error: any) {
-      console.error('Error starting call:', error);
-      let message = 'Failed to start call';
-    
-      if (error.name === 'NotAllowedError') {
-        message = 'Camera/microphone permission denied. Please allow access and try again.';
-      } else if (error.name === 'NotFoundError') {
-        message = 'No camera or microphone found.';
-      } else if (error.name === 'NotSupportedError') {
-        message = 'Browser does not support this feature.';
-      }
-    
-      setCallError(message);
-      setCallState('failed');
-      socket?.emit('call_failed', { to: otherUserId, callId: `${user?._id}-${otherUserId}-${Date.now()}` });
-      toast.error(message);
-      
-      setTimeout(() => {
-        cleanup();
-      }, 3000);
+  } catch (error: any) {
+    console.error('Error starting call:', error);
+    let message = 'Failed to start call';
+  
+    if (error.name === 'NotAllowedError') {
+      message = 'Camera/microphone permission denied. Please allow access and try again.';
+    } else if (error.name === 'NotFoundError') {
+      message = 'No camera or microphone found.';
+    } else if (error.name === 'NotSupportedError') {
+      message = 'Browser does not support this feature.';
     }
-  }, [currentChat, socket, otherUserId, initializePeerConnection, callState, cleanup]);
+  
+    setCallError(message);
+    setCallState('failed');
+    
+    const callId = `${user?._id}-${otherUserId}-${Date.now()}`;
+    socket?.emit('call_failed', { 
+      to: otherUserId, 
+      callId 
+    });
+    toast.error(message);
+    
+    setTimeout(() => {
+      cleanup();
+    }, 3000);
+  }
+}, [currentChat, socket, otherUserId, initializePeerConnection, callState, cleanup, user?._id]);
 
   const acceptCall = useCallback(async () => {
     if (!incomingCall || !socket || !otherUserId || callState !== 'ringing') {
