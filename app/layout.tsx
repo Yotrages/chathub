@@ -15,12 +15,29 @@ import { useSocket } from "@/context/socketContext"
 import { updateUserOnlineStatus } from '@/libs/redux/authSlice';
 import { api } from '@/libs/axios/config';
 import { Analytics } from "@vercel/analytics/next"
+import { usePathname } from 'next/navigation';
 
 function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const { user} = useSelector((state: RootState) => state.auth);
   const token = getCookie("auth-token")
   const { socket, isConnected } = useSocket()
   const dispatch: AppDispatch = useDispatch()
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      if (
+        event.message?.includes('Loading chunk') ||
+        event.message?.includes('ChunkLoadError')
+      ) {
+        console.log('Chunk load error detected, reloading page...');
+        window.location.href = pathname;
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, [pathname]);
 
   useEffect(() => {
     if (!user || !token || !socket || !isConnected) return;

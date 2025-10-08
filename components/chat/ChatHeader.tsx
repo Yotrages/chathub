@@ -125,13 +125,9 @@ export const ChatHeader = ({
             <>
               <button
                 onClick={() => onStartCall(false)}
-                className={`p-1.5 sm:p-2 rounded-full transition-colors ${
-                  isOtherUserOnline
-                    ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    : 'text-gray-300 cursor-not-allowed'
-                }`}
-                disabled={!isOtherUserOnline}
-                title={isOtherUserOnline ? "Voice call" : "User is offline"}
+                className={`p-1.5 sm:p-2 rounded-full transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100`}
+                // disabled={!isOtherUserOnline}
+                title={"Voice call"}
               >
                 <Phone size={16} className="sm:w-5 sm:h-5" />
               </button>
@@ -139,13 +135,9 @@ export const ChatHeader = ({
               {/* Video call button */}
               <button
                 onClick={() => onStartCall(true)}
-                className={`p-1.5 sm:p-2 rounded-full transition-colors ${
-                  isOtherUserOnline
-                    ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    : 'text-gray-300 cursor-not-allowed'
-                }`}
-                disabled={!isOtherUserOnline}
-                title={isOtherUserOnline ? "Video call" : "User is offline"}
+                className={`p-1.5 sm:p-2 rounded-full transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100 `}
+                // disabled={!isOtherUserOnline}
+                title={"Video call"}
               >
                 <Video size={16} className="sm:w-5 sm:h-5" />
               </button>

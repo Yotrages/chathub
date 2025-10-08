@@ -58,6 +58,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const maxReconnectAttempts = 10;
   const socketRef = useRef<Socket | null>(null);
   const isInitializing = useRef(false);
+  const heartbeatInterval = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const userIdRef = useRef(user?._id);
   const tokenRef = useRef(token);
@@ -67,16 +69,42 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     tokenRef.current = token;
   }, [user?._id, token]);
 
+  const startHeartbeat = (sock: Socket) => {
+    if (heartbeatInterval.current) {
+      clearInterval(heartbeatInterval.current);
+    }
+
+    heartbeatInterval.current = setInterval(() => {
+      if (sock.connected) {
+        console.log('💓 Sending heartbeat...');
+        sock.emit('heartbeat');
+      }
+    }, 25000); // Send heartbeat every 25 seconds
+  };
+
+  const stopHeartbeat = () => {
+    if (heartbeatInterval.current) {
+      clearInterval(heartbeatInterval.current);
+      heartbeatInterval.current = null;
+    }
+  };
+
   const forceReconnect = () => {
     if (socketRef.current) {
-      console.log("Forcing socket reconnection...");
+      console.log("🔄 Forcing socket reconnection...");
+      stopHeartbeat();
       socketRef.current.disconnect();
-      socketRef.current.connect();
+      
+      setTimeout(() => {
+        if (socketRef.current) {
+          socketRef.current.connect();
+        }
+      }, 500);
     }
   };
 
   useEffect(() => {
-    if (isInitializing.current || socketRef.current) {
+    if (isInitializing.current || socketRef.current?.connected) {
       console.log("Socket already exists or initializing, skipping...");
       return;
     }
@@ -87,15 +115,13 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     }
 
     isInitializing.current = true;
-    console.log("Initializing socket connection for user:", user._id);
+    console.log("🚀 Initializing socket connection for user:", user._id);
 
-    const socketUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
        
-      console.log('🔌 Creating socket connection:', {
+    console.log('🔌 Creating socket connection:', {
       url: socketUrl,
       hasToken: !!token,
-      tokenLength: token ? String(token).length : 0,
       userId: user._id,
     });
 
@@ -104,28 +130,39 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         token: String(token), 
         userId: user._id,
       },
-      transports: ["websocket", "polling"], 
+      transports: ["websocket", "polling"],
       timeout: 20000,
       reconnectionAttempts: maxReconnectAttempts,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       autoConnect: true,
-      forceNew: false, 
-      upgrade: true, 
-      rememberUpgrade: true, 
+      forceNew: false,
+      upgrade: true,
+      rememberUpgrade: true,
+      // Enable ping/pong to keep connection alive
+      ackTimeout: 60000,
+      requestTimeout: 60000,
     });
 
     newSocket.on("connect", () => {
-      console.log("Connected to socket server, Socket ID:", newSocket.id);
+      console.log("✅ Connected to socket server");
+      console.log("Socket ID:", newSocket.id);
       console.log("Transport:", newSocket.io.engine.transport.name);
+      
       setIsConnected(true);
       setConnectionError(null);
       reconnectAttempts.current = 0;
       isInitializing.current = false;
+
+      // Start heartbeat
+      startHeartbeat(newSocket);
+
+      // Confirm connection with backend
+      newSocket.emit('connection_confirmed');
     });
 
     newSocket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error.message);
+      console.error("❌ Socket connection error:", error.message);
       setIsConnected(false);
       setConnectionError(error.message);
       reconnectAttempts.current++;
@@ -135,18 +172,23 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
           "Connection failed after multiple attempts. Please refresh the page."
         );
         isInitializing.current = false;
+        stopHeartbeat();
       }
     });
 
     newSocket.on("reconnect_attempt", (attemptNumber) => {
-      console.log("Reconnection attempt", attemptNumber);
+      console.log("🔄 Reconnection attempt", attemptNumber);
+      setConnectionError(`Reconnecting... (${attemptNumber}/${maxReconnectAttempts})`);
     });
 
     newSocket.on("reconnect", async (attemptNumber) => {
-      console.log("Socket reconnected after", attemptNumber, "attempts");
+      console.log("✅ Socket reconnected after", attemptNumber, "attempts");
       setIsConnected(true);
       setConnectionError(null);
       reconnectAttempts.current = 0;
+
+      // Restart heartbeat
+      startHeartbeat(newSocket);
 
       try {
         const currentToken = getCookie("auth-token") as string;
@@ -157,36 +199,81 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       } catch (error) {
         console.error("Reconnect token refresh failed:", error);
       }
+
+      // Re-emit connection confirmation
+      newSocket.emit('connection_confirmed');
     });
 
     newSocket.on("disconnect", (reason) => {
       console.log("🔌 Disconnected from socket server. Reason:", reason);
       setIsConnected(false);
+      stopHeartbeat();
 
+      // Handle different disconnect reasons
       if (reason === "io server disconnect") {
-        newSocket.connect();
+        // Server disconnected, try to reconnect
+        console.log("Server disconnected, attempting reconnect...");
+        reconnectTimeout.current = setTimeout(() => {
+          newSocket.connect();
+        }, 1000);
+      } else if (reason === "ping timeout") {
+        // Ping timeout - connection lost
+        console.log("Ping timeout detected, reconnecting...");
+        setConnectionError("Connection lost. Reconnecting...");
+        reconnectTimeout.current = setTimeout(() => {
+          newSocket.connect();
+        }, 1000);
+      } else if (reason === "transport close") {
+        // Transport closed, will auto-reconnect
+        console.log("Transport closed, waiting for auto-reconnect...");
+      } else if (reason === "transport error") {
+        // Transport error
+        console.log("Transport error, reconnecting...");
+        reconnectTimeout.current = setTimeout(() => {
+          newSocket.connect();
+        }, 2000);
       }
     });
 
     newSocket.io.engine.on("upgrade", (transport) => {
-      console.log("Transport upgraded to:", transport.name);
+      console.log("🚀 Transport upgraded to:", transport.name);
     });
 
-    newSocket.on("messages_read", (data) =>
-      console.log("Messages read:", data)
-    );
-    newSocket.on("new_message", (data) => console.log("New message:", data));
+    newSocket.on("connection_confirmed", (data) => {
+      console.log("✅ Connection confirmed by server:", data);
+    });
+
+    // Pong event (response to ping)
+    newSocket.io.engine.on("pong", () => {
+      console.log("🏓 Pong received");
+    });
+
+    // Handle various message events
+    newSocket.on("messages_read", (data) => {
+      console.log("📖 Messages read:", data);
+    });
+    
+    newSocket.on("new_message", (data) => {
+      console.log("💬 New message received:", data);
+    });
 
     socketRef.current = newSocket;
     setSocket(newSocket);
 
     return () => {
-      console.log("Cleaning up socket connection");
+      console.log("🧹 Cleaning up socket connection");
+      stopHeartbeat();
+      
+      if (reconnectTimeout.current) {
+        clearTimeout(reconnectTimeout.current);
+      }
+      
       if (socketRef.current) {
         socketRef.current.removeAllListeners();
         socketRef.current.close();
         socketRef.current = null;
       }
+      
       setSocket(null);
       setIsConnected(false);
       setConnectionError(null);
@@ -195,8 +282,9 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     };
   }, [user?._id, token]);
 
+  // Monitor socket state
   useEffect(() => {
-    console.log("Socket Provider State:", {
+    console.log("📊 Socket Provider State:", {
       hasSocket: !!socket,
       isConnected,
       connectionError,
@@ -205,22 +293,16 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       hasToken: !!token,
       transport: socket?.io?.engine?.transport?.name,
     });
-  }, [
-    socket,
-    isConnected,
-    connectionError,
-    onlineUsers.length,
-    user?._id,
-    token,
-  ]);
+  }, [socket, isConnected, connectionError, onlineUsers.length, user?._id, token]);
 
+  // Handle token expiration
   useEffect(() => {
     if (!socket) return;
 
     socket.on("token_expired", () => {
-      console.log("Socket token expired");
+      console.log("🔐 Socket token expired");
+      stopHeartbeat();
       dispatch(logout());
-
       socket.disconnect();
 
       router.push(
@@ -231,13 +313,14 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     });
 
     socket.on("connect_error", (error: Error) => {
-      console.error("Socket connection error:", error.message);
+      console.error("❌ Socket connection error:", error.message);
 
       if (
         error.message === "TOKEN_EXPIRED" ||
         error.message === "NO_TOKEN" ||
         error.message === "INVALID_TOKEN"
       ) {
+        stopHeartbeat();
         dispatch(logout());
         router.push(
           `/login?error=${encodeURIComponent(
