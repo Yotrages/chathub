@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/socket.io/(.*)",
+      "destination": "https://chathub-backend-cq3x.onrender.com/socket.io/$1"
+    }
+  ]
+}

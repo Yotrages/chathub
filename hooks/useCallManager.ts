@@ -20,10 +20,6 @@ export const useCallManagement = (currentChat: any) => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [incomingCall, setIncomingCall] = useState<{from: string, isVideo: boolean, callId: string} | null>(null);
-  const [callTimeout, setCallTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  const [maxReconnectAttempts] = useState(5);
-  const [networkQuality, setNetworkQuality] = useState<'good' | 'poor' | 'disconnected'>('good');
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -32,21 +28,30 @@ export const useCallManagement = (currentChat: any) => {
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const currentCallIdRef = useRef<string | null>(null);
-  const iceGatheringCompleteRef = useRef(false);
+  const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
+  const handlersSetupRef = useRef(false);
 
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  const otherUserId = currentChat?.type === 'group' 
-    ? null 
-    : currentChat?.participants?.find((p: any) => p._id !== user?._id)?._id;
+  // Memoize otherUserId to prevent re-renders
+  const otherUserId = useRef<string | null>(null);
+  
+  useEffect(() => {
+    if (currentChat?.type !== 'group') {
+      const other = currentChat?.participants?.find((p: any) => p._id !== user?._id)?._id;
+      otherUserId.current = other || null;
+    } else {
+      otherUserId.current = null;
+    }
+  }, [currentChat, user?._id]);
 
-  // Enhanced WebRTC Configuration
   const configuration = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
       {
         urls: [
           'turn:jb-turn1.xirsys.com:80?transport=udp',
@@ -63,7 +68,6 @@ export const useCallManagement = (currentChat: any) => {
     iceCandidatePoolSize: 10,
     bundlePolicy: 'max-bundle' as RTCBundlePolicy,
     rtcpMuxPolicy: 'require' as RTCRtcpMuxPolicy,
-    iceTransportPolicy: 'all' as RTCIceTransportPolicy,
   };
 
   const formatDuration = (seconds: number) => {
@@ -122,14 +126,14 @@ export const useCallManagement = (currentChat: any) => {
       remoteVideoRef.current.srcObject = null;
     }
 
-    if (callTimeout) {
-      clearTimeout(callTimeout);
-      setCallTimeout(null);
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
     }
 
     stopCallTimer();
     currentCallIdRef.current = null;
-    iceGatheringCompleteRef.current = false;
+    reconnectAttemptsRef.current = 0;
 
     setCallState('idle');
     setConnectionState('new');
@@ -139,32 +143,7 @@ export const useCallManagement = (currentChat: any) => {
     setIsRemoteAudioMuted(false);
     setIsCallMinimized(false);
     setIncomingCall(null);
-    setReconnectAttempts(0);
-    setNetworkQuality('good');
-  }, [localStream, remoteStream, callTimeout, stopCallTimer]);
-
-  const attemptReconnection = useCallback(() => {
-    if (reconnectAttempts >= maxReconnectAttempts) {
-      setCallError('Connection lost. Call ended.');
-      toast.error('Call ended due to connection issues');
-      endCall();
-      return;
-    }
-
-    setReconnectAttempts(prev => prev + 1);
-    setCallError(`Reconnecting... (${reconnectAttempts + 1}/${maxReconnectAttempts})`);
-    setNetworkQuality('poor');
-    
-    reconnectTimeoutRef.current = setTimeout(() => {
-      if (peerConnectionRef.current) {
-        const state = peerConnectionRef.current.connectionState;
-        if (state === 'failed' || state === 'disconnected') {
-          console.log('Attempting ICE restart...');
-          peerConnectionRef.current.restartIce();
-        }
-      }
-    }, 2000);
-  }, [reconnectAttempts, maxReconnectAttempts]);
+  }, [localStream, remoteStream, stopCallTimer]);
 
   const initializePeerConnection = useCallback(() => {
     if (peerConnectionRef.current) {
@@ -173,29 +152,18 @@ export const useCallManagement = (currentChat: any) => {
    
     const pc = new RTCPeerConnection(configuration);
     peerConnectionRef.current = pc;
-    iceGatheringCompleteRef.current = false;
 
-    // ICE Candidate handling
     pc.onicecandidate = (event) => {
-      if (event.candidate && socket && otherUserId && currentCallIdRef.current) {
-        console.log('📤 Sending ICE candidate to:', otherUserId);
+      if (event.candidate && socket && otherUserId.current && currentCallIdRef.current) {
+        console.log('📤 Sending ICE candidate');
         socket.emit('ice-candidate', {
           candidate: event.candidate,
-          to: otherUserId,
+          to: otherUserId.current,
           callId: currentCallIdRef.current
         });
       }
     };
 
-    // ICE gathering state monitoring
-    pc.onicegatheringstatechange = () => {
-      console.log('ICE gathering state:', pc.iceGatheringState);
-      if (pc.iceGatheringState === 'complete') {
-        iceGatheringCompleteRef.current = true;
-      }
-    };
-
-    // Remote track handling
     pc.ontrack = (event) => {
       console.log('📥 Received remote track:', event.track.kind);
       if (remoteVideoRef.current && event.streams[0]) {
@@ -204,7 +172,6 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
-    // Connection state monitoring
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
       console.log('🔗 Connection state:', state);
@@ -213,65 +180,38 @@ export const useCallManagement = (currentChat: any) => {
       if (state === 'connected') {
         setCallState('connected');
         setCallError(null);
-        setReconnectAttempts(0);
-        setNetworkQuality('good');
+        reconnectAttemptsRef.current = 0;
         if (callStartTimeRef.current === null) {
           startCallTimer();
         }
         toast.success('Call connected');
       } else if (state === 'disconnected') {
-        setNetworkQuality('poor');
         setCallError('Connection interrupted. Reconnecting...');
-        attemptReconnection();
+        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+          reconnectAttemptsRef.current++;
+          reconnectTimeoutRef.current = setTimeout(() => {
+            pc.restartIce();
+          }, 2000);
+        }
       } else if (state === 'failed') {
-        setNetworkQuality('disconnected');
-        if (reconnectAttempts < maxReconnectAttempts) {
-          attemptReconnection();
-        } else {
-          setCallError('Connection failed');
-          endCall();
-          toast.error('Call connection failed');
-        }
-      }
-    };
-
-    // ICE connection state monitoring
-    pc.oniceconnectionstatechange = () => {
-      const iceState = pc.iceConnectionState;
-      console.log('🧊 ICE state:', iceState);
-    
-      if (iceState === 'failed') {
-        setNetworkQuality('disconnected');
-        setCallError('Network connection failed. Reconnecting...');
-        if (reconnectAttempts < maxReconnectAttempts) {
-          attemptReconnection();
-        }
-      } else if (iceState === 'disconnected') {
-        setNetworkQuality('poor');
-        setCallError('Connection interrupted. Reconnecting...');
-        if (callState === 'connected') {
-          attemptReconnection();
-        }
-      } else if (iceState === 'connected' || iceState === 'completed') {
-        setNetworkQuality('good');
-        setCallError(null);
-        setReconnectAttempts(0);
+        setCallError('Connection failed');
+        endCall();
       }
     };
 
     return pc;
-  }, [socket, otherUserId, user?._id, startCallTimer, attemptReconnection, reconnectAttempts, maxReconnectAttempts, callState]);
+  }, [socket, startCallTimer]);
 
   const startCall = useCallback(async (isVideo: boolean = false) => {
-    console.log('📞 Starting call...', { isVideo, otherUserId, hasSocket: !!socket });
+    console.log('📞 Starting call...', { isVideo, otherUserId: otherUserId.current, hasSocket: !!socket, isConnected });
     
-    if (!currentChat || !socket || !otherUserId) {
+    if (!currentChat || !socket || !otherUserId.current) {
       toast.error('Cannot start call - connection unavailable');
       return;
     }
     
-    if (!socket.connected) {
-      toast.error('Connection not established. Please wait and try again.');
+    if (!isConnected) {
+      toast.error('Not connected to server. Please wait...');
       return;
     }
     
@@ -284,13 +224,14 @@ export const useCallManagement = (currentChat: any) => {
       setCallError(null);
       setCallState('calling');
       setIsVideoCall(isVideo);
-      setReconnectAttempts(0);
 
-      const callId = `${user?._id}-${otherUserId}-${Date.now()}`;
+      const callId = `${user?._id}-${otherUserId.current}-${Date.now()}`;
       currentCallIdRef.current = callId;
 
       console.log('🎬 Getting user media...');
-      const stream = await navigator.mediaDevices.getUserMedia({
+      
+      // Add timeout to media access
+      const mediaPromise = navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
@@ -302,6 +243,12 @@ export const useCallManagement = (currentChat: any) => {
           facingMode: 'user'
         } : false,
       });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Camera/microphone timeout')), 10000)
+      );
+
+      const stream = await Promise.race([mediaPromise, timeoutPromise]) as MediaStream;
    
       setLocalStream(stream);
       if (localVideoRef.current) {
@@ -325,40 +272,39 @@ export const useCallManagement = (currentChat: any) => {
       await pc.setLocalDescription(offer);
       console.log('✅ Local description set');
    
-      // Send call request first
-      console.log('📤 Sending call_request to:', otherUserId);
+      // Send call request
+      console.log('📤 Sending call_request to:', otherUserId.current);
       socket.emit('call_request', { 
-        to: otherUserId, 
+        to: otherUserId.current, 
         isVideo,
         callId 
       });
       
-      // Wait briefly for ICE candidates to be gathered
+      // Wait for ICE gathering
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Then send offer
-      console.log('📤 Sending offer to:', otherUserId);
+      // Send offer
+      console.log('📤 Sending offer to:', otherUserId.current);
       socket.emit('offer', { 
         sdp: offer, 
-        to: otherUserId, 
+        to: otherUserId.current, 
         isVideo,
         callId 
       });
 
-      // Set timeout for no answer
-      const timeout = setTimeout(() => {
+      // Set timeout
+      callTimeoutRef.current = setTimeout(() => {
         if (callState === 'calling' || callState === 'ringing') {
-          console.log('⏰ Call timeout - no answer');
+          console.log('⏰ Call timeout');
           setCallError('No answer');
           socket.emit('call_timeout', { 
-            to: otherUserId, 
+            to: otherUserId.current, 
             callId 
           });
           toast.error('No answer');
           setTimeout(() => cleanup(), 3000);
         }
-      }, 45000); // 45 seconds
-      setCallTimeout(timeout);
+      }, 45000);
 
     } catch (error: any) {
       console.error('❌ Error starting call:', error);
@@ -370,6 +316,8 @@ export const useCallManagement = (currentChat: any) => {
         message = 'No camera or microphone found';
       } else if (error.name === 'NotReadableError') {
         message = 'Camera/microphone is already in use';
+      } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+        message = 'Camera/microphone timeout - check if another app is using it';
       }
   
       setCallError(message);
@@ -378,18 +326,17 @@ export const useCallManagement = (currentChat: any) => {
       
       setTimeout(() => cleanup(), 3000);
     }
-  }, [currentChat, socket, otherUserId, initializePeerConnection, callState, cleanup, user?._id]);
+  }, [currentChat, socket, isConnected, initializePeerConnection, cleanup, user?._id, callState]);
 
   const acceptCall = useCallback(async () => {
     console.log('✅ Accepting call...');
     
-    if (!incomingCall || !socket || !otherUserId) {
+    if (!incomingCall || !socket || !otherUserId.current) {
       console.error('Cannot accept call - invalid state');
       return;
     }
 
     try {
-      console.log('🎬 Getting user media for answer...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -408,16 +355,12 @@ export const useCallManagement = (currentChat: any) => {
         localVideoRef.current.srcObject = stream;
       }
 
-      console.log('🔌 Initializing peer connection for answer...');
       const pc = initializePeerConnection();
       
       stream.getTracks().forEach((track) => {
-        console.log('➕ Adding track:', track.kind);
         pc.addTrack(track, stream);
       });
 
-      // Send call accept BEFORE creating answer
-      console.log('📤 Sending call_accept to:', incomingCall.from);
       socket.emit('call_accept', { 
         to: incomingCall.from,
         callId: incomingCall.callId 
@@ -427,9 +370,9 @@ export const useCallManagement = (currentChat: any) => {
       setCallState('connecting');
       setIsVideoCall(incomingCall.isVideo);
       
-      if (callTimeout) {
-        clearTimeout(callTimeout);
-        setCallTimeout(null);
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+        callTimeoutRef.current = null;
       }
       
     } catch (error) {
@@ -438,38 +381,36 @@ export const useCallManagement = (currentChat: any) => {
       toast.error('Failed to accept call');
       cleanup();
     }
-  }, [incomingCall, socket, callTimeout, otherUserId, initializePeerConnection, cleanup]);
+  }, [incomingCall, socket, initializePeerConnection, cleanup]);
 
   const declineCall = useCallback(() => {
-    console.log('❌ Declining call...');
-    
-    if (incomingCall && socket && otherUserId) {
+    if (incomingCall && socket) {
       socket.emit('call_decline', { 
         to: incomingCall.from,
         callId: incomingCall.callId 
       });
       setIncomingCall(null);
       setCallState('idle');
-      if (callTimeout) {
-        clearTimeout(callTimeout);
-        setCallTimeout(null);
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+        callTimeoutRef.current = null;
       }
     }
-  }, [incomingCall, socket, callTimeout, otherUserId]);
+  }, [incomingCall, socket]);
 
   const endCall = useCallback(() => {
     console.log('🔚 Ending call...');
     
-    if (currentChat && socket && otherUserId && callState !== 'idle' && currentCallIdRef.current) {
+    if (socket && otherUserId.current && callState !== 'idle' && currentCallIdRef.current) {
       socket.emit('call_end', { 
-        to: otherUserId,
+        to: otherUserId.current,
         callId: currentCallIdRef.current 
       });
     }
 
     cleanup();
     toast.success('Call ended');
-  }, [currentChat, socket, callState, otherUserId, cleanup]);
+  }, [socket, callState, cleanup]);
 
   const toggleAudioMute = useCallback(() => {
     if (localStream) {
@@ -502,7 +443,7 @@ export const useCallManagement = (currentChat: any) => {
   }, [remoteStream]);
 
   const switchCallType = useCallback(async () => {
-    if (!peerConnectionRef.current || callState !== 'connected' || !otherUserId) return;
+    if (!peerConnectionRef.current || callState !== 'connected') return;
   
     try {
       const newIsVideo = !isVideoCall;
@@ -539,26 +480,25 @@ export const useCallManagement = (currentChat: any) => {
       console.error('Failed to switch call type:', error);
       setCallError('Failed to switch call type');
     }
-  }, [callState, isVideoCall, otherUserId]);
+  }, [callState, isVideoCall]);
 
-  // Socket event handlers
+  // Socket event handlers - USE USEEFFECT WITH PROPER DEPENDENCIES
   useEffect(() => {
-    if (!socket || !currentChat || !otherUserId) return;
+    if (!socket || !isConnected || handlersSetupRef.current) return;
 
     console.log('🔌 Setting up socket event handlers...');
+    handlersSetupRef.current = true;
 
     const handleOffer = async (data: { sdp: RTCSessionDescriptionInit; from: string; isVideo: boolean; callId: string }) => {
       console.log('📥 Received offer from:', data.from);
       
-      if (data.from === otherUserId && peerConnectionRef.current) {
+      if (data.from === otherUserId.current && peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
-          console.log('✅ Remote description set from offer');
           currentCallIdRef.current = data.callId;
           setIsVideoCall(data.isVideo);
         } catch (err) {
           console.error('❌ Failed to set remote description:', err);
-          setCallError('Failed to process incoming call');
         }
       }
     };
@@ -566,14 +506,12 @@ export const useCallManagement = (currentChat: any) => {
     const handleAnswer = async (data: { sdp: RTCSessionDescriptionInit; from: string }) => {
       console.log('📥 Received answer from:', data.from);
       
-      if (data.from === otherUserId && peerConnectionRef.current) {
+      if (data.from === otherUserId.current && peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
-          console.log('✅ Remote description set from answer');
           setCallState('connecting');
         } catch (err) {
           console.error('❌ Failed to set remote description:', err);
-          setCallError('Failed to establish connection');
         }
       }
     };
@@ -581,7 +519,7 @@ export const useCallManagement = (currentChat: any) => {
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; from: string }) => {
       console.log('📥 Received ICE candidate from:', data.from);
       
-      if (data.from === otherUserId && peerConnectionRef.current) {
+      if (data.from === otherUserId.current && peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
         } catch (err) {
@@ -593,7 +531,7 @@ export const useCallManagement = (currentChat: any) => {
     const handleCallRequest = (data: { from: string; isVideo: boolean; callId: string }) => {
       console.log('📞 Received call_request from:', data.from);
       
-      if (data.from === otherUserId && callState === 'idle') {
+      if (data.from === otherUserId.current && callState === 'idle') {
         setIncomingCall({ from: data.from, isVideo: data.isVideo, callId: data.callId });
         setCallState('ringing');
         setIsVideoCall(data.isVideo);
@@ -601,28 +539,24 @@ export const useCallManagement = (currentChat: any) => {
         
         initializePeerConnection();
         
-        const timeout = setTimeout(() => {
+        callTimeoutRef.current = setTimeout(() => {
           console.log('⏰ Auto-declining call due to timeout');
           declineCall();
           toast.error('Missed call');
         }, 45000);
-        setCallTimeout(timeout);
       }
     };
 
     const handleCallAccept = async (data: { from: string; callId: string }) => {
       console.log('✅ Received call_accept from:', data.from);
       
-      if (data.from === otherUserId && peerConnectionRef.current) {
+      if (data.from === otherUserId.current && peerConnectionRef.current) {
         try {
-          console.log('📝 Creating answer...');
           const answer = await peerConnectionRef.current.createAnswer();
           await peerConnectionRef.current.setLocalDescription(answer);
           
-          // Wait briefly for ICE candidates
           await new Promise(resolve => setTimeout(resolve, 300));
           
-          console.log('📤 Sending answer to:', data.from);
           socket.emit('answer', { 
             sdp: answer, 
             to: data.from,
@@ -631,13 +565,12 @@ export const useCallManagement = (currentChat: any) => {
           
           setCallState('connecting');
           
-          if (callTimeout) {
-            clearTimeout(callTimeout);
-            setCallTimeout(null);
+          if (callTimeoutRef.current) {
+            clearTimeout(callTimeoutRef.current);
+            callTimeoutRef.current = null;
           }
         } catch (error) {
           console.error('❌ Error creating answer:', error);
-          setCallError('Failed to establish connection');
         }
       }
     };
@@ -645,7 +578,7 @@ export const useCallManagement = (currentChat: any) => {
     const handleCallEnd = (data: { from: string }) => {
       console.log('🔚 Received call_end from:', data.from);
       
-      if (data.from === otherUserId) {
+      if (data.from === otherUserId.current) {
         cleanup();
         toast.custom('Call ended');
       }
@@ -654,7 +587,7 @@ export const useCallManagement = (currentChat: any) => {
     const handleCallDecline = (data: { from: string }) => {
       console.log('❌ Received call_decline from:', data.from);
       
-      if (data.from === otherUserId) {
+      if (data.from === otherUserId.current) {
         cleanup();
         toast.error('Call declined');
       }
@@ -670,6 +603,7 @@ export const useCallManagement = (currentChat: any) => {
 
     return () => {
       console.log('Cleaning up socket event handlers');
+      handlersSetupRef.current = false;
       socket.off('offer', handleOffer);
       socket.off('answer', handleAnswer);
       socket.off('ice-candidate', handleIceCandidate);
@@ -678,14 +612,14 @@ export const useCallManagement = (currentChat: any) => {
       socket.off('call_end', handleCallEnd);
       socket.off('call_decline', handleCallDecline);
     };
-  }, [socket, currentChat, otherUserId, callState, callTimeout, declineCall, cleanup, initializePeerConnection]);
+  }, [socket, isConnected, callState, initializePeerConnection, declineCall, cleanup]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanup();
     };
-  }, [cleanup]);
+  }, []);
 
   return {
     callState,
@@ -700,7 +634,6 @@ export const useCallManagement = (currentChat: any) => {
     localVideoRef,
     remoteVideoRef,
     incomingCall,
-    networkQuality,
     startCall,
     acceptCall,
     declineCall,
