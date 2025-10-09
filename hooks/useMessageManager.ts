@@ -291,12 +291,13 @@ export const useMessageManagement = (currentChat: any) => {
       }
     };
 
-    fetchInitialStatuses();
+      const interval = setInterval(() => fetchInitialStatuses, 120000)
 
     return () => {
       socket.off('user_status_change', handleUserStatusChange);
       socket.off('user_online', handleUserOnline);
       socket.off('user_offline', handleUserOffline);
+      clearInterval(interval)
     };
   }, [socket, activeChat, currentChat, user]);
 

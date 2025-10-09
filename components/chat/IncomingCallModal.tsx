@@ -38,8 +38,6 @@ export const IncomingCallModal = ({
     timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          // CRITICAL FIX: Don't call onDecline here
-          // Let the backend timeout handle it (which sends "missed call")
           console.log('⏰ Call timeout reached on frontend');
           return 0;
         }

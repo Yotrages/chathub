@@ -1,4 +1,5 @@
-import { Maximize2, Minimize2, Mic, MicOff, Video, VideoOff, Phone, PhoneOff, Volume2, VolumeX } from 'lucide-react';
+import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
+import React from 'react';
 
 interface CallInterfaceProps {
   callState: string;
@@ -10,8 +11,8 @@ interface CallInterfaceProps {
   isVideoMuted: boolean;
   isRemoteAudioMuted: boolean;
   isCallMinimized: boolean;
-  localVideoRef: React.RefObject<HTMLVideoElement | null>;
-  remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
+  localVideoRef: React.RefObject<HTMLVideoElement>;
+  remoteVideoRef: React.RefObject<HTMLVideoElement>;
   currentChat: any;
   onToggleAudioMute: () => void;
   onToggleVideoMute: () => void;
@@ -68,7 +69,7 @@ export const CallInterface = ({
         </div>
       )}
 
-      {/* Main call content - fills remaining space */}
+      {/* Main call content */}
       <div className="flex-1 relative overflow-hidden">
         {isVideoCall ? (
           <VideoCallDisplay
@@ -129,6 +130,12 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
               Ringing...
             </span>
           )}
+          {callState === 'connecting' && (
+            <span className="flex items-center">
+              <div className="animate-pulse w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+              Connecting...
+            </span>
+          )}
           {callState === 'connected' && (
             <span className="flex items-center">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
@@ -173,44 +180,95 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
   </div>
 );
 
-const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: any) => (
-  <div className="relative w-full h-full bg-black">
-    {/* Remote video - full screen */}
-    <video
-      ref={remoteVideoRef}
-      autoPlay
-      playsInline
-      className="w-full h-full object-cover"
-    />
-    
-    {/* Local video - picture in picture */}
-    {!isCallMinimized && (
-      <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg">
-        <video
-          ref={localVideoRef}
-          autoPlay
-          muted
-          playsInline
-          className="w-full h-full object-cover"
-        />
-        {isVideoMuted && (
-          <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-            <VideoOff size={20} className="text-gray-400" />
+// FIXED: Better video display with stream monitoring
+const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: any) => {
+  const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
+
+  // Monitor remote video stream
+  React.useEffect(() => {
+    const remoteVideo = remoteVideoRef.current;
+    if (!remoteVideo) return;
+
+    const checkStream = () => {
+      const hasStream = !!(remoteVideo.srcObject && 
+        (remoteVideo.srcObject as MediaStream).getTracks().length > 0);
+      setHasRemoteVideo(hasStream);
+      console.log('Remote video stream check:', hasStream);
+    };
+
+    checkStream();
+
+    const handleLoadedMetadata = () => {
+      console.log('Remote video metadata loaded');
+      checkStream();
+    };
+
+    const handlePlay = () => {
+      console.log('Remote video playing');
+      setHasRemoteVideo(true);
+    };
+
+    remoteVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
+    remoteVideo.addEventListener('play', handlePlay);
+
+    const interval = setInterval(checkStream, 1000);
+
+    return () => {
+      remoteVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      remoteVideo.removeEventListener('play', handlePlay);
+      clearInterval(interval);
+    };
+  }, [remoteVideoRef]);
+
+  return (
+    <div className="relative w-full h-full bg-black">
+      {/* Remote video - full screen */}
+      <video
+        ref={remoteVideoRef}
+        autoPlay
+        playsInline
+        className="w-full h-full object-cover"
+        style={{ 
+          display: hasRemoteVideo ? 'block' : 'none',
+          backgroundColor: '#000' 
+        }}
+      />
+      
+      {/* Local video - picture in picture */}
+      {!isCallMinimized && (
+        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg">
+          <video
+            ref={localVideoRef}
+            autoPlay
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          />
+          {isVideoMuted && (
+            <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
+              <VideoOff size={20} className="text-gray-400" />
+            </div>
+          )}
+        </div>
+      )}
+      
+      {/* No remote video placeholder */}
+      {!hasRemoteVideo && (
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
+          <div className="text-center">
+            <Video size={48} className="mx-auto mb-4 opacity-50" />
+            <p>Waiting for video...</p>
+            <div className="mt-2 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            </div>
           </div>
-        )}
-      </div>
-    )}
-    
-    {/* No remote video placeholder */}
-    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400" 
-         style={{ display: remoteVideoRef.current?.srcObject ? 'none' : 'flex' }}>
-      <div className="text-center">
-        <Video size={48} className="mx-auto mb-4 opacity-50" />
-        <p>Waiting for video...</p>
-      </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration }: any) => (
   <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 to-gray-900">
@@ -236,6 +294,12 @@ const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration
           <div className="flex items-center justify-center">
             <div className="animate-pulse w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
             <span>Incoming call...</span>
+          </div>
+        )}
+        {callState === 'connecting' && (
+          <div className="flex items-center justify-center">
+            <div className="animate-pulse w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+            <span>Connecting...</span>
           </div>
         )}
         {callState === 'connected' && (
