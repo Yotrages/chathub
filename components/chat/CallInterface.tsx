@@ -11,8 +11,8 @@ interface CallInterfaceProps {
   isVideoMuted: boolean;
   isRemoteAudioMuted: boolean;
   isCallMinimized: boolean;
-  localVideoRef: React.RefObject<HTMLVideoElement>;
-  remoteVideoRef: React.RefObject<HTMLVideoElement>;
+  localVideoRef: React.RefObject<HTMLVideoElement | null>;
+  remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
   currentChat: any;
   onToggleAudioMute: () => void;
   onToggleVideoMute: () => void;
