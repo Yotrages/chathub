@@ -180,7 +180,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         console.error("Token refresh failed:", error);
       }
 
-      // Re-emit online status
       newSocket.emit('user_online', { userId: user._id });
       newSocket.emit('connection_confirmed');
     });

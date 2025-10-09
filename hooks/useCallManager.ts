@@ -32,11 +32,11 @@ export const useCallManagement = (currentChat: any) => {
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
   const handlersSetupRef = useRef(false);
+  const callStateRef = useRef<CallState>('idle'); // Add ref to track current state
 
   const { socket, isConnected } = useSocket();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Memoize otherUserId to prevent re-renders
   const otherUserId = useRef<string | null>(null);
   
   useEffect(() => {
@@ -47,6 +47,11 @@ export const useCallManagement = (currentChat: any) => {
       otherUserId.current = null;
     }
   }, [currentChat, user?._id]);
+
+  // Keep callStateRef in sync with callState
+  useEffect(() => {
+    callStateRef.current = callState;
+  }, [callState]);
 
   const configuration = {
     iceServers: [
@@ -230,7 +235,6 @@ export const useCallManagement = (currentChat: any) => {
 
       console.log('🎬 Getting user media...');
       
-      // Add timeout to media access
       const mediaPromise = navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
@@ -272,7 +276,6 @@ export const useCallManagement = (currentChat: any) => {
       await pc.setLocalDescription(offer);
       console.log('✅ Local description set');
    
-      // Send call request
       console.log('📤 Sending call_request to:', otherUserId.current);
       socket.emit('call_request', { 
         to: otherUserId.current, 
@@ -280,10 +283,8 @@ export const useCallManagement = (currentChat: any) => {
         callId 
       });
       
-      // Wait for ICE gathering
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Send offer
       console.log('📤 Sending offer to:', otherUserId.current);
       socket.emit('offer', { 
         sdp: offer, 
@@ -292,17 +293,24 @@ export const useCallManagement = (currentChat: any) => {
         callId 
       });
 
-      // Set timeout
+      // FIXED: Use ref instead of state variable in timeout
       callTimeoutRef.current = setTimeout(() => {
-        if (callState === 'calling' || callState === 'ringing') {
-          console.log('⏰ Call timeout');
+        const currentState = callStateRef.current;
+        console.log('⏰ Call timeout check - Current state:', currentState);
+        
+        if (currentState === 'calling' || currentState === 'ringing') {
+          console.log('⏰ Call timeout - ending call');
           setCallError('No answer');
+          toast.error('No answer');
+          
           socket.emit('call_timeout', { 
             to: otherUserId.current, 
             callId 
           });
-          toast.error('No answer');
-          setTimeout(() => cleanup(), 3000);
+          
+          setTimeout(() => {
+            cleanup();
+          }, 2000);
         }
       }, 45000);
 
@@ -324,9 +332,9 @@ export const useCallManagement = (currentChat: any) => {
       setCallState('failed');
       toast.error(message);
       
-      setTimeout(() => cleanup(), 3000);
+      setTimeout(() => cleanup(), 2000);
     }
-  }, [currentChat, socket, isConnected, initializePeerConnection, cleanup, user?._id, callState]);
+  }, [currentChat, socket, isConnected, initializePeerConnection, cleanup, user?._id]);
 
   const acceptCall = useCallback(async () => {
     console.log('✅ Accepting call...');
@@ -401,7 +409,7 @@ export const useCallManagement = (currentChat: any) => {
   const endCall = useCallback(() => {
     console.log('🔚 Ending call...');
     
-    if (socket && otherUserId.current && callState !== 'idle' && currentCallIdRef.current) {
+    if (socket && otherUserId.current && callStateRef.current !== 'idle' && currentCallIdRef.current) {
       socket.emit('call_end', { 
         to: otherUserId.current,
         callId: currentCallIdRef.current 
@@ -410,7 +418,7 @@ export const useCallManagement = (currentChat: any) => {
 
     cleanup();
     toast.success('Call ended');
-  }, [socket, callState, cleanup]);
+  }, [socket, cleanup]);
 
   const toggleAudioMute = useCallback(() => {
     if (localStream) {
@@ -482,12 +490,22 @@ export const useCallManagement = (currentChat: any) => {
     }
   }, [callState, isVideoCall]);
 
-  // Socket event handlers - USE USEEFFECT WITH PROPER DEPENDENCIES
+  // Socket event handlers
   useEffect(() => {
     if (!socket || !isConnected || handlersSetupRef.current) return;
 
     console.log('🔌 Setting up socket event handlers...');
     handlersSetupRef.current = true;
+
+    // FIXED: Add call_error handler
+    const handleCallError = (data: { error: string; reason?: string }) => {
+      console.log('❌ Received call_error:', data);
+      setCallError(data.error);
+      toast.error(data.error);
+      
+      // Don't close interface immediately - let timeout handle it
+      // Interface will show error message while waiting for timeout
+    };
 
     const handleOffer = async (data: { sdp: RTCSessionDescriptionInit; from: string; isVideo: boolean; callId: string }) => {
       console.log('📥 Received offer from:', data.from);
@@ -531,7 +549,7 @@ export const useCallManagement = (currentChat: any) => {
     const handleCallRequest = (data: { from: string; isVideo: boolean; callId: string }) => {
       console.log('📞 Received call_request from:', data.from);
       
-      if (data.from === otherUserId.current && callState === 'idle') {
+      if (data.from === otherUserId.current && callStateRef.current === 'idle') {
         setIncomingCall({ from: data.from, isVideo: data.isVideo, callId: data.callId });
         setCallState('ringing');
         setIsVideoCall(data.isVideo);
@@ -593,6 +611,14 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
+    const handleCallTimeout = (data: { callId: string }) => {
+      console.log('⏰ Received call_timeout');
+      setCallError('No answer');
+      toast.error('Call timeout - no answer');
+      
+      setTimeout(() => cleanup(), 2000);
+    };
+
     socket.on('offer', handleOffer);
     socket.on('answer', handleAnswer);
     socket.on('ice-candidate', handleIceCandidate);
@@ -600,6 +626,8 @@ export const useCallManagement = (currentChat: any) => {
     socket.on('call_accept', handleCallAccept);
     socket.on('call_end', handleCallEnd);
     socket.on('call_decline', handleCallDecline);
+    socket.on('call_error', handleCallError);
+    socket.on('call_timeout', handleCallTimeout);
 
     return () => {
       console.log('Cleaning up socket event handlers');
@@ -611,10 +639,11 @@ export const useCallManagement = (currentChat: any) => {
       socket.off('call_accept', handleCallAccept);
       socket.off('call_end', handleCallEnd);
       socket.off('call_decline', handleCallDecline);
+      socket.off('call_error', handleCallError);
+      socket.off('call_timeout', handleCallTimeout);
     };
-  }, [socket, isConnected, callState, initializePeerConnection, declineCall, cleanup]);
+  }, [socket, isConnected, initializePeerConnection, declineCall, cleanup]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanup();
