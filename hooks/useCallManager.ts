@@ -206,188 +206,180 @@ export const useCallManagement = (currentChat: any) => {
     return pc;
   }, [socket, startCallTimer]);
 
-  const startCall = useCallback(async (isVideo: boolean = false) => {
-    console.log('📞 Starting call...', { isVideo, otherUserId: otherUserId.current, hasSocket: !!socket, isConnected });
-    
-    if (!currentChat || !socket || !otherUserId.current) {
-      toast.error('Cannot start call - connection unavailable');
-      return;
-    }
-    
-    if (!isConnected) {
-      toast.error('Not connected to server. Please wait...');
-      return;
-    }
-    
-    if (currentChat.type === 'group') {
-      toast.error('Group calls are not supported yet');
-      return;
-    }
-
-    try {
-      setCallError(null);
-      setCallState('calling');
-      setIsVideoCall(isVideo);
-
-      const callId = `${user?._id}-${otherUserId.current}-${Date.now()}`;
-      currentCallIdRef.current = callId;
-
-      console.log('🎬 Getting user media...');
-      
-      const mediaPromise = navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-        video: isVideo ? {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user'
-        } : false,
-      });
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Camera/microphone timeout')), 10000)
-      );
-
-      const stream = await Promise.race([mediaPromise, timeoutPromise]) as MediaStream;
-   
-      setLocalStream(stream);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
-
-      console.log('🔌 Initializing peer connection...');
-      const pc = initializePeerConnection();
-   
-      stream.getTracks().forEach((track) => {
-        console.log('➕ Adding track to peer connection:', track.kind);
-        pc.addTrack(track, stream);
-      });
-
-      console.log('📝 Creating offer...');
-      const offer = await pc.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: isVideo,
-      });
+const startCall = useCallback(async (isVideo: boolean = false) => {
+  console.log('📞 Starting call...', { isVideo, otherUserId: otherUserId.current });
   
-      await pc.setLocalDescription(offer);
-      console.log('✅ Local description set');
-   
-      console.log('📤 Sending call_request to:', otherUserId.current);
-      socket.emit('call_request', { 
-        to: otherUserId.current, 
-        isVideo,
-        callId 
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      console.log('📤 Sending offer to:', otherUserId.current);
-      socket.emit('offer', { 
-        sdp: offer, 
-        to: otherUserId.current, 
-        isVideo,
-        callId 
-      });
+  if (!currentChat || !socket || !otherUserId.current || !isConnected) {
+    toast.error('Cannot start call - connection unavailable');
+    return;
+  }
+  
+  if (currentChat.type === 'group') {
+    toast.error('Group calls are not supported yet');
+    return;
+  }
 
-      callTimeoutRef.current = setTimeout(() => {
-        const currentState = callStateRef.current;
-        console.log('⏰ Call timeout check - Current state:', currentState);
+  try {
+    setCallError(null);
+    setCallState('calling');
+    setIsVideoCall(isVideo);
+
+    const callId = `${user?._id}-${otherUserId.current}-${Date.now()}`;
+    currentCallIdRef.current = callId;
+
+    console.log('🎬 Getting user media...');
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      video: isVideo ? {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: 'user'
+      } : false,
+    });
+ 
+    setLocalStream(stream);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+    }
+
+    console.log('🔌 Initializing peer connection...');
+    const pc = initializePeerConnection();
+ 
+    stream.getTracks().forEach((track) => {
+      console.log('➕ Adding track to peer connection:', track.kind);
+      pc.addTrack(track, stream);
+    });
+
+    // CRITICAL FIX 1: Send call_request FIRST and wait for session creation
+    console.log('📤 Sending call_request to:', otherUserId.current);
+    socket.emit('call_request', { 
+      to: otherUserId.current, 
+      isVideo,
+      callId 
+    });
+    
+    // CRITICAL FIX 2: Wait for backend to create session before sending offer
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    console.log('📝 Creating offer...');
+    const offer = await pc.createOffer({
+      offerToReceiveAudio: true,
+      offerToReceiveVideo: isVideo,
+    });
+
+    await pc.setLocalDescription(offer);
+    console.log('✅ Local description set');
+ 
+    console.log('📤 Sending offer to:', otherUserId.current);
+    socket.emit('offer', { 
+      sdp: offer, 
+      to: otherUserId.current, 
+      isVideo,
+      callId 
+    });
+
+    callTimeoutRef.current = setTimeout(() => {
+      const currentState = callStateRef.current;
+      console.log('⏰ Call timeout check - Current state:', currentState);
+      
+      if (currentState === 'calling' || currentState === 'ringing') {
+        console.log('⏰ Call timeout - ending call');
+        setCallError('No answer');
+        toast.error('No answer');
         
-        if (currentState === 'calling' || currentState === 'ringing') {
-          console.log('⏰ Call timeout - ending call');
-          setCallError('No answer');
-          toast.error('No answer');
-          
-          socket.emit('call_timeout', { 
-            to: otherUserId.current, 
-            callId 
-          });
-          
-          setTimeout(() => {
-            cleanup();
-          }, 2000);
-        }
-      }, 45000);
-
-    } catch (error: any) {
-      console.error('❌ Error starting call:', error);
-      let message = 'Failed to start call';
-  
-      if (error.name === 'NotAllowedError') {
-        message = 'Camera/microphone permission denied';
-      } else if (error.name === 'NotFoundError') {
-        message = 'No camera or microphone found';
-      } else if (error.name === 'NotReadableError') {
-        message = 'Camera/microphone is already in use';
-      } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
-        message = 'Camera/microphone timeout - check if another app is using it';
+        socket.emit('call_timeout', { 
+          to: otherUserId.current, 
+          callId 
+        });
+        
+        setTimeout(() => {
+          cleanup();
+        }, 2000);
       }
-  
-      setCallError(message);
-      setCallState('failed');
-      toast.error(message);
-      
-      setTimeout(() => cleanup(), 2000);
-    }
-  }, [currentChat, socket, isConnected, initializePeerConnection, cleanup, user?._id]);
+    }, 45000);
 
-  const acceptCall = useCallback(async () => {
-    console.log('✅ Accepting call...');
+  } catch (error: any) {
+    console.error('❌ Error starting call:', error);
+    let message = 'Failed to start call';
+
+    if (error.name === 'NotAllowedError') {
+      message = 'Camera/microphone permission denied';
+    } else if (error.name === 'NotFoundError') {
+      message = 'No camera or microphone found';
+    } else if (error.name === 'NotReadableError') {
+      message = 'Camera/microphone is already in use';
+    }
+
+    setCallError(message);
+    setCallState('failed');
+    toast.error(message);
     
-    if (!incomingCall || !socket) {
-      console.error('Cannot accept call - invalid state');
-      return;
+    setTimeout(() => cleanup(), 2000);
+  }
+}, [currentChat, socket, isConnected, initializePeerConnection, cleanup, user?._id]);
+
+const acceptCall = useCallback(async () => {
+  console.log('✅ Accepting call...');
+  
+  if (!incomingCall || !socket) {
+    console.error('Cannot accept call - invalid state');
+    return;
+  }
+
+  try {
+    setCallState('connecting'); // CRITICAL FIX 3: Update state immediately
+    setIsVideoCall(incomingCall.isVideo);
+    
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+      video: incomingCall.isVideo ? {
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
+        facingMode: 'user'
+      } : false,
+    });
+    
+    setLocalStream(stream);
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-        video: incomingCall.isVideo ? {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          facingMode: 'user'
-        } : false,
-      });
-      
-      setLocalStream(stream);
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
+    const pc = initializePeerConnection();
+    
+    stream.getTracks().forEach((track) => {
+      pc.addTrack(track, stream);
+    });
 
-      const pc = initializePeerConnection();
-      
-      stream.getTracks().forEach((track) => {
-        pc.addTrack(track, stream);
-      });
-
-      socket.emit('call_accept', { 
-        to: incomingCall.from,
-        callId: incomingCall.callId 
-      });
-      
-      setIncomingCall(null);
-      setCallState('connecting');
-      setIsVideoCall(incomingCall.isVideo);
-      
-      if (callTimeoutRef.current) {
-        clearTimeout(callTimeoutRef.current);
-        callTimeoutRef.current = null;
-      }
-      
-    } catch (error) {
-      console.error('❌ Error accepting call:', error);
-      setCallError('Failed to accept call');
-      toast.error('Failed to accept call');
-      cleanup();
+    // CRITICAL FIX 4: Emit call_accept FIRST
+    console.log('📤 Emitting call_accept');
+    socket.emit('call_accept', { 
+      to: incomingCall.from,
+      callId: incomingCall.callId 
+    });
+    
+    setIncomingCall(null);
+    
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
     }
-  }, [incomingCall, socket, initializePeerConnection, cleanup]);
+    
+  } catch (error) {
+    console.error('❌ Error accepting call:', error);
+    setCallError('Failed to accept call');
+    toast.error('Failed to accept call');
+    cleanup();
+  }
+}, [incomingCall, socket, initializePeerConnection, cleanup]);
+
 
   const declineCall = useCallback(() => {
     if (incomingCall && socket) {
@@ -572,33 +564,35 @@ export const useCallManagement = (currentChat: any) => {
       }, 45000);
     };
 
-    const handleCallAccept = async (data: { from: string; callId: string }) => {
-      console.log('✅ Received call_accept from:', data.from);
+const handleCallAccept = async (data: { from: string; callId: string }) => {
+  console.log('✅ Received call_accept from:', data.from);
+  
+  if (peerConnectionRef.current) {
+    try {
+      // CRITICAL: Update state to show connection is being established
+      setCallState('connecting');
       
-      if (peerConnectionRef.current) {
-        try {
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-          
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          socket.emit('answer', { 
-            sdp: answer, 
-            to: data.from,
-            callId: data.callId 
-          });
-          
-          setCallState('connecting');
-          
-          if (callTimeoutRef.current) {
-            clearTimeout(callTimeoutRef.current);
-            callTimeoutRef.current = null;
-          }
-        } catch (error) {
-          console.error('❌ Error creating answer:', error);
-        }
+      const answer = await peerConnectionRef.current.createAnswer();
+      await peerConnectionRef.current.setLocalDescription(answer);
+      
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      socket.emit('answer', { 
+        sdp: answer, 
+        to: data.from,
+        callId: data.callId 
+      });
+      
+      if (callTimeoutRef.current) {
+        clearTimeout(callTimeoutRef.current);
+        callTimeoutRef.current = null;
       }
-    };
+    } catch (error) {
+      console.error('❌ Error creating answer:', error);
+    }
+  }
+};
+
 
     const handleCallEnd = (data: { from: string }) => {
       console.log('🔚 Received call_end from:', data.from);

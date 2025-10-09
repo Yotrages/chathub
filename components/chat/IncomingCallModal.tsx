@@ -1,8 +1,8 @@
 import { Phone, PhoneOff, Video } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface IncomingCallModalProps {
-  incomingCall: { from: string; isVideo: boolean } | null;
+  incomingCall: { from: string; isVideo: boolean; callId: string } | null;
   callState: string;
   currentChat: any;
   onAccept: () => void;
@@ -16,44 +16,64 @@ export const IncomingCallModal = ({
   onAccept,
   onDecline
 }: IncomingCallModalProps) => {
-  const [timeRemaining, setTimeRemaining] = useState(30);
+  const [timeRemaining, setTimeRemaining] = useState(45); // Match backend timeout
   const [isRinging, setIsRinging] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!incomingCall || callState !== 'ringing') {
-      setTimeRemaining(30);
+      // Clean up timer
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setTimeRemaining(45);
       setIsRinging(false);
       return;
     }
 
     setIsRinging(true);
     
-    const timer = setInterval(() => {
+    // Start countdown timer
+    timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
-          onDecline();
-          return 30;
+          // CRITICAL FIX: Don't call onDecline here
+          // Let the backend timeout handle it (which sends "missed call")
+          console.log('⏰ Call timeout reached on frontend');
+          return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => {
-      clearInterval(timer);
-      setTimeRemaining(30);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setTimeRemaining(45);
       setIsRinging(false);
     };
-  }, [incomingCall, callState, onDecline]);
+  }, [incomingCall, callState]); // Removed onDecline from dependencies
 
   if (!incomingCall || callState !== 'ringing') return null;
 
   const handleAccept = () => {
     setIsRinging(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     onAccept();
   };
 
   const handleDecline = () => {
     setIsRinging(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     onDecline();
   };
 
@@ -69,7 +89,9 @@ export const IncomingCallModal = ({
       <div className="relative bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
         <div className="text-center">
           {/* Timer */}
-          <div className="absolute top-4 right-4 bg-red-500 text-white text-sm px-2 py-1 rounded-full">
+          <div className={`absolute top-4 right-4 text-white text-sm px-2 py-1 rounded-full ${
+            timeRemaining <= 10 ? 'bg-red-500 animate-pulse' : 'bg-blue-500'
+          }`}>
             {timeRemaining}s
           </div>
           
@@ -129,7 +151,7 @@ export const IncomingCallModal = ({
           
           {/* Quick action hints */}
           <div className="mt-4 text-xs text-gray-400">
-            <p>Call will auto-decline in {timeRemaining} seconds</p>
+            <p>{timeRemaining > 0 ? `Call will auto-timeout in ${timeRemaining} seconds` : 'Call timed out'}</p>
           </div>
         </div>
       </div>

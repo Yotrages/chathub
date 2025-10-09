@@ -257,14 +257,13 @@ const PostComments: React.FC<PostCommentsProps> = ({
   const participantUsername = postAuthor?.authorId?.username;
 
   return (
-    <div className="flex flex-col border-t border-gray-50 bg-gray-50 w-full">
-      {/* Scrollable Comments Section */}
-      <div className="flex-1 overflow-y-auto px-1 sm:px-4 md:px-6 w-full pb-4 sm:pb-6">
+    <div className="border-t border-gray-50 bg-gray-50 w-full pb-[180px] sm:pb-[200px]">
+      <div className="px-1 sm:px-4 md:px-6 w-full pb-4 sm:pb-6">
         <CommentList type={type} dynamicId={dynamicId} comments={comments} />
       </div>
 
-      {/* Sticky Comment Input Area */}
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10">
+      {/* Fixed Comment Input Area */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50">
         {preview && <div className="pt-3">{renderFilePreview(preview, previewType, originalFile)}</div>}
         
         {user && (
