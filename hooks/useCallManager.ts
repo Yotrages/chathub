@@ -31,8 +31,7 @@ export const useCallManagement = (currentChat: any) => {
   const callTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
-  const handlersSetupRef = useRef(false);
-  const callStateRef = useRef<CallState>('idle'); // Add ref to track current state
+  const callStateRef = useRef<CallState>('idle');
 
   const { socket, isConnected } = useSocket();
   const { user } = useSelector((state: RootState) => state.auth);
@@ -43,12 +42,12 @@ export const useCallManagement = (currentChat: any) => {
     if (currentChat?.type !== 'group') {
       const other = currentChat?.participants?.find((p: any) => p._id !== user?._id)?._id;
       otherUserId.current = other || null;
+      console.log('📝 Updated otherUserId:', otherUserId.current);
     } else {
       otherUserId.current = null;
     }
   }, [currentChat, user?._id]);
 
-  // Keep callStateRef in sync with callState
   useEffect(() => {
     callStateRef.current = callState;
   }, [callState]);
@@ -293,7 +292,6 @@ export const useCallManagement = (currentChat: any) => {
         callId 
       });
 
-      // FIXED: Use ref instead of state variable in timeout
       callTimeoutRef.current = setTimeout(() => {
         const currentState = callStateRef.current;
         console.log('⏰ Call timeout check - Current state:', currentState);
@@ -339,7 +337,7 @@ export const useCallManagement = (currentChat: any) => {
   const acceptCall = useCallback(async () => {
     console.log('✅ Accepting call...');
     
-    if (!incomingCall || !socket || !otherUserId.current) {
+    if (!incomingCall || !socket) {
       console.error('Cannot accept call - invalid state');
       return;
     }
@@ -490,44 +488,44 @@ export const useCallManagement = (currentChat: any) => {
     }
   }, [callState, isVideoCall]);
 
-  // Socket event handlers
+  // FIXED: Socket event handlers with proper dependency handling
   useEffect(() => {
-    if (!socket || !isConnected || handlersSetupRef.current) return;
+    if (!socket || !isConnected) return;
 
     console.log('🔌 Setting up socket event handlers...');
-    handlersSetupRef.current = true;
 
-    // FIXED: Add call_error handler
     const handleCallError = (data: { error: string; reason?: string }) => {
       console.log('❌ Received call_error:', data);
       setCallError(data.error);
       toast.error(data.error);
-      
-      // Don't close interface immediately - let timeout handle it
-      // Interface will show error message while waiting for timeout
     };
 
     const handleOffer = async (data: { sdp: RTCSessionDescriptionInit; from: string; isVideo: boolean; callId: string }) => {
-      console.log('📥 Received offer from:', data.from);
+      console.log('📥 Received offer from:', data.from, 'Current other user:', otherUserId.current);
       
-      if (data.from === otherUserId.current && peerConnectionRef.current) {
+      // FIXED: Accept offer from anyone, not just current chat
+      if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
           currentCallIdRef.current = data.callId;
           setIsVideoCall(data.isVideo);
+          console.log('✅ Set remote description for offer');
         } catch (err) {
           console.error('❌ Failed to set remote description:', err);
         }
+      } else {
+        console.warn('⚠️ No peer connection when offer received');
       }
     };
 
     const handleAnswer = async (data: { sdp: RTCSessionDescriptionInit; from: string }) => {
       console.log('📥 Received answer from:', data.from);
       
-      if (data.from === otherUserId.current && peerConnectionRef.current) {
+      if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
           setCallState('connecting');
+          console.log('✅ Set remote description for answer');
         } catch (err) {
           console.error('❌ Failed to set remote description:', err);
         }
@@ -537,38 +535,47 @@ export const useCallManagement = (currentChat: any) => {
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit; from: string }) => {
       console.log('📥 Received ICE candidate from:', data.from);
       
-      if (data.from === otherUserId.current && peerConnectionRef.current) {
+      if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          console.log('✅ Added ICE candidate');
         } catch (err) {
           console.error('❌ ICE candidate error:', err);
         }
       }
     };
 
+    // FIXED: Accept calls from anyone, update otherUserId dynamically
     const handleCallRequest = (data: { from: string; isVideo: boolean; callId: string }) => {
-      console.log('📞 Received call_request from:', data.from);
+      console.log('📞 Received call_request from:', data.from, 'Current state:', callStateRef.current);
       
-      if (data.from === otherUserId.current && callStateRef.current === 'idle') {
-        setIncomingCall({ from: data.from, isVideo: data.isVideo, callId: data.callId });
-        setCallState('ringing');
-        setIsVideoCall(data.isVideo);
-        currentCallIdRef.current = data.callId;
-        
-        initializePeerConnection();
-        
-        callTimeoutRef.current = setTimeout(() => {
-          console.log('⏰ Auto-declining call due to timeout');
-          declineCall();
-          toast.error('Missed call');
-        }, 45000);
+      if (callStateRef.current !== 'idle') {
+        console.log('⚠️ Already in a call, ignoring request');
+        return;
       }
+
+      // FIXED: Update otherUserId to the caller
+      otherUserId.current = data.from;
+      console.log('📝 Updated otherUserId to caller:', data.from);
+      
+      setIncomingCall({ from: data.from, isVideo: data.isVideo, callId: data.callId });
+      setCallState('ringing');
+      setIsVideoCall(data.isVideo);
+      currentCallIdRef.current = data.callId;
+      
+      initializePeerConnection();
+      
+      callTimeoutRef.current = setTimeout(() => {
+        console.log('⏰ Auto-declining call due to timeout');
+        declineCall();
+        toast.error('Missed call');
+      }, 45000);
     };
 
     const handleCallAccept = async (data: { from: string; callId: string }) => {
       console.log('✅ Received call_accept from:', data.from);
       
-      if (data.from === otherUserId.current && peerConnectionRef.current) {
+      if (peerConnectionRef.current) {
         try {
           const answer = await peerConnectionRef.current.createAnswer();
           await peerConnectionRef.current.setLocalDescription(answer);
@@ -595,20 +602,14 @@ export const useCallManagement = (currentChat: any) => {
 
     const handleCallEnd = (data: { from: string }) => {
       console.log('🔚 Received call_end from:', data.from);
-      
-      if (data.from === otherUserId.current) {
-        cleanup();
-        toast.custom('Call ended');
-      }
+      cleanup();
+      toast.custom('Call ended');
     };
 
     const handleCallDecline = (data: { from: string }) => {
       console.log('❌ Received call_decline from:', data.from);
-      
-      if (data.from === otherUserId.current) {
-        cleanup();
-        toast.error('Call declined');
-      }
+      cleanup();
+      toast.error('Call declined');
     };
 
     const handleCallTimeout = (data: { callId: string }) => {
@@ -630,8 +631,7 @@ export const useCallManagement = (currentChat: any) => {
     socket.on('call_timeout', handleCallTimeout);
 
     return () => {
-      console.log('Cleaning up socket event handlers');
-      handlersSetupRef.current = false;
+      console.log('🧹 Cleaning up socket event handlers');
       socket.off('offer', handleOffer);
       socket.off('answer', handleAnswer);
       socket.off('ice-candidate', handleIceCandidate);
