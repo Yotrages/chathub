@@ -23,11 +23,13 @@ import EditProfileModal from '@/components/profile/EditProfileModal';
 import Link from 'next/link';
 import { User } from '@/types';
 import UserReelsComponent from '@/components/reels/UserReels';
+import { setActiveChat } from '@/libs/redux/chatSlice';
 
 const UserProfilePage = () => {
   const { id } = useParams();
   const router = useRouter();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
+    const { chats } = useSelector((state: RootState) => state.chat);
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'posts' | 'reels' | 'likes' | 'saved'>('posts');
@@ -113,7 +115,14 @@ const UserProfilePage = () => {
 
   const handleMessage = async () => {
     if (!currentUser || !profileUser) return;
-    await createChat([currentUser?._id, profileUser?._id], "direct");
+    const matchedChat = chats.find((c) => {
+      return c.participants.map((u) => u._id === profileUser._id) && c.type === 'direct'
+    })
+    if (matchedChat) {
+      setActiveChat(matchedChat._id)
+    } else {
+      await createChat([currentUser?._id, profileUser?._id], "direct");
+    }
     router.push(window.innerWidth < 768 ? '/message' : '/chat');
   };
 

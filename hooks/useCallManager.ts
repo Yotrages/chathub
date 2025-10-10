@@ -378,12 +378,54 @@ export const useCallManagement = (currentChat: any) => {
         localVideoRef.current.srcObject = stream;
       }
 
-      const pc = initializePeerConnection();
+      // FIXED: Don't reinitialize peer connection, it already has the offer
+      let pc = peerConnectionRef.current;
+      
+      // Only initialize if we don't have one yet
+      if (!pc) {
+        console.log('⚠️ No peer connection found, initializing...');
+        pc = initializePeerConnection();
+      } else {
+        console.log('✅ Using existing peer connection with offer');
+      }
       
       stream.getTracks().forEach((track) => {
+        console.log('➕ Adding track to peer connection:', track.kind);
         pc.addTrack(track, stream);
       });
 
+      // FIXED: Check if we have remote description (the offer)
+      if (!pc.remoteDescription) {
+        console.error('❌ No remote description set! Waiting for offer...');
+        // Store acceptance state and wait for offer
+        setCallState('connecting');
+        setIncomingCall(null);
+        setIsVideoCall(incomingCall.isVideo);
+        
+        socket.emit('call_accept', { 
+          to: incomingCall.from,
+          callId: incomingCall.callId 
+        });
+        
+        if (callTimeoutRef.current) {
+          clearTimeout(callTimeoutRef.current);
+          callTimeoutRef.current = null;
+        }
+        return;
+      }
+
+      console.log('📝 Creating answer...');
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+      console.log('✅ Local description (answer) set');
+
+      // FIXED: Send answer immediately after creating it
+      socket.emit('answer', { 
+        sdp: answer, 
+        to: incomingCall.from,
+        callId: incomingCall.callId 
+      });
+      
       socket.emit('call_accept', { 
         to: incomingCall.from,
         callId: incomingCall.callId 
@@ -520,12 +562,47 @@ export const useCallManagement = (currentChat: any) => {
     const handleOffer = async (data: { sdp: RTCSessionDescriptionInit; from: string; isVideo: boolean; callId: string }) => {
       console.log('📥 Received offer from:', data.from, 'Current other user:', otherUserId.current);
       
-      if (peerConnectionRef.current) {
+      // FIXED: Ensure peer connection exists before setting remote description
+      let pc = peerConnectionRef.current;
+      
+      if (!pc) {
+        console.log('⚠️ No peer connection, creating one for offer...');
+        pc = initializePeerConnection();
+      }
+      
+      if (pc) {
         try {
-          await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.sdp));
+          console.log('📝 Setting remote description (offer)...');
+          await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
           currentCallIdRef.current = data.callId;
           setIsVideoCall(data.isVideo);
           console.log('✅ Set remote description for offer');
+          
+          // FIXED: If we're the callee and already accepted, create answer now
+          if (callStateRef.current === 'connecting' || callStateRef.current === 'ringing') {
+            console.log('📝 Auto-creating answer after receiving offer...');
+            
+            // Make sure we have local stream
+            if (localStream) {
+              localStream.getTracks().forEach((track) => {
+                if (!pc.getSenders().find(s => s.track === track)) {
+                  console.log('➕ Adding track:', track.kind);
+                  pc.addTrack(track, localStream);
+                }
+              });
+            }
+            
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            console.log('✅ Created and set answer');
+            
+            socket.emit('answer', { 
+              sdp: answer, 
+              to: data.from,
+              callId: data.callId 
+            });
+            console.log('📤 Sent answer to:', data.from);
+          }
         } catch (err) {
           console.error('❌ Failed to set remote description:', err);
         }
@@ -578,6 +655,8 @@ export const useCallManagement = (currentChat: any) => {
       setIsVideoCall(data.isVideo);
       currentCallIdRef.current = data.callId;
       
+      // FIXED: Initialize peer connection immediately when call request comes in
+      console.log('🔌 Initializing peer connection for incoming call...');
       initializePeerConnection();
       
       callTimeoutRef.current = setTimeout(() => {
@@ -587,37 +666,20 @@ export const useCallManagement = (currentChat: any) => {
       }, 45000);
     };
 
-    // FIXED: Handle call_accept event properly
+    // FIXED: Simplified - just handle state transition for User A (caller)
     const handleCallAccept = async (data: { from: string; callId: string }) => {
       console.log('✅ Received call_accept from:', data.from);
       
-      // FIXED: Clear the timeout when call is accepted
+      // Clear the timeout when call is accepted
       if (callTimeoutRef.current) {
         clearTimeout(callTimeoutRef.current);
         callTimeoutRef.current = null;
       }
       
-      if (peerConnectionRef.current) {
-        try {
-          const answer = await peerConnectionRef.current.createAnswer();
-          await peerConnectionRef.current.setLocalDescription(answer);
-          
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          socket.emit('answer', { 
-            sdp: answer, 
-            to: data.from,
-            callId: data.callId 
-          });
-          
-          // FIXED: Transition to connecting state for User A
-          setCallState('connecting');
-          console.log('✅ User A transitioned to connecting state');
-          
-        } catch (error) {
-          console.error('❌ Error creating answer:', error);
-        }
-      }
+      // FIXED: User A (caller) just transitions to connecting
+      // Answer will come separately from User B
+      setCallState('connecting');
+      console.log('✅ User A transitioned to connecting state, waiting for answer...');
     };
 
     const handleCallEnd = (data: { from: string }) => {

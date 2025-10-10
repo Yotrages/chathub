@@ -534,7 +534,7 @@ const MobileContextMenu = ({
 
   if (showForwardModal) {
     return (
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden">
           <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-500 to-purple-600">
             <div className="flex items-center justify-between">
@@ -571,7 +571,7 @@ const MobileContextMenu = ({
   }
 
   if (showInfoModal) {
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[70] p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
       <div
         className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 scale-100"
         onClick={(e) => e.stopPropagation()}

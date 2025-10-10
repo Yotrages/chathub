@@ -291,7 +291,8 @@ export const useMessageManagement = (currentChat: any) => {
       }
     };
 
-      const interval = setInterval(() => fetchInitialStatuses, 120000)
+    fetchInitialStatuses();
+    const interval = setInterval(fetchInitialStatuses, 120000);
 
     return () => {
       socket.off('user_status_change', handleUserStatusChange);
