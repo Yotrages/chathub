@@ -300,7 +300,7 @@ export const useMessageManagement = (currentChat: any) => {
       socket.off('user_offline', handleUserOffline);
       clearInterval(interval)
     };
-  }, [socket, activeChat, currentChat, user]);
+  }, [socket, activeChat, currentChat, user, navigator.onLine]);
 
   useEffect(() => {
     setMarkedAsReadChats(new Set());

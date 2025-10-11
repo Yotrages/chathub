@@ -168,25 +168,56 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
-    // FIXED: Better remote track handling
+    // FIXED: Better remote track handling with proper stream management
     pc.ontrack = (event) => {
       console.log('📥 Received remote track:', event.track.kind, 'streams:', event.streams.length);
+      console.log('Track details:', {
+        id: event.track.id,
+        kind: event.track.kind,
+        enabled: event.track.enabled,
+        muted: event.track.muted,
+        readyState: event.track.readyState
+      });
       
       if (event.streams[0]) {
         const stream = event.streams[0];
-        console.log('📥 Remote stream tracks:', stream.getTracks().map(t => t.kind));
+        console.log('📥 Remote stream tracks:', stream.getTracks().map(t => ({
+          kind: t.kind,
+          enabled: t.enabled,
+          muted: t.muted,
+          readyState: t.readyState
+        })));
         
-        // Set remote stream immediately
+        // FIXED: Set remote stream immediately
         setRemoteStream(stream);
         
         if (remoteVideoRef.current) {
+          // FIXED: Ensure previous stream is cleared
+          if (remoteVideoRef.current.srcObject) {
+            const oldStream = remoteVideoRef.current.srcObject as MediaStream;
+            oldStream.getTracks().forEach(track => track.stop());
+          }
+          
           remoteVideoRef.current.srcObject = stream;
           console.log('✅ Remote video ref srcObject set');
           
-          // Ensure video plays
-          remoteVideoRef.current.play().catch(err => {
-            console.error('Error playing remote video:', err);
-          });
+          // FIXED: Force play with better error handling
+          const playPromise = remoteVideoRef.current.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('✅ Remote video playing successfully');
+              })
+              .catch(err => {
+                console.error('❌ Error playing remote video:', err);
+                // Retry play after a short delay
+                setTimeout(() => {
+                  if (remoteVideoRef.current) {
+                    remoteVideoRef.current.play().catch(e => console.error('Retry failed:', e));
+                  }
+                }, 500);
+              });
+          }
         }
       }
     };
@@ -204,6 +235,16 @@ export const useCallManagement = (currentChat: any) => {
           startCallTimer();
         }
         toast.success('Call connected');
+        
+        // FIXED: Log media tracks status on connection
+        if (localStream) {
+          console.log('📊 Local stream tracks:', localStream.getTracks().map(t => ({
+            kind: t.kind,
+            enabled: t.enabled,
+            muted: t.muted,
+            readyState: t.readyState
+          })));
+        }
       } else if (state === 'disconnected') {
         setCallError('Connection interrupted. Reconnecting...');
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
@@ -219,7 +260,7 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     return pc;
-  }, [socket, startCallTimer]);
+  }, [socket, startCallTimer, localStream]);
 
   const startCall = useCallback(async (isVideo: boolean = false) => {
     console.log('📞 Starting call...', { isVideo, otherUserId: otherUserId.current, hasSocket: !!socket, isConnected });
@@ -249,37 +290,72 @@ export const useCallManagement = (currentChat: any) => {
 
       console.log('🎬 Getting user media...');
       
-      const mediaPromise = navigator.mediaDevices.getUserMedia({
+      // FIXED: Better media constraints for compatibility
+      const constraints: MediaStreamConstraints = {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
         },
         video: isVideo ? {
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 30, max: 30 },
           facingMode: 'user'
         } : false,
-      });
+      };
 
+      console.log('📝 Requesting media with constraints:', constraints);
+
+      const mediaPromise = navigator.mediaDevices.getUserMedia(constraints);
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Camera/microphone timeout')), 10000)
       );
 
       const stream = await Promise.race([mediaPromise, timeoutPromise]) as MediaStream;
+      
+      console.log('✅ Got media stream:', {
+        id: stream.id,
+        active: stream.active,
+        tracks: stream.getTracks().map(t => ({
+          kind: t.kind,
+          enabled: t.enabled,
+          muted: t.muted,
+          readyState: t.readyState,
+          label: t.label
+        }))
+      });
    
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true; // Prevent echo
       }
 
       console.log('🔌 Initializing peer connection...');
       const pc = initializePeerConnection();
    
+      // FIXED: Add tracks with better logging
       stream.getTracks().forEach((track) => {
-        console.log('➕ Adding track to peer connection:', track.kind);
+        console.log('➕ Adding track to peer connection:', {
+          kind: track.kind,
+          id: track.id,
+          enabled: track.enabled,
+          muted: track.muted,
+          readyState: track.readyState
+        });
         pc.addTrack(track, stream);
       });
+
+      // Verify senders
+      const senders = pc.getSenders();
+      console.log('📊 Peer connection senders:', senders.map(s => ({
+        track: s.track ? {
+          kind: s.track.kind,
+          enabled: s.track.enabled,
+          readyState: s.track.readyState
+        } : null
+      })));
 
       // FIXED: Send call_request FIRST before creating offer
       console.log('📤 Sending call_request to:', otherUserId.current);
@@ -742,6 +818,9 @@ export const useCallManagement = (currentChat: any) => {
     isVideoMuted,
     isRemoteAudioMuted,
     isCallMinimized,
+    localStream,
+    remoteStream,
+    peerConnectionRef,
     localVideoRef,
     remoteVideoRef,
     incomingCall,

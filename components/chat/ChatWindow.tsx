@@ -1,16 +1,17 @@
-'use client';
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/libs/redux/store';
-import { ChatHeader } from './ChatHeader';
-import { CallInterface } from './CallInterface';
-import { MessagesArea } from './MessageArea';
-import { FileUpload } from './FileUpload';
-import { MessageInput } from './MessageInput';
-import { IncomingCallModal } from './IncomingCallModal';
-import { useCallManagement } from '@/hooks/useCallManager';
-import { useMessageManagement } from '@/hooks/useMessageManager';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+"use client";
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/libs/redux/store";
+import { ChatHeader } from "./ChatHeader";
+import { CallInterface } from "./CallInterface";
+import { MessagesArea } from "./MessageArea";
+import { FileUpload } from "./FileUpload";
+import { MessageInput } from "./MessageInput";
+import { IncomingCallModal } from "./IncomingCallModal";
+import { useCallManagement } from "@/hooks/useCallManager";
+import { useMessageManagement } from "@/hooks/useMessageManager";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import MobileDebugPanel from "./MobileDebugPanel";
 
 interface ChatWindowProps {
   onShowProfile: () => void;
@@ -23,7 +24,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const currentChat = chats.find((chat) => chat._id === activeChat);
 
   const { isUserOnline: currentUserOnline } = useOnlineStatus();
-  
+
   const {
     callState,
     connectionState,
@@ -46,14 +47,14 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     toggleRemoteAudio,
     switchCallType,
     setIsCallMinimized,
-    formatDuration
+    formatDuration,
+    localStream,
+    remoteStream,
+    peerConnectionRef,
   } = useCallManagement(currentChat);
 
-  const {
-    isLoading,
-    typingUsers,
-    userStatuses 
-  } = useMessageManagement(currentChat);
+  const { isLoading, typingUsers, userStatuses } =
+    useMessageManagement(currentChat);
 
   if (!currentChat) return null;
 
@@ -89,7 +90,16 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         formatDuration={formatDuration}
       />
 
-      {(callState === 'idle' || isCallMinimized) && (
+      {callState !== "idle" && (
+        <MobileDebugPanel
+          localStream={localStream}
+          remoteStream={remoteStream}
+          peerConnection={peerConnectionRef.current}
+          callState={callState}
+        />
+      )}
+
+      {(callState === "idle" || isCallMinimized) && (
         <>
           <div className="flex-shrink-0 z-40">
             <ChatHeader
@@ -103,12 +113,10 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
           </div>
 
           <div className="flex-1 overflow-hidden relative">
-            <div 
-              className="h-full overflow-y-auto pb-16"
-            >
+            <div className="h-full overflow-y-auto pb-16">
               <MessagesArea
                 currentChat={currentChat}
-                isUserOnline={currentUserOnline} 
+                isUserOnline={currentUserOnline}
                 isLoading={isLoading}
               />
             </div>

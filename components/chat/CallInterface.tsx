@@ -23,6 +23,13 @@ interface CallInterfaceProps {
   formatDuration: (seconds: number) => string;
 }
 
+interface VideoCallDisplay {
+    isCallMinimized: boolean;
+    localVideoRef: React.RefObject<HTMLVideoElement | null>;
+    remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
+    isVideoMuted: boolean;
+}
+
 export const CallInterface = ({
   callState,
   connectionState,
@@ -181,8 +188,9 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
 );
 
 // FIXED: Better video display with stream monitoring
-const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: any) => {
+const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
+  const [hasRemoteAudio, setHasRemoteAudio] = React.useState(false);
 
   // Monitor remote video stream
   React.useEffect(() => {
@@ -190,32 +198,69 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
     if (!remoteVideo) return;
 
     const checkStream = () => {
-      const hasStream = !!(remoteVideo.srcObject && 
-        (remoteVideo.srcObject as MediaStream).getTracks().length > 0);
-      setHasRemoteVideo(hasStream);
-      console.log('Remote video stream check:', hasStream);
+      const srcObject = remoteVideo.srcObject as MediaStream;
+      if (!srcObject) {
+        setHasRemoteVideo(false);
+        setHasRemoteAudio(false);
+        return;
+      }
+
+      const videoTracks = srcObject.getVideoTracks();
+      const audioTracks = srcObject.getAudioTracks();
+      
+      const hasVideo = videoTracks.length > 0 && videoTracks[0].readyState === 'live';
+      const hasAudio = audioTracks.length > 0 && audioTracks[0].readyState === 'live';
+      
+      console.log('📊 Remote stream check:', {
+        hasVideo,
+        hasAudio,
+        videoTracks: videoTracks.map(t => ({
+          enabled: t.enabled,
+          muted: t.muted,
+          readyState: t.readyState
+        })),
+        audioTracks: audioTracks.map(t => ({
+          enabled: t.enabled,
+          muted: t.muted,
+          readyState: t.readyState
+        }))
+      });
+      
+      setHasRemoteVideo(hasVideo);
+      setHasRemoteAudio(hasAudio);
     };
 
     checkStream();
 
     const handleLoadedMetadata = () => {
-      console.log('Remote video metadata loaded');
+      console.log('📥 Remote video metadata loaded');
       checkStream();
     };
 
     const handlePlay = () => {
-      console.log('Remote video playing');
-      setHasRemoteVideo(true);
+      console.log('▶️ Remote video playing');
+      checkStream();
+    };
+
+    const handleCanPlay = () => {
+      console.log('✅ Remote video can play');
+      // Force play on mobile devices
+      remoteVideo.play().catch(err => {
+        console.error('Error auto-playing:', err);
+      });
+      checkStream();
     };
 
     remoteVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
     remoteVideo.addEventListener('play', handlePlay);
+    remoteVideo.addEventListener('canplay', handleCanPlay);
 
     const interval = setInterval(checkStream, 1000);
 
     return () => {
       remoteVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
       remoteVideo.removeEventListener('play', handlePlay);
+      remoteVideo.removeEventListener('canplay', handleCanPlay);
       clearInterval(interval);
     };
   }, [remoteVideoRef]);
@@ -227,21 +272,23 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
         ref={remoteVideoRef}
         autoPlay
         playsInline
+        controls={false}
         className="w-full h-full object-cover"
         style={{ 
           display: hasRemoteVideo ? 'block' : 'none',
-          backgroundColor: '#000' 
+          backgroundColor: '#000'
         }}
       />
       
       {/* Local video - picture in picture */}
       {!isCallMinimized && (
-        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg">
+        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10">
           <video
             ref={localVideoRef}
             autoPlay
             muted
             playsInline
+            controls={false}
             className="w-full h-full object-cover"
           />
           {isVideoMuted && (
@@ -255,9 +302,15 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
       {/* No remote video placeholder */}
       {!hasRemoteVideo && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
-          <div className="text-center">
+          <div className="text-center p-4">
             <Video size={48} className="mx-auto mb-4 opacity-50" />
-            <p>Waiting for video...</p>
+            <p className="mb-2">Waiting for video...</p>
+            {hasRemoteAudio && (
+              <p className="text-green-400 text-sm flex items-center justify-center">
+                <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
+                Audio connected
+              </p>
+            )}
             <div className="mt-2 flex justify-center space-x-1">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
