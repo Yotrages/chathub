@@ -205,7 +205,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
           post={post}
         />
         {showComments && (
-          <div className="w-full max-w-full">
+          <div className="w-full max-w-full h-[400px] sm:h-[500px] flex flex-col">
             {isFetchingComments ? (
               <div className="text-center py-4 text-gray-500">
                 <p>Loading comments...</p>

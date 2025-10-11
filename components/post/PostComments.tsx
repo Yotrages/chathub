@@ -264,7 +264,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
       </div>
 
       {/* Sticky Comment Input Area */}
-      <div className="sticky top-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10">
+      <div className="flex-shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10">
         {preview && <div className="pt-3">{renderFilePreview(preview, previewType, originalFile)}</div>}
         
         {user && (
