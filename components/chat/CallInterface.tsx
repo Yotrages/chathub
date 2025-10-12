@@ -116,7 +116,7 @@ export const CallInterface = ({
 const CallHeader = ({ currentChat, callState, connectionState, callDuration, isCallMinimized, onToggleMinimize, formatDuration }: any) => (
   <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
     <div className="flex items-center min-w-0">
-      <UserAvatar username={currentChat.name} avatar={currentChat?.avatar}/>
+      <UserAvatar username={currentChat.name} avatar={currentChat?.avatar} className='w-8 h-8'/>
       {/* <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
         <span className="text-white text-sm font-semibold">
           {currentChat.name?.charAt(0) || 'U'}
