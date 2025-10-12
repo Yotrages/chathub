@@ -1,5 +1,6 @@
 import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
 import React from 'react';
+import { UserAvatar } from '../constant/UserAvatar';
 
 interface CallInterfaceProps {
   callState: string;
@@ -76,7 +77,6 @@ export const CallInterface = ({
         </div>
       )}
 
-      {/* Main call content */}
       <div className="flex-1 relative overflow-hidden">
         {isVideoCall ? (
           <VideoCallDisplay
@@ -95,7 +95,6 @@ export const CallInterface = ({
         )}
       </div>
 
-      {/* Call controls at bottom */}
       {!isCallMinimized && (
         <CallControls
           isAudioMuted={isAudioMuted}
@@ -117,11 +116,12 @@ export const CallInterface = ({
 const CallHeader = ({ currentChat, callState, connectionState, callDuration, isCallMinimized, onToggleMinimize, formatDuration }: any) => (
   <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
     <div className="flex items-center min-w-0">
-      <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+      <UserAvatar username={currentChat.name} avatar={currentChat?.avatar}/>
+      {/* <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
         <span className="text-white text-sm font-semibold">
           {currentChat.name?.charAt(0) || 'U'}
         </span>
-      </div>
+      </div> */}
       <div className="min-w-0">
         <h4 className="font-medium text-white truncate">{currentChat.name}</h4>
         <p className="text-xs text-gray-300">
@@ -187,12 +187,10 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
   </div>
 );
 
-// FIXED: Better video display with stream monitoring
 const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
-  const [hasRemoteAudio, setHasRemoteAudio] = React.useState(false);
+  const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>('');
 
-  // Monitor remote video stream
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
     if (!remoteVideo) return;
@@ -201,33 +199,24 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
       const srcObject = remoteVideo.srcObject as MediaStream;
       if (!srcObject) {
         setHasRemoteVideo(false);
-        setHasRemoteAudio(false);
+        setRemoteStreamInfo('No stream');
         return;
       }
 
       const videoTracks = srcObject.getVideoTracks();
       const audioTracks = srcObject.getAudioTracks();
       
-      const hasVideo = videoTracks.length > 0 && videoTracks[0].readyState === 'live';
-      const hasAudio = audioTracks.length > 0 && audioTracks[0].readyState === 'live';
-      
-      console.log('📊 Remote stream check:', {
-        hasVideo,
-        hasAudio,
-        videoTracks: videoTracks.map(t => ({
-          enabled: t.enabled,
-          muted: t.muted,
-          readyState: t.readyState
-        })),
-        audioTracks: audioTracks.map(t => ({
-          enabled: t.enabled,
-          muted: t.muted,
-          readyState: t.readyState
-        }))
-      });
+      const hasVideo = videoTracks.length > 0 && 
+                       videoTracks[0].readyState === 'live' && 
+                       videoTracks[0].enabled;
       
       setHasRemoteVideo(hasVideo);
-      setHasRemoteAudio(hasAudio);
+      setRemoteStreamInfo(
+        `Video: ${videoTracks.length}(${videoTracks[0]?.readyState}) ` +
+        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState})`
+      );
+      
+      console.log('📊 Remote stream:', remoteStreamInfo);
     };
 
     checkStream();
@@ -244,18 +233,29 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
 
     const handleCanPlay = () => {
       console.log('✅ Remote video can play');
-      // Force play on mobile devices
       remoteVideo.play().catch(err => {
         console.error('Error auto-playing:', err);
+        // Add touch handler for mobile
+        const enablePlay = () => {
+          remoteVideo.play();
+          document.removeEventListener('touchstart', enablePlay);
+          document.removeEventListener('click', enablePlay);
+        };
+        document.addEventListener('touchstart', enablePlay, { once: true });
+        document.addEventListener('click', enablePlay, { once: true });
       });
       checkStream();
     };
+
+    // CRITICAL: Ensure remote video is NEVER muted (otherwise no audio)
+    remoteVideo.muted = false;
+    remoteVideo.volume = 1.0;
 
     remoteVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
     remoteVideo.addEventListener('play', handlePlay);
     remoteVideo.addEventListener('canplay', handleCanPlay);
 
-    const interval = setInterval(checkStream, 1000);
+    const interval = setInterval(checkStream, 2000);
 
     return () => {
       remoteVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -265,6 +265,14 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
     };
   }, [remoteVideoRef]);
 
+  // CRITICAL: Ensure local video is ALWAYS muted (prevent echo)
+  React.useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.muted = true;
+      localVideoRef.current.volume = 0;
+    }
+  }, [localVideoRef]);
+
   return (
     <div className="relative w-full h-full bg-black">
       {/* Remote video - full screen */}
@@ -272,10 +280,11 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
         ref={remoteVideoRef}
         autoPlay
         playsInline
+        muted={false}
         controls={false}
         className="w-full h-full object-cover"
         style={{ 
-          display: hasRemoteVideo ? 'block' : 'none',
+          display: 'block',
           backgroundColor: '#000'
         }}
       />
@@ -299,19 +308,14 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
         </div>
       )}
       
-      {/* No remote video placeholder */}
+      {/* Video status overlay */}
       {!hasRemoteVideo && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
           <div className="text-center p-4">
             <Video size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">Waiting for video...</p>
-            {hasRemoteAudio && (
-              <p className="text-green-400 text-sm flex items-center justify-center">
-                <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                Audio connected
-              </p>
-            )}
-            <div className="mt-2 flex justify-center space-x-1">
+            <p className="text-xs text-gray-500">{remoteStreamInfo}</p>
+            <div className="mt-4 flex justify-center space-x-1">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
@@ -385,7 +389,6 @@ const CallControls = ({
   onEndCall
 }: any) => (
   <div className="flex items-center justify-center space-x-4 p-6 bg-gray-800 border-t border-gray-700">
-    {/* Microphone toggle */}
     <button
       onClick={onToggleAudioMute}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
@@ -398,7 +401,6 @@ const CallControls = ({
       {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
     </button>
 
-    {/* Camera toggle (video calls only) */}
     {isVideoCall && (
       <button
         onClick={onToggleVideoMute}
@@ -413,7 +415,6 @@ const CallControls = ({
       </button>
     )}
 
-    {/* Speaker toggle */}
     <button
       onClick={onToggleRemoteAudio}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
@@ -426,7 +427,6 @@ const CallControls = ({
       {isRemoteAudioMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
     </button>
 
-    {/* Call type switch (when connected) */}
     {callState === 'connected' && (
       <button
         onClick={onSwitchCallType}
@@ -437,7 +437,6 @@ const CallControls = ({
       </button>
     )}
 
-    {/* End call */}
     <button
       onClick={onEndCall}
       className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-red-500/50"
