@@ -6,8 +6,8 @@ import { Button } from "../ui/Button";
 import { PasswordInput } from "../ui/PasswordInput";
 import { useLogin } from "@/hooks/useFetch";
 
-const SignIn = () => {
-  const { errors, register, handleSubmit, isLoading, isPending } = useLogin();
+const SignIn = ({from}: {from?: string}) => {
+  const { errors, register, handleSubmit, isLoading, isPending } = useLogin(from);
   const [loading, setLoading] = useState<string | null>(null);
  
   const handleOAuthLogin = (provider: string, intent = 'login') => {

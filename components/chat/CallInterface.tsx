@@ -214,105 +214,125 @@ const CallHeader = ({
   </div>
 );
 
-const VideoCallDisplay = ({
-  localVideoRef,
-  remoteVideoRef,
-  isVideoMuted,
-  isCallMinimized,
-}: VideoCallDisplay) => {
+const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
-  const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
-  // const [needsInteraction, setNeedsInteraction] = React.useState(false);
+  const [debugInfo, setDebugInfo] = React.useState<string>('Initializing...');
+  const [needsInteraction, setNeedsInteraction] = React.useState(false);
 
+  // CRITICAL: Force video element setup with mobile-specific handling
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
-    if (!remoteVideo) return;
+    if (!remoteVideo) {
+      setDebugInfo('No video element');
+      return;
+    }
 
-    const checkStream = () => {
+    console.log('🎥 Setting up remote video element');
+
+    // CRITICAL: Mobile-specific attributes
+    remoteVideo.setAttribute('playsinline', 'true');
+    remoteVideo.setAttribute('webkit-playsinline', 'true');
+    remoteVideo.setAttribute('autoplay', 'true');
+    remoteVideo.muted = true; // Mute video (audio plays via separate element)
+    remoteVideo.volume = 0;
+    
+    const checkAndPlayVideo = async () => {
       const srcObject = remoteVideo.srcObject as MediaStream;
+      
       if (!srcObject) {
+        setDebugInfo('No stream attached');
         setHasRemoteVideo(false);
-        setRemoteStreamInfo("No stream");
         return;
       }
 
       const videoTracks = srcObject.getVideoTracks();
       const audioTracks = srcObject.getAudioTracks();
-
-      const hasVideo =
-        videoTracks.length > 0 &&
-        videoTracks[0].readyState === "live" &&
-        videoTracks[0].enabled;
-
+      
+      console.log('📊 Stream check:', {
+        videoTracks: videoTracks.length,
+        audioTracks: audioTracks.length,
+        videoTrack: videoTracks[0] ? {
+          id: videoTracks[0].id,
+          label: videoTracks[0].label,
+          enabled: videoTracks[0].enabled,
+          muted: videoTracks[0].muted,
+          readyState: videoTracks[0].readyState
+        } : null
+      });
+      
+      const hasVideo = videoTracks.length > 0 && 
+                       videoTracks[0].readyState === 'live' && 
+                       videoTracks[0].enabled;
+      
       setHasRemoteVideo(hasVideo);
-      setRemoteStreamInfo(
-        `Video: ${videoTracks.length}(${
-          videoTracks[0]?.readyState || "none"
-        }) ` +
-          `Audio: ${audioTracks.length}(${
-            audioTracks[0]?.readyState || "none"
-          })`
+      setDebugInfo(
+        `Video: ${videoTracks.length} tracks, ` +
+        `State: ${videoTracks[0]?.readyState || 'none'}, ` +
+        `Enabled: ${videoTracks[0]?.enabled || 'n/a'}`
       );
 
-      console.log("📊 Stream check:", remoteStreamInfo);
+      if (hasVideo) {
+        console.log('✅ Video track is live, attempting to play...');
+        
+        // CRITICAL: Multiple play attempts for mobile
+        try {
+          await remoteVideo.play();
+          console.log('✅ Video playing successfully');
+          setNeedsInteraction(false);
+        } catch (err: any) {
+          console.error('❌ Video play failed:', err.name, err.message);
+          
+          if (err.name === 'NotAllowedError' || err.name === 'NotSupportedError') {
+            console.log('⚠️ Requires user interaction');
+            setNeedsInteraction(true);
+          } else {
+            // Try again after a delay
+            setTimeout(() => {
+              remoteVideo.play().catch(e => console.error('Retry failed:', e));
+            }, 500);
+          }
+        }
+      }
     };
 
-    checkStream();
-
+    // Event handlers
     const handleLoadedMetadata = () => {
-      console.log("📥 Video metadata loaded");
-      checkStream();
-      // Force play immediately when metadata loads
-      setTimeout(() => attemptPlay(), 100);
+      console.log('📥 Video metadata loaded');
+      console.log('  Video dimensions:', remoteVideo.videoWidth, 'x', remoteVideo.videoHeight);
+      checkAndPlayVideo();
     };
 
     const handleCanPlay = () => {
-      console.log("✅ Video can play");
-      attemptPlay();
+      console.log('✅ Video can play');
+      checkAndPlayVideo();
     };
 
-    const attemptPlay = () => {
-      if (!remoteVideo.srcObject) return;
-      
-      console.log("🎬 Attempting to play remote video...");
-      remoteVideo.play()
-        .then(() => {
-          console.log("✅ Remote video playing successfully");
-          // setNeedsInteraction(false);
-          checkStream();
-        })
-        .catch((err) => {
-          console.error("❌ Play error:", err.name, err.message);
-          // setNeedsInteraction(true);
-        });
+    const handlePlaying = () => {
+      console.log('▶️ Video is playing!');
+      setNeedsInteraction(false);
     };
 
-    const enablePlayOnInteraction = () => {
-      console.log("👆 User interaction detected, playing video");
-      attemptPlay();
+    const handleLoadedData = () => {
+      console.log('📥 Video data loaded');
+      checkAndPlayVideo();
     };
 
-    // CRITICAL: Remote video should be muted to prevent audio duplication
-    remoteVideo.muted = true;
-    remoteVideo.volume = 0;
-    // CRITICAL for mobile: Set these properties
-    remoteVideo.setAttribute('playsinline', 'true');
-    remoteVideo.setAttribute('webkit-playsinline', 'true');
+    remoteVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
+    remoteVideo.addEventListener('canplay', handleCanPlay);
+    remoteVideo.addEventListener('playing', handlePlaying);
+    remoteVideo.addEventListener('loadeddata', handleLoadedData);
 
-    remoteVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
-    remoteVideo.addEventListener("canplay", handleCanPlay);
-    
-    // Add interaction listeners
-    document.addEventListener("touchstart", enablePlayOnInteraction);
-    document.addEventListener("click", enablePlayOnInteraction);
+    // Initial check
+    checkAndPlayVideo();
 
-    const interval = setInterval(checkStream, 2000);
+    // Periodic checks
+    const interval = setInterval(checkAndPlayVideo, 2000);
 
     return () => {
-      remoteVideo.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      remoteVideo.removeEventListener("canplay", handleCanPlay);
-      document.removeEventListener("touchstart", enablePlayOnInteraction);
-      document.removeEventListener("click", enablePlayOnInteraction);
+      remoteVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      remoteVideo.removeEventListener('canplay', handleCanPlay);
+      remoteVideo.removeEventListener('playing', handlePlaying);
+      remoteVideo.removeEventListener('loadeddata', handleLoadedData);
       clearInterval(interval);
     };
   }, [remoteVideoRef]);
@@ -322,11 +342,29 @@ const VideoCallDisplay = ({
     if (localVideoRef.current) {
       localVideoRef.current.muted = true;
       localVideoRef.current.volume = 0;
+      localVideoRef.current.setAttribute('playsinline', 'true');
+      localVideoRef.current.setAttribute('webkit-playsinline', 'true');
     }
   }, [localVideoRef]);
 
+  // Handle user tap to enable video
+  const handleScreenTap = () => {
+    console.log('👆 User tapped screen');
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.play()
+        .then(() => {
+          console.log('✅ Video playing after tap');
+          setNeedsInteraction(false);
+        })
+        .catch(err => console.error('❌ Play after tap failed:', err));
+    }
+  };
+
   return (
-    <div className="relative w-full h-full bg-black">
+    <div 
+      className="relative w-full h-full bg-black"
+      onClick={needsInteraction ? handleScreenTap : undefined}
+    >
       {/* Remote video - full screen */}
       <video
         ref={remoteVideoRef}
@@ -334,17 +372,14 @@ const VideoCallDisplay = ({
         playsInline
         muted
         controls={false}
-        webkit-playsinline="true"
-        x-webkit-airplay="allow"
         className="w-full h-full object-cover"
-        style={{
-          display: "block",
-          backgroundColor: "#000",
-          WebkitTransform: "translateZ(0)",
-          transform: "translateZ(0)",
+        style={{ 
+          display: 'block',
+          backgroundColor: '#000',
+          objectFit: 'cover'
         }}
       />
-
+      
       {/* Local video - picture in picture */}
       {!isCallMinimized && (
         <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10">
@@ -363,31 +398,34 @@ const VideoCallDisplay = ({
           )}
         </div>
       )}
-
-      {/* Debug info */}
-      <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
-        {remoteStreamInfo}
+      
+      {/* Debug info - bottom left */}
+      <div className="absolute bottom-20 left-2 bg-black bg-opacity-70 text-white text-xs p-2 rounded max-w-xs">
+        <div className="font-mono">{debugInfo}</div>
       </div>
-
-      {!hasRemoteVideo && (
-        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
+      
+      {/* Tap to play overlay */}
+      {needsInteraction && (
+        <div className="absolute inset-0 bg-black bg-opacity-80 flex items-center justify-center z-20">
+          <div className="text-center p-6 bg-gray-800 rounded-lg">
+            <Video size={48} className="mx-auto mb-4 text-blue-400" />
+            <p className="text-white text-lg font-semibold mb-2">Tap to Start Video</p>
+            <p className="text-gray-300 text-sm">Tap anywhere on the screen</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Loading overlay when no video */}
+      {!hasRemoteVideo && !needsInteraction && (
+        <div className="absolute inset-0 bg-pink-900 flex items-center justify-center text-white">
           <div className="text-center p-4">
-            <Video size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="mb-2">Waiting for video...</p>
-            <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p>
-            <p className="text-xs text-yellow-400">
-              Tap screen to enable playback
-            </p>
-            <div className="mt-4 flex justify-center space-x-1">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-              <div
-                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                style={{ animationDelay: "0.1s" }}
-              ></div>
-              <div
-                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                style={{ animationDelay: "0.2s" }}
-              ></div>
+            <Video size={64} className="mx-auto mb-4 opacity-50" />
+            <p className="text-xl font-semibold mb-2">Loading Video...</p>
+            <p className="text-sm text-gray-300 mb-4">{debugInfo}</p>
+            <div className="flex justify-center space-x-2">
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             </div>
           </div>
         </div>
@@ -477,17 +515,17 @@ const CallControls = ({
   onToggleVideoMute,
   onToggleRemoteAudio,
   onSwitchCallType,
-  onEndCall,
+  onEndCall
 }: any) => (
   <div className="flex items-center justify-center space-x-4 p-6 bg-gray-800 border-t border-gray-700">
     <button
       onClick={onToggleAudioMute}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-        isAudioMuted
-          ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
-          : "bg-gray-600 hover:bg-gray-500"
+        isAudioMuted 
+          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
+          : 'bg-gray-600 hover:bg-gray-500'
       }`}
-      title={isAudioMuted ? "Unmute microphone" : "Mute microphone"}
+      title={isAudioMuted ? 'Unmute microphone' : 'Mute microphone'}
     >
       {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
     </button>
@@ -496,11 +534,11 @@ const CallControls = ({
       <button
         onClick={onToggleVideoMute}
         className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-          isVideoMuted
-            ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
-            : "bg-gray-600 hover:bg-gray-500"
+          isVideoMuted 
+            ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
+            : 'bg-gray-600 hover:bg-gray-500'
         }`}
-        title={isVideoMuted ? "Turn on camera" : "Turn off camera"}
+        title={isVideoMuted ? 'Turn on camera' : 'Turn off camera'}
       >
         {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
       </button>
@@ -509,20 +547,20 @@ const CallControls = ({
     <button
       onClick={onToggleRemoteAudio}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-        isRemoteAudioMuted
-          ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
-          : "bg-gray-600 hover:bg-gray-500"
+        isRemoteAudioMuted 
+          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
+          : 'bg-gray-600 hover:bg-gray-500'
       }`}
-      title={isRemoteAudioMuted ? "Unmute speaker" : "Mute speaker"}
+      title={isRemoteAudioMuted ? 'Unmute speaker' : 'Mute speaker'}
     >
       {isRemoteAudioMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
     </button>
 
-    {callState === "connected" && (
+    {callState === 'connected' && (
       <button
         onClick={onSwitchCallType}
         className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25"
-        title={isVideoCall ? "Switch to voice call" : "Switch to video call"}
+        title={isVideoCall ? 'Switch to voice call' : 'Switch to video call'}
       >
         {isVideoCall ? <Phone size={24} /> : <Video size={24} />}
       </button>

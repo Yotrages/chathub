@@ -47,8 +47,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const previousLocation = window.location.href
       store.dispatch(logout());
-      window.location.href = '/login';
+      window.location.href = `/login?from=${encodeURIComponent(`${previousLocation}`)}&error=${encodeURIComponent(`session expired, login again`)}`;
     }
     // Global error handling
     // handleLogout(error);

@@ -436,7 +436,7 @@ interface AuthResponse {
 }
 
 // Auth Login Hook
-export const useLogin = (options?: Partial<Omit<UseApiControllerOptions<LoginData, AuthResponse>, 'method'>>): MutationResult<LoginData, AuthResponse> => {
+export const useLogin = (from?: string, options?: Partial<Omit<UseApiControllerOptions<LoginData, AuthResponse>, 'method'>>): MutationResult<LoginData, AuthResponse> => {
   const loginSchema = z.object({
     email: z.string().min(1, "Username is required"),
     password: z.string().min(1, "Password is required"),
@@ -454,7 +454,7 @@ export const useLogin = (options?: Partial<Omit<UseApiControllerOptions<LoginDat
     onError: (error) => {
       console.error('Login onError called with:', error);
     },
-    redirectTo: "/",
+    redirectTo: from ? `${from === '/' ? "/" : `/${from}`}` : "/",
     ...options,
   } as UseApiControllerOptions<LoginData, AuthResponse> & { method: "POST" });
 };
