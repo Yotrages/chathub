@@ -368,8 +368,7 @@ const VideoCallDisplay = ({
       <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
         {remoteStreamInfo}
       </div>
-
-      {/* Video status overlay */}
+      
       {!hasRemoteVideo && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
           <div className="text-center p-4">
