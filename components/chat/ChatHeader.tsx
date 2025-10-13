@@ -129,7 +129,7 @@ export const ChatHeader = ({
                 // disabled={!isOtherUserOnline}
                 title={"Voice call"}
               >
-                <Phone size={16} className="sm:w-5 sm:h-5" />
+                <Phone size={20} className="w-5 h-5" />
               </button>
               
               {/* Video call button */}

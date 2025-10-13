@@ -252,26 +252,42 @@ export const useCallManagement = (currentChat: any) => {
         if (event.track.kind === 'video') {
           console.log('📹 Setting VIDEO stream to video element');
           if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = stream;
+            const videoElement = remoteVideoRef.current;
             
-            // Force play
-            setTimeout(() => {
-              if (remoteVideoRef.current) {
-                remoteVideoRef.current.play()
-                  .then(() => console.log('✅ Video playing'))
-                  .catch(err => {
-                    console.error('❌ Video play failed:', err);
-                    // Try again after user interaction
-                    const enableVideo = () => {
-                      remoteVideoRef.current?.play();
-                      document.removeEventListener('click', enableVideo);
-                      document.removeEventListener('touchstart', enableVideo);
-                    };
-                    document.addEventListener('click', enableVideo, { once: true });
-                    document.addEventListener('touchstart', enableVideo, { once: true });
-                  });
-              }
-            }, 100);
+            // CRITICAL: Set attributes before assigning stream
+            videoElement.setAttribute('playsinline', 'true');
+            videoElement.setAttribute('webkit-playsinline', 'true');
+            videoElement.muted = true;
+            
+            videoElement.srcObject = stream;
+            
+            // CRITICAL: Wait for loadedmetadata before playing
+            const attemptPlay = () => {
+              console.log('🎬 Attempting to play video...');
+              videoElement.play()
+                .then(() => {
+                  console.log('✅ Video playing successfully');
+                })
+                .catch(err => {
+                  console.error('❌ Video play failed:', err.name, err.message);
+                  // For mobile: require user interaction
+                  const enableVideo = () => {
+                    console.log('👆 User tap detected, playing video');
+                    videoElement.play().catch(console.error);
+                    document.removeEventListener('click', enableVideo);
+                    document.removeEventListener('touchstart', enableVideo);
+                  };
+                  document.addEventListener('click', enableVideo, { once: true });
+                  document.addEventListener('touchstart', enableVideo, { once: true });
+                });
+            };
+            
+            if (videoElement.readyState >= 2) {
+              // Video is ready
+              attemptPlay();
+            } else {
+              videoElement.addEventListener('loadedmetadata', attemptPlay, { once: true });
+            }
           }
         }
       }

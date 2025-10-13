@@ -1,6 +1,17 @@
-import { Phone, PhoneOff, Video, VideoOff, Mic, MicOff, Volume2, VolumeX, Maximize2, Minimize2 } from 'lucide-react';
-import React from 'react';
-import { UserAvatar } from '../constant/UserAvatar';
+import {
+  Phone,
+  PhoneOff,
+  Video,
+  VideoOff,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
+import React from "react";
+import { UserAvatar } from "../constant/UserAvatar";
 
 interface CallInterfaceProps {
   callState: string;
@@ -25,10 +36,10 @@ interface CallInterfaceProps {
 }
 
 interface VideoCallDisplay {
-    isCallMinimized: boolean;
-    localVideoRef: React.RefObject<HTMLVideoElement | null>;
-    remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
-    isVideoMuted: boolean;
+  isCallMinimized: boolean;
+  localVideoRef: React.RefObject<HTMLVideoElement | null>;
+  remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
+  isVideoMuted: boolean;
 }
 
 export const CallInterface = ({
@@ -50,14 +61,18 @@ export const CallInterface = ({
   onSwitchCallType,
   onEndCall,
   onToggleMinimize,
-  formatDuration
+  formatDuration,
 }: CallInterfaceProps) => {
-  if (callState === 'idle') return null;
+  if (callState === "idle") return null;
 
   return (
-    <div className={`fixed inset-0 z-[9999] bg-gray-900 text-white flex flex-col transition-all duration-300 ${
-      isCallMinimized ? 'bottom-0 right-4 left-auto top-auto w-80 h-60 rounded-t-lg shadow-2xl' : ''
-    }`}>
+    <div
+      className={`fixed inset-0 z-[9999] bg-gray-900 text-white flex flex-col transition-all duration-300 ${
+        isCallMinimized
+          ? "bottom-0 right-4 left-auto top-auto w-80 h-60 rounded-t-lg shadow-2xl"
+          : ""
+      }`}
+    >
       <CallHeader
         currentChat={currentChat}
         callState={callState}
@@ -113,10 +128,22 @@ export const CallInterface = ({
   );
 };
 
-const CallHeader = ({ currentChat, callState, connectionState, callDuration, isCallMinimized, onToggleMinimize, formatDuration }: any) => (
+const CallHeader = ({
+  currentChat,
+  callState,
+  connectionState,
+  callDuration,
+  isCallMinimized,
+  onToggleMinimize,
+  formatDuration,
+}: any) => (
   <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
     <div className="flex items-center min-w-0">
-      <UserAvatar username={currentChat?.name} avatar={currentChat?.avatar} className='w-8 h-8 mr-3 flex-shrink-0'/>
+      <UserAvatar
+        username={currentChat?.name}
+        avatar={currentChat?.avatar}
+        className="w-8 h-8 mr-3 flex-shrink-0"
+      />
       {/* <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
         <span className="text-white text-sm font-semibold">
           {currentChat.name?.charAt(0) || 'U'}
@@ -125,37 +152,37 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
       <div className="min-w-0">
         <h4 className="font-medium text-white truncate">{currentChat.name}</h4>
         <p className="text-xs text-gray-300">
-          {callState === 'calling' && (
+          {callState === "calling" && (
             <span className="flex items-center">
               <div className="animate-pulse w-2 h-2 bg-blue-400 rounded-full mr-2"></div>
               Calling...
             </span>
           )}
-          {callState === 'ringing' && (
+          {callState === "ringing" && (
             <span className="flex items-center">
               <div className="animate-pulse w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
               Ringing...
             </span>
           )}
-          {callState === 'connecting' && (
+          {callState === "connecting" && (
             <span className="flex items-center">
               <div className="animate-pulse w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
               Connecting...
             </span>
           )}
-          {callState === 'connected' && (
+          {callState === "connected" && (
             <span className="flex items-center">
               <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
               {formatDuration(callDuration)}
             </span>
           )}
-          {callState === 'failed' && (
+          {callState === "failed" && (
             <span className="flex items-center">
               <div className="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
               Call Failed
             </span>
           )}
-          {callState === 'ended' && (
+          {callState === "ended" && (
             <span className="flex items-center">
               <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
               Call Ended
@@ -164,22 +191,22 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
         </p>
       </div>
     </div>
-   
+
     <div className="flex items-center space-x-2">
       <span className="text-xs text-gray-300 hidden sm:block">
-        {connectionState === 'connecting' && 'Connecting...'}
-        {connectionState === 'connected' && 'Connected'}
-        {connectionState === 'disconnected' && (
+        {connectionState === "connecting" && "Connecting..."}
+        {connectionState === "connected" && "Connected"}
+        {connectionState === "disconnected" && (
           <span className="text-yellow-400">Reconnecting...</span>
         )}
-        {connectionState === 'failed' && (
+        {connectionState === "failed" && (
           <span className="text-red-400">Connection Failed</span>
         )}
       </span>
       <button
         onClick={onToggleMinimize}
         className="p-1 text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors"
-        title={isCallMinimized ? 'Maximize call' : 'Minimize call'}
+        title={isCallMinimized ? "Maximize call" : "Minimize call"}
       >
         {isCallMinimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
       </button>
@@ -187,9 +214,15 @@ const CallHeader = ({ currentChat, callState, connectionState, callDuration, isC
   </div>
 );
 
-const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallMinimized }: VideoCallDisplay) => {
+const VideoCallDisplay = ({
+  localVideoRef,
+  remoteVideoRef,
+  isVideoMuted,
+  isCallMinimized,
+}: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
-  const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>('');
+  const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
+  const [needsInteraction, setNeedsInteraction] = React.useState(false);
 
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
@@ -199,63 +232,87 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
       const srcObject = remoteVideo.srcObject as MediaStream;
       if (!srcObject) {
         setHasRemoteVideo(false);
-        setRemoteStreamInfo('No stream');
+        setRemoteStreamInfo("No stream");
         return;
       }
 
       const videoTracks = srcObject.getVideoTracks();
       const audioTracks = srcObject.getAudioTracks();
-      
-      const hasVideo = videoTracks.length > 0 && 
-                       videoTracks[0].readyState === 'live' && 
-                       videoTracks[0].enabled;
-      
+
+      const hasVideo =
+        videoTracks.length > 0 &&
+        videoTracks[0].readyState === "live" &&
+        videoTracks[0].enabled;
+
       setHasRemoteVideo(hasVideo);
       setRemoteStreamInfo(
-        `Video: ${videoTracks.length}(${videoTracks[0]?.readyState || 'none'}) ` +
-        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || 'none'})`
+        `Video: ${videoTracks.length}(${
+          videoTracks[0]?.readyState || "none"
+        }) ` +
+          `Audio: ${audioTracks.length}(${
+            audioTracks[0]?.readyState || "none"
+          })`
       );
-      
-      console.log('📊 Stream check:', remoteStreamInfo);
+
+      console.log("📊 Stream check:", remoteStreamInfo);
     };
 
     checkStream();
 
     const handleLoadedMetadata = () => {
-      console.log('📥 Video metadata loaded');
+      console.log("📥 Video metadata loaded");
       checkStream();
+      // Force play immediately when metadata loads
+      setTimeout(() => attemptPlay(), 100);
     };
 
     const handleCanPlay = () => {
-      console.log('✅ Video can play');
-      // Force play for mobile
-      remoteVideo.play().catch(err => {
-        console.error('Play error:', err);
-        // Require user interaction
-        const enablePlay = () => {
-          console.log('👆 User interaction, playing video');
-          remoteVideo.play();
-          document.removeEventListener('touchstart', enablePlay);
-          document.removeEventListener('click', enablePlay);
-        };
-        document.addEventListener('touchstart', enablePlay, { once: true });
-        document.addEventListener('click', enablePlay, { once: true });
-      });
-      checkStream();
+      console.log("✅ Video can play");
+      attemptPlay();
     };
 
-    // CRITICAL: Remote video should NOT be muted (audio plays through separate element)
-    remoteVideo.muted = true; // Mute video element to prevent audio duplication
-    remoteVideo.volume = 0;
+    const attemptPlay = () => {
+      if (!remoteVideo.srcObject) return;
+      
+      console.log("🎬 Attempting to play remote video...");
+      remoteVideo.play()
+        .then(() => {
+          console.log("✅ Remote video playing successfully");
+          setNeedsInteraction(false);
+          checkStream();
+        })
+        .catch((err) => {
+          console.error("❌ Play error:", err.name, err.message);
+          setNeedsInteraction(true);
+        });
+    };
 
-    remoteVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
-    remoteVideo.addEventListener('canplay', handleCanPlay);
+    const enablePlayOnInteraction = () => {
+      console.log("👆 User interaction detected, playing video");
+      attemptPlay();
+    };
+
+    // CRITICAL: Remote video should be muted to prevent audio duplication
+    remoteVideo.muted = true;
+    remoteVideo.volume = 0;
+    // CRITICAL for mobile: Set these properties
+    remoteVideo.setAttribute('playsinline', 'true');
+    remoteVideo.setAttribute('webkit-playsinline', 'true');
+
+    remoteVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
+    remoteVideo.addEventListener("canplay", handleCanPlay);
+    
+    // Add interaction listeners
+    document.addEventListener("touchstart", enablePlayOnInteraction);
+    document.addEventListener("click", enablePlayOnInteraction);
 
     const interval = setInterval(checkStream, 2000);
 
     return () => {
-      remoteVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      remoteVideo.removeEventListener('canplay', handleCanPlay);
+      remoteVideo.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      remoteVideo.removeEventListener("canplay", handleCanPlay);
+      document.removeEventListener("touchstart", enablePlayOnInteraction);
+      document.removeEventListener("click", enablePlayOnInteraction);
       clearInterval(interval);
     };
   }, [remoteVideoRef]);
@@ -277,13 +334,17 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
         playsInline
         muted
         controls={false}
+        webkit-playsinline="true"
+        x-webkit-airplay="allow"
         className="w-full h-full object-cover"
-        style={{ 
-          display: 'block',
-          backgroundColor: '#000'
+        style={{
+          display: "block",
+          backgroundColor: "#000",
+          WebkitTransform: "translateZ(0)",
+          transform: "translateZ(0)",
         }}
       />
-      
+
       {/* Local video - picture in picture */}
       {!isCallMinimized && (
         <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10">
@@ -302,12 +363,12 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
           )}
         </div>
       )}
-      
+
       {/* Debug info */}
       <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
         {remoteStreamInfo}
       </div>
-      
+
       {/* Video status overlay */}
       {!hasRemoteVideo && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
@@ -315,11 +376,19 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
             <Video size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">Waiting for video...</p>
             <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p>
-            <p className="text-xs text-yellow-400">Tap screen to enable playback</p>
+            <p className="text-xs text-yellow-400">
+              Tap screen to enable playback
+            </p>
             <div className="mt-4 flex justify-center space-x-1">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div
+                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></div>
             </div>
           </div>
         </div>
@@ -328,47 +397,67 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
   );
 };
 
-const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration }: any) => (
+const AudioCallDisplay = ({
+  currentChat,
+  callState,
+  callDuration,
+  formatDuration,
+}: any) => (
   <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 to-gray-900">
     <div className="text-center">
-            <UserAvatar username={currentChat?.name} avatar={currentChat?.avatar} className='w-24 h-24 mx-auto mb-6 shadow-2xl'/>
+      {currentChat?.avatar ? (
+        <UserAvatar
+          username={currentChat?.name}
+          avatar={currentChat?.avatar}
+          className="w-24 h-24 mx-auto mb-6 shadow-2xl"
+        />
+      ) : (
+        <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+          <span className="text-white text-3xl font-semibold">
+            {currentChat.name?.charAt(0) || "U"}
+          </span>
+        </div>
+      )}
 
-      {/* <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
-        <span className="text-white text-3xl font-semibold">
-          {currentChat.name?.charAt(0) || 'U'}
-        </span>
-      </div> */}
-      <h3 className="text-2xl font-semibold text-white mb-2">{currentChat.name}</h3>
+      <h3 className="text-2xl font-semibold text-white mb-2">
+        {currentChat.name}
+      </h3>
       <div className="text-lg text-gray-300">
-        {callState === 'calling' && (
+        {callState === "calling" && (
           <div className="flex items-center justify-center">
             <div className="animate-pulse flex space-x-1">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div
+                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></div>
             </div>
             <span className="ml-2">Calling...</span>
           </div>
         )}
-        {callState === 'ringing' && (
+        {callState === "ringing" && (
           <div className="flex items-center justify-center">
             <div className="animate-pulse w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
             <span>Incoming call...</span>
           </div>
         )}
-        {callState === 'connecting' && (
+        {callState === "connecting" && (
           <div className="flex items-center justify-center">
             <div className="animate-pulse w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
             <span>Connecting...</span>
           </div>
         )}
-        {callState === 'connected' && (
+        {callState === "connected" && (
           <div className="flex items-center justify-center">
             <div className="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
             <span>Voice call • {formatDuration(callDuration)}</span>
           </div>
         )}
-        {(callState === 'failed' || callState === 'ended') && (
+        {(callState === "failed" || callState === "ended") && (
           <div className="flex items-center justify-center">
             <div className="w-3 h-3 bg-red-400 rounded-full mr-2"></div>
             <span>Call {callState}</span>
@@ -389,17 +478,17 @@ const CallControls = ({
   onToggleVideoMute,
   onToggleRemoteAudio,
   onSwitchCallType,
-  onEndCall
+  onEndCall,
 }: any) => (
   <div className="flex items-center justify-center space-x-4 p-6 bg-gray-800 border-t border-gray-700">
     <button
       onClick={onToggleAudioMute}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-        isAudioMuted 
-          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
-          : 'bg-gray-600 hover:bg-gray-500'
+        isAudioMuted
+          ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
+          : "bg-gray-600 hover:bg-gray-500"
       }`}
-      title={isAudioMuted ? 'Unmute microphone' : 'Mute microphone'}
+      title={isAudioMuted ? "Unmute microphone" : "Mute microphone"}
     >
       {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
     </button>
@@ -408,11 +497,11 @@ const CallControls = ({
       <button
         onClick={onToggleVideoMute}
         className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-          isVideoMuted 
-            ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
-            : 'bg-gray-600 hover:bg-gray-500'
+          isVideoMuted
+            ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
+            : "bg-gray-600 hover:bg-gray-500"
         }`}
-        title={isVideoMuted ? 'Turn on camera' : 'Turn off camera'}
+        title={isVideoMuted ? "Turn on camera" : "Turn off camera"}
       >
         {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
       </button>
@@ -421,20 +510,20 @@ const CallControls = ({
     <button
       onClick={onToggleRemoteAudio}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-        isRemoteAudioMuted 
-          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
-          : 'bg-gray-600 hover:bg-gray-500'
+        isRemoteAudioMuted
+          ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
+          : "bg-gray-600 hover:bg-gray-500"
       }`}
-      title={isRemoteAudioMuted ? 'Unmute speaker' : 'Mute speaker'}
+      title={isRemoteAudioMuted ? "Unmute speaker" : "Mute speaker"}
     >
       {isRemoteAudioMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
     </button>
 
-    {callState === 'connected' && (
+    {callState === "connected" && (
       <button
         onClick={onSwitchCallType}
         className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25"
-        title={isVideoCall ? 'Switch to voice call' : 'Switch to video call'}
+        title={isVideoCall ? "Switch to voice call" : "Switch to video call"}
       >
         {isVideoCall ? <Phone size={24} /> : <Video size={24} />}
       </button>

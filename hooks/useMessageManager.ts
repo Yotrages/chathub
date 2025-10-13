@@ -220,24 +220,12 @@ export const useMessageManagement = (currentChat: any) => {
       if (authFailedRef.current) return; 
       
       if (currentChat.participants.some((p: any) => p._id === userId)) {
-        try {
-          const response = await api.get(`/auth/status/${userId}`);
-          if (response.data.isOnline) {
             setUserStatuses((prev) => {
               const newStatuses = new Map(prev);
               const existing = newStatuses.get(userId) || { username: '' };
               newStatuses.set(userId, { ...existing, isOnline: true });
               return newStatuses;
             });
-          }
-        } catch (err: any) {
-          if (isAuthError(err)) {
-            console.log('Auth error in user status fetch - stopping further requests');
-            authFailedRef.current = true;
-            return;
-          }
-          console.error('Error fetching user status:', err);
-        }
       }
     };
 
