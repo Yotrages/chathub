@@ -116,7 +116,7 @@ export const CallInterface = ({
 const CallHeader = ({ currentChat, callState, connectionState, callDuration, isCallMinimized, onToggleMinimize, formatDuration }: any) => (
   <div className="flex items-center justify-between p-4 bg-gray-800 border-b border-gray-700">
     <div className="flex items-center min-w-0">
-      <UserAvatar username={currentChat.name} avatar={currentChat?.avatar} className='w-8 h-8'/>
+      <UserAvatar username={currentChat?.name} avatar={currentChat?.avatar} className='w-8 h-8 mr-3 flex-shrink-0'/>
       {/* <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
         <span className="text-white text-sm font-semibold">
           {currentChat.name?.charAt(0) || 'U'}
@@ -212,31 +212,28 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
       
       setHasRemoteVideo(hasVideo);
       setRemoteStreamInfo(
-        `Video: ${videoTracks.length}(${videoTracks[0]?.readyState}) ` +
-        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState})`
+        `Video: ${videoTracks.length}(${videoTracks[0]?.readyState || 'none'}) ` +
+        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || 'none'})`
       );
       
-      console.log('📊 Remote stream:', remoteStreamInfo);
+      console.log('📊 Stream check:', remoteStreamInfo);
     };
 
     checkStream();
 
     const handleLoadedMetadata = () => {
-      console.log('📥 Remote video metadata loaded');
-      checkStream();
-    };
-
-    const handlePlay = () => {
-      console.log('▶️ Remote video playing');
+      console.log('📥 Video metadata loaded');
       checkStream();
     };
 
     const handleCanPlay = () => {
-      console.log('✅ Remote video can play');
+      console.log('✅ Video can play');
+      // Force play for mobile
       remoteVideo.play().catch(err => {
-        console.error('Error auto-playing:', err);
-        // Add touch handler for mobile
+        console.error('Play error:', err);
+        // Require user interaction
         const enablePlay = () => {
+          console.log('👆 User interaction, playing video');
           remoteVideo.play();
           document.removeEventListener('touchstart', enablePlay);
           document.removeEventListener('click', enablePlay);
@@ -247,25 +244,23 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
       checkStream();
     };
 
-    // CRITICAL: Ensure remote video is NEVER muted (otherwise no audio)
-    remoteVideo.muted = false;
-    remoteVideo.volume = 1.0;
+    // CRITICAL: Remote video should NOT be muted (audio plays through separate element)
+    remoteVideo.muted = true; // Mute video element to prevent audio duplication
+    remoteVideo.volume = 0;
 
     remoteVideo.addEventListener('loadedmetadata', handleLoadedMetadata);
-    remoteVideo.addEventListener('play', handlePlay);
     remoteVideo.addEventListener('canplay', handleCanPlay);
 
     const interval = setInterval(checkStream, 2000);
 
     return () => {
       remoteVideo.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      remoteVideo.removeEventListener('play', handlePlay);
       remoteVideo.removeEventListener('canplay', handleCanPlay);
       clearInterval(interval);
     };
   }, [remoteVideoRef]);
 
-  // CRITICAL: Ensure local video is ALWAYS muted (prevent echo)
+  // CRITICAL: Local video always muted
   React.useEffect(() => {
     if (localVideoRef.current) {
       localVideoRef.current.muted = true;
@@ -280,7 +275,7 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
         ref={remoteVideoRef}
         autoPlay
         playsInline
-        muted={false}
+        muted
         controls={false}
         className="w-full h-full object-cover"
         style={{ 
@@ -308,13 +303,19 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
         </div>
       )}
       
+      {/* Debug info */}
+      <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
+        {remoteStreamInfo}
+      </div>
+      
       {/* Video status overlay */}
       {!hasRemoteVideo && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
           <div className="text-center p-4">
             <Video size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">Waiting for video...</p>
-            <p className="text-xs text-gray-500">{remoteStreamInfo}</p>
+            <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p>
+            <p className="text-xs text-yellow-400">Tap screen to enable playback</p>
             <div className="mt-4 flex justify-center space-x-1">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -330,11 +331,13 @@ const VideoCallDisplay = ({ localVideoRef, remoteVideoRef, isVideoMuted, isCallM
 const AudioCallDisplay = ({ currentChat, callState, callDuration, formatDuration }: any) => (
   <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-800 to-gray-900">
     <div className="text-center">
-      <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+            <UserAvatar username={currentChat?.name} avatar={currentChat?.avatar} className='w-24 h-24 mx-auto mb-6 shadow-2xl'/>
+
+      {/* <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
         <span className="text-white text-3xl font-semibold">
           {currentChat.name?.charAt(0) || 'U'}
         </span>
-      </div>
+      </div> */}
       <h3 className="text-2xl font-semibold text-white mb-2">{currentChat.name}</h3>
       <div className="text-lg text-gray-300">
         {callState === 'calling' && (

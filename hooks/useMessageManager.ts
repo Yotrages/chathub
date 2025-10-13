@@ -256,51 +256,51 @@ export const useMessageManagement = (currentChat: any) => {
     socket.on('user_online', handleUserOnline);
     socket.on('user_offline', handleUserOffline);
 
-    const fetchInitialStatuses = async () => {
-      for (const p of currentChat.participants) {
-        if (p._id !== user._id && !authFailedRef.current) {
-          try {
-            const response = await api.get(`/auth/status/${p._id}`);
-            setUserStatuses((prev) => {
-              const newStatuses = new Map(prev);
-              newStatuses.set(p._id, { 
-                isOnline: response.data.isOnline, 
-                username: p.username || 'Unknown' 
-              });
-              return newStatuses;
-            });
-          } catch (err: any) {
-            if (isAuthError(err)) {
-              console.log('Auth error in initial status fetch - stopping');
-              authFailedRef.current = true;
-              break; 
-            } else if (err.response?.status === 403) {
-              setUserStatuses((prev) => {
-                const newStatuses = new Map(prev);
-                newStatuses.set(p._id, { 
-                  isOnline: false, 
-                  username: p.username || 'Unknown' 
-                });
-                return newStatuses;
-              });
-            } else {
-              console.error('Error fetching user status:', err);
-            }
-          }
-        }
-      }
-    };
+    // const fetchInitialStatuses = async () => {
+    //   for (const p of currentChat.participants) {
+    //     if (p._id !== user._id && !authFailedRef.current) {
+    //       try {
+    //         const response = await api.get(`/auth/status/${p._id}`);
+    //         setUserStatuses((prev) => {
+    //           const newStatuses = new Map(prev);
+    //           newStatuses.set(p._id, { 
+    //             isOnline: response.data.isOnline, 
+    //             username: p.username || 'Unknown' 
+    //           });
+    //           return newStatuses;
+    //         });
+    //       } catch (err: any) {
+    //         if (isAuthError(err)) {
+    //           console.log('Auth error in initial status fetch - stopping');
+    //           authFailedRef.current = true;
+    //           break; 
+    //         } else if (err.response?.status === 403) {
+    //           setUserStatuses((prev) => {
+    //             const newStatuses = new Map(prev);
+    //             newStatuses.set(p._id, { 
+    //               isOnline: false, 
+    //               username: p.username || 'Unknown' 
+    //             });
+    //             return newStatuses;
+    //           });
+    //         } else {
+    //           console.error('Error fetching user status:', err);
+    //         }
+    //       }
+    //     }
+    //   }
+    // };
 
-    fetchInitialStatuses();
-    const interval = setInterval(fetchInitialStatuses, 120000);
+    // fetchInitialStatuses();
+    // const interval = setInterval(fetchInitialStatuses, 120000);
 
     return () => {
       socket.off('user_status_change', handleUserStatusChange);
       socket.off('user_online', handleUserOnline);
       socket.off('user_offline', handleUserOffline);
-      clearInterval(interval)
+      // clearInterval(interval)
     };
-  }, [socket, activeChat, currentChat, user, navigator.onLine]);
+  }, [socket, activeChat, currentChat, user]);
 
   useEffect(() => {
     setMarkedAsReadChats(new Set());
