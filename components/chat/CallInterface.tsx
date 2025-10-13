@@ -222,7 +222,7 @@ const VideoCallDisplay = ({
 }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
-  const [needsInteraction, setNeedsInteraction] = React.useState(false);
+  // const [needsInteraction, setNeedsInteraction] = React.useState(false);
 
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
@@ -278,12 +278,12 @@ const VideoCallDisplay = ({
       remoteVideo.play()
         .then(() => {
           console.log("✅ Remote video playing successfully");
-          setNeedsInteraction(false);
+          // setNeedsInteraction(false);
           checkStream();
         })
         .catch((err) => {
           console.error("❌ Play error:", err.name, err.message);
-          setNeedsInteraction(true);
+          // setNeedsInteraction(true);
         });
     };
 
@@ -368,7 +368,7 @@ const VideoCallDisplay = ({
       <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
         {remoteStreamInfo}
       </div>
-      
+
       {!hasRemoteVideo && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
           <div className="text-center p-4">
