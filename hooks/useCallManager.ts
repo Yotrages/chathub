@@ -222,57 +222,55 @@ export const useCallManagement = (currentChat: any) => {
           readyState: t.readyState
         })));
         
-        setRemoteStream(stream);
-        
-        // CRITICAL: Route audio and video separately
-        if (event.track.kind === 'audio') {
-          console.log('🔊 Setting AUDIO stream to audio element');
-          if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = stream;
-            remoteAudioRef.current.volume = 1.0;
-            remoteAudioRef.current.muted = false;
-            
-            // Force play
-            remoteAudioRef.current.play()
-              .then(() => console.log('✅ Audio playing'))
-              .catch(err => {
-                console.error('❌ Audio play failed:', err);
-                // Try again after user interaction
-                const enableAudio = () => {
-                  remoteAudioRef.current?.play();
-                  document.removeEventListener('click', enableAudio);
-                  document.removeEventListener('touchstart', enableAudio);
-                };
-                document.addEventListener('click', enableAudio, { once: true });
-                document.addEventListener('touchstart', enableAudio, { once: true });
-              });
-          }
-        }
-        
-        if (event.track.kind === 'video') {
-          console.log('📹 Setting VIDEO stream to video element');
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = stream;
-            
-            // Force play
-            setTimeout(() => {
-              if (remoteVideoRef.current) {
-                remoteVideoRef.current.play()
-                  .then(() => console.log('✅ Video playing'))
+        // CRITICAL: Only set remote stream once per stream ID
+        if (!remoteStream || remoteStream.id !== stream.id) {
+          console.log('📥 Setting new remote stream:', stream.id);
+          setRemoteStream(stream);
+          
+          // CRITICAL: Route audio and video separately
+          if (event.track.kind === 'audio') {
+            console.log('🔊 Setting AUDIO stream to audio element');
+            if (remoteAudioRef.current) {
+              // Only set if not already set to this stream
+              if (!remoteAudioRef.current.srcObject || 
+                  (remoteAudioRef.current.srcObject as MediaStream).id !== stream.id) {
+                remoteAudioRef.current.srcObject = stream;
+                remoteAudioRef.current.volume = 1.0;
+                remoteAudioRef.current.muted = false;
+                
+                // Force play
+                remoteAudioRef.current.play()
+                  .then(() => console.log('✅ Audio playing'))
                   .catch(err => {
-                    console.error('❌ Video play failed:', err);
-                    // Try again after user interaction
-                    const enableVideo = () => {
-                      remoteVideoRef.current?.play();
-                      document.removeEventListener('click', enableVideo);
-                      document.removeEventListener('touchstart', enableVideo);
+                    console.error('❌ Audio play failed:', err);
+                    const enableAudio = () => {
+                      remoteAudioRef.current?.play();
+                      document.removeEventListener('click', enableAudio);
+                      document.removeEventListener('touchstart', enableAudio);
                     };
-                    document.addEventListener('click', enableVideo, { once: true });
-                    document.addEventListener('touchstart', enableVideo, { once: true });
+                    document.addEventListener('click', enableAudio, { once: true });
+                    document.addEventListener('touchstart', enableAudio, { once: true });
                   });
               }
-            }, 100);
+            }
           }
+          
+          if (event.track.kind === 'video') {
+            console.log('📹 Setting VIDEO stream to video element');
+            if (remoteVideoRef.current) {
+              // Only set if not already set to this stream
+              if (!remoteVideoRef.current.srcObject || 
+                  (remoteVideoRef.current.srcObject as MediaStream).id !== stream.id) {
+                remoteVideoRef.current.srcObject = stream;
+                console.log('✅ Video srcObject set to stream:', stream.id);
+                
+                // Let the video element's event handlers take care of playing
+                // Don't force play here to avoid AbortError
+              }
+            }
+          }
+        } else {
+          console.log('📥 Stream already set, skipping:', stream.id);
         }
       }
     };
@@ -681,6 +679,23 @@ export const useCallManagement = (currentChat: any) => {
       console.log('❌ call_error:', data);
       setCallError(data.error);
       toast.error(data.error);
+      
+      // Clean up immediately on error
+      if (data.reason === 'offline') {
+        setTimeout(() => cleanup(), 2000);
+      }
+    };
+
+    const handleCallWaiting = (data: { message: string; status: string }) => {
+      console.log('⏳ call_waiting:', data);
+      
+      if (data.status === 'offline') {
+        setCallError('User is offline, waiting...');
+      } else if (data.status === 'online') {
+        setCallError(null);
+        setCallState('calling');
+        toast.success('User came online, calling...');
+      }
     };
 
     const handleOffer = async (data: { sdp: RTCSessionDescriptionInit; from: string; isVideo: boolean; callId: string }) => {
@@ -843,6 +858,7 @@ export const useCallManagement = (currentChat: any) => {
     socket.on('call_end', handleCallEnd);
     socket.on('call_decline', handleCallDecline);
     socket.on('call_error', handleCallError);
+    socket.on('call_waiting', handleCallWaiting);
     socket.on('call_timeout', handleCallTimeout);
 
     return () => {
@@ -854,6 +870,7 @@ export const useCallManagement = (currentChat: any) => {
       socket.off('call_end', handleCallEnd);
       socket.off('call_decline', handleCallDecline);
       socket.off('call_error', handleCallError);
+      socket.off('call_waiting', handleCallWaiting);
       socket.off('call_timeout', handleCallTimeout);
     };
   }, [socket, isConnected, initializePeerConnection, declineCall, cleanup, localStream]);

@@ -139,7 +139,7 @@ export const ChatHeader = ({
                 // disabled={!isOtherUserOnline}
                 title={"Video call"}
               >
-                <Video size={16} className="sm:w-5 sm:h-5" />
+                <Video size={20} className="w-5 h-5" />
               </button>
             </>
           )}
