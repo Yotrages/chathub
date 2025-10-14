@@ -200,7 +200,7 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
-    // CRITICAL: Proper track handling with Android fixes
+    // CRITICAL: Proper track handling - FIXED ECHO by separating audio/video
     pc.ontrack = (event) => {
       console.log('📥 ===== ONTRACK FIRED =====');
       console.log('📥 Track kind:', event.track.kind);
@@ -223,7 +223,7 @@ export const useCallManagement = (currentChat: any) => {
         
         setRemoteStream(stream);
         
-        // CRITICAL: Route audio and video separately
+        // CRITICAL: Route audio ONLY to audio element
         if (event.track.kind === 'audio') {
           console.log('🔊 Setting AUDIO stream to audio element');
           if (remoteAudioRef.current) {
@@ -247,61 +247,81 @@ export const useCallManagement = (currentChat: any) => {
           }
         }
         
+        // CRITICAL: Route video ONLY (no audio) to video element
         if (event.track.kind === 'video') {
           console.log('📹 Setting VIDEO stream to video element');
           if (remoteVideoRef.current) {
-            // CRITICAL: Force clear and reset srcObject for Android
+            // CRITICAL: Create a new MediaStream with ONLY video track (no audio!)
+            const videoOnlyStream = new MediaStream([event.track]);
+            
+            // Force clear old stream
             remoteVideoRef.current.srcObject = null;
             
             // Small delay to ensure clean state
             setTimeout(() => {
               if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = stream;
+                remoteVideoRef.current.srcObject = videoOnlyStream;
                 
-                // CRITICAL: Set explicit attributes for Android rendering
-                remoteVideoRef.current.muted = false;
-                remoteVideoRef.current.volume = 1.0;
+                // CRITICAL: Video element MUST be muted (audio plays through separate element)
+                remoteVideoRef.current.muted = true;
+                remoteVideoRef.current.volume = 0;
                 remoteVideoRef.current.playsInline = true;
                 remoteVideoRef.current.setAttribute('playsinline', '');
                 remoteVideoRef.current.setAttribute('webkit-playsinline', '');
                 
-                // Force display styles for Android
+                // Force display styles for Android - CRITICAL for Itel A16
                 remoteVideoRef.current.style.display = 'block';
                 remoteVideoRef.current.style.visibility = 'visible';
                 remoteVideoRef.current.style.opacity = '1';
+                remoteVideoRef.current.style.objectFit = 'cover';
+                remoteVideoRef.current.style.width = '100%';
+                remoteVideoRef.current.style.height = '100%';
+                remoteVideoRef.current.style.position = 'absolute';
+                remoteVideoRef.current.style.top = '0';
+                remoteVideoRef.current.style.left = '0';
                 remoteVideoRef.current.style.transform = 'translateZ(0)';
                 remoteVideoRef.current.style.webkitTransform = 'translateZ(0)';
+                remoteVideoRef.current.style.backfaceVisibility = 'hidden';
+                remoteVideoRef.current.style.webkitBackfaceVisibility = 'hidden';
                 
                 console.log('📹 Attempting video play...');
                 
                 // Force play with error handling
-                remoteVideoRef.current.play()
-                  .then(() => {
-                    console.log('✅ Video playing successfully');
-                    // Double-check display is working
-                    if (remoteVideoRef.current) {
-                      remoteVideoRef.current.style.display = 'block';
-                      console.log('✅ Video display confirmed');
-                    }
-                  })
-                  .catch(err => {
-                    console.error('❌ Video play failed:', err);
-                    const enableVideo = () => {
+                const playPromise = remoteVideoRef.current.play();
+                
+                if (playPromise !== undefined) {
+                  playPromise
+                    .then(() => {
+                      console.log('✅ Video playing successfully');
                       if (remoteVideoRef.current) {
-                        remoteVideoRef.current.muted = false;
-                        remoteVideoRef.current.style.display = 'block';
-                        remoteVideoRef.current.play()
-                          .then(() => console.log('✅ Video playing after interaction'))
-                          .catch(e => console.error('❌ Still failed:', e));
+                        console.log('✅ Video element properties:', {
+                          paused: remoteVideoRef.current.paused,
+                          muted: remoteVideoRef.current.muted,
+                          videoWidth: remoteVideoRef.current.videoWidth,
+                          videoHeight: remoteVideoRef.current.videoHeight,
+                          readyState: remoteVideoRef.current.readyState
+                        });
                       }
-                      document.removeEventListener('click', enableVideo);
-                      document.removeEventListener('touchstart', enableVideo);
-                    };
-                    document.addEventListener('click', enableVideo, { once: true });
-                    document.addEventListener('touchstart', enableVideo, { once: true });
-                  });
+                    })
+                    .catch(err => {
+                      console.error('❌ Video play failed:', err);
+                      const enableVideo = () => {
+                        if (remoteVideoRef.current) {
+                          remoteVideoRef.current.muted = true; // Keep muted!
+                          remoteVideoRef.current.style.display = 'block';
+                          remoteVideoRef.current.play()
+                            .then(() => console.log('✅ Video playing after interaction'))
+                            .catch(e => console.error('❌ Still failed:', e));
+                        }
+                        document.removeEventListener('click', enableVideo);
+                        document.removeEventListener('touchstart', enableVideo);
+                      };
+                      document.addEventListener('click', enableVideo, { once: true });
+                      document.addEventListener('touchstart', enableVideo, { once: true });
+                    });
+                }
               }
-            }, 100);
+            }, 150);
           }
         }
       }
@@ -706,7 +726,7 @@ export const useCallManagement = (currentChat: any) => {
       toast.error(data.error);
     };
 
-    // NEW: Handle call_waiting event
+    // NEW: Handle call_waiting event for offline/online transitions
     const handleCallWaiting = (data: { message: string; status: string }) => {
       console.log('⏳ call_waiting:', data);
       if (data.status === 'offline') {
@@ -874,7 +894,7 @@ export const useCallManagement = (currentChat: any) => {
     socket.on('call_decline', handleCallDecline);
     socket.on('call_error', handleCallError);
     socket.on('call_timeout', handleCallTimeout);
-    socket.on('call_waiting', handleCallWaiting); // NEW
+    socket.on('call_waiting', handleCallWaiting);
 
     return () => {
       socket.off('offer', handleOffer);
@@ -886,7 +906,7 @@ export const useCallManagement = (currentChat: any) => {
       socket.off('call_decline', handleCallDecline);
       socket.off('call_error', handleCallError);
       socket.off('call_timeout', handleCallTimeout);
-      socket.off('call_waiting', handleCallWaiting); // NEW
+      socket.off('call_waiting', handleCallWaiting);
     };
   }, [socket, isConnected, initializePeerConnection, declineCall, cleanup, localStream]);
 
@@ -894,7 +914,7 @@ export const useCallManagement = (currentChat: any) => {
     return () => {
       cleanup();
     };
-  }, []);
+  }, [cleanup]);
 
   return {
     callState,

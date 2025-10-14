@@ -454,7 +454,7 @@ export const useLogin = (from?: string, options?: Partial<Omit<UseApiControllerO
     onError: (error) => {
       console.error('Login onError called with:', error);
     },
-    redirectTo: from ? `${from === '/' ? "/" : `/${from}`}` : "/",
+    redirectTo: from ? from : "/",
     ...options,
   } as UseApiControllerOptions<LoginData, AuthResponse> & { method: "POST" });
 };

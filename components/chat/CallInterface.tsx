@@ -238,7 +238,6 @@ const VideoCallDisplay = ({
       }
 
       const videoTracks = srcObject.getVideoTracks();
-      const audioTracks = srcObject.getAudioTracks();
 
       const hasVideo =
         videoTracks.length > 0 &&
@@ -249,45 +248,53 @@ const VideoCallDisplay = ({
       setRemoteStreamInfo(
         `Video: ${videoTracks.length}(${
           videoTracks[0]?.readyState || "none"
-        }) ` +
-          `Audio: ${audioTracks.length}(${
-            audioTracks[0]?.readyState || "none"
-          })`
+        }, ${videoTracks[0]?.enabled ? "enabled" : "disabled"})`
       );
-
-      console.log("📊 Stream check:", remoteStreamInfo);
     };
 
     checkStream();
 
     const handleLoadedMetadata = () => {
       console.log("📥 Video metadata loaded");
+      console.log("📥 Video dimensions:", remoteVideo.videoWidth, "x", remoteVideo.videoHeight);
       checkStream();
-      // Force re-render to trigger display update
       setForceRender(prev => prev + 1);
     };
 
     const handleCanPlay = () => {
       console.log("✅ Video can play");
       
-      // CRITICAL: Force display properties for Android
+      // CRITICAL: Ensure video element is properly styled for rendering
       remoteVideo.style.display = 'block';
       remoteVideo.style.visibility = 'visible';
       remoteVideo.style.opacity = '1';
-      remoteVideo.style.transform = 'translateZ(0)'; // Hardware acceleration
+      remoteVideo.style.objectFit = 'cover';
+      remoteVideo.style.width = '100%';
+      remoteVideo.style.height = '100%';
+      remoteVideo.style.position = 'absolute';
+      remoteVideo.style.top = '0';
+      remoteVideo.style.left = '0';
+      remoteVideo.style.transform = 'translateZ(0)';
       remoteVideo.style.webkitTransform = 'translateZ(0)';
+      remoteVideo.style.backfaceVisibility = 'hidden';
+      remoteVideo.style.webkitBackfaceVisibility = 'hidden';
       
-      // Unmute for proper rendering on Android
-      remoteVideo.muted = false;
-      remoteVideo.volume = 1.0;
+      // MUST stay muted (audio plays through separate element)
+      remoteVideo.muted = true;
+      remoteVideo.volume = 0;
       
-      // Try to play
       const playPromise = remoteVideo.play();
       
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             console.log("✅ Video playing successfully");
+            console.log("📊 Video state:", {
+              paused: remoteVideo.paused,
+              videoWidth: remoteVideo.videoWidth,
+              videoHeight: remoteVideo.videoHeight,
+              readyState: remoteVideo.readyState
+            });
             setNeedsInteraction(false);
             setForceRender(prev => prev + 1);
           })
@@ -295,11 +302,10 @@ const VideoCallDisplay = ({
             console.error("❌ Play error:", err);
             setNeedsInteraction(true);
             
-            // Require user interaction
             const enablePlay = () => {
               console.log("👆 User interaction, playing video");
-              remoteVideo.muted = false;
-              remoteVideo.volume = 1.0;
+              remoteVideo.muted = true; // Keep muted!
+              remoteVideo.volume = 0;
               remoteVideo.style.display = 'block';
               
               remoteVideo.play()
@@ -322,20 +328,25 @@ const VideoCallDisplay = ({
       checkStream();
     };
 
-    // CRITICAL: Proper video element setup for Android
-    remoteVideo.muted = false;
-    remoteVideo.volume = 1.0;
+    // CRITICAL: Video element setup - MUST be muted
+    remoteVideo.muted = true;
+    remoteVideo.volume = 0;
     remoteVideo.playsInline = true;
-    remoteVideo.setAttribute('playsinline', ''); // iOS
-    remoteVideo.setAttribute('webkit-playsinline', ''); // Older iOS
+    remoteVideo.setAttribute('playsinline', '');
+    remoteVideo.setAttribute('webkit-playsinline', '');
     remoteVideo.style.display = 'block';
     remoteVideo.style.visibility = 'visible';
     remoteVideo.style.opacity = '1';
     remoteVideo.style.objectFit = 'cover';
     remoteVideo.style.width = '100%';
     remoteVideo.style.height = '100%';
-    remoteVideo.style.transform = 'translateZ(0)'; // Force GPU acceleration
+    remoteVideo.style.position = 'absolute';
+    remoteVideo.style.top = '0';
+    remoteVideo.style.left = '0';
+    remoteVideo.style.transform = 'translateZ(0)';
     remoteVideo.style.webkitTransform = 'translateZ(0)';
+    remoteVideo.style.backfaceVisibility = 'hidden';
+    remoteVideo.style.webkitBackfaceVisibility = 'hidden';
 
     remoteVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
     remoteVideo.addEventListener("canplay", handleCanPlay);
@@ -371,15 +382,25 @@ const VideoCallDisplay = ({
         ref={remoteVideoRef}
         autoPlay
         playsInline
+        muted
         controls={false}
-        key={forceRender} // Force re-render on stream change
+        key={forceRender}
         className="w-full h-full object-cover"
         style={{
           display: "block",
           visibility: "visible",
           opacity: 1,
           backgroundColor: "#000",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
           transform: "translateZ(0)",
+          WebkitTransform: "translateZ(0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
         }}
       />
 
@@ -425,7 +446,8 @@ const VideoCallDisplay = ({
                 onClick={() => {
                   const video = remoteVideoRef.current;
                   if (video) {
-                    video.muted = false;
+                    video.muted = true; // MUST stay muted!
+                    video.volume = 0;
                     video.style.display = 'block';
                     video.play().then(() => {
                       setNeedsInteraction(false);
