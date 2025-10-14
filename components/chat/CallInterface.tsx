@@ -222,8 +222,6 @@ const VideoCallDisplay = ({
 }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
-  const [needsInteraction, setNeedsInteraction] = React.useState(false);
-  const [forceRender, setForceRender] = React.useState(0);
 
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
@@ -238,6 +236,7 @@ const VideoCallDisplay = ({
       }
 
       const videoTracks = srcObject.getVideoTracks();
+      const audioTracks = srcObject.getAudioTracks();
 
       const hasVideo =
         videoTracks.length > 0 &&
@@ -248,105 +247,43 @@ const VideoCallDisplay = ({
       setRemoteStreamInfo(
         `Video: ${videoTracks.length}(${
           videoTracks[0]?.readyState || "none"
-        }, ${videoTracks[0]?.enabled ? "enabled" : "disabled"})`
+        }) ` +
+          `Audio: ${audioTracks.length}(${
+            audioTracks[0]?.readyState || "none"
+          })`
       );
+
+      console.log("📊 Stream check:", remoteStreamInfo);
     };
 
     checkStream();
 
     const handleLoadedMetadata = () => {
       console.log("📥 Video metadata loaded");
-      console.log("📥 Video dimensions:", remoteVideo.videoWidth, "x", remoteVideo.videoHeight);
       checkStream();
-      setForceRender(prev => prev + 1);
     };
 
     const handleCanPlay = () => {
       console.log("✅ Video can play");
-      
-      // CRITICAL: Ensure video element is properly styled for rendering
-      remoteVideo.style.display = 'block';
-      remoteVideo.style.visibility = 'visible';
-      remoteVideo.style.opacity = '1';
-      remoteVideo.style.objectFit = 'cover';
-      remoteVideo.style.width = '100%';
-      remoteVideo.style.height = '100%';
-      remoteVideo.style.position = 'absolute';
-      remoteVideo.style.top = '0';
-      remoteVideo.style.left = '0';
-      remoteVideo.style.transform = 'translateZ(0)';
-      remoteVideo.style.webkitTransform = 'translateZ(0)';
-      remoteVideo.style.backfaceVisibility = 'hidden';
-      remoteVideo.style.webkitBackfaceVisibility = 'hidden';
-      
-      // MUST stay muted (audio plays through separate element)
-      remoteVideo.muted = true;
-      remoteVideo.volume = 0;
-      
-      const playPromise = remoteVideo.play();
-      
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => {
-            console.log("✅ Video playing successfully");
-            console.log("📊 Video state:", {
-              paused: remoteVideo.paused,
-              videoWidth: remoteVideo.videoWidth,
-              videoHeight: remoteVideo.videoHeight,
-              readyState: remoteVideo.readyState
-            });
-            setNeedsInteraction(false);
-            setForceRender(prev => prev + 1);
-          })
-          .catch((err) => {
-            console.error("❌ Play error:", err);
-            setNeedsInteraction(true);
-            
-            const enablePlay = () => {
-              console.log("👆 User interaction, playing video");
-              remoteVideo.muted = true; // Keep muted!
-              remoteVideo.volume = 0;
-              remoteVideo.style.display = 'block';
-              
-              remoteVideo.play()
-                .then(() => {
-                  console.log("✅ Video playing after interaction");
-                  setNeedsInteraction(false);
-                  setForceRender(prev => prev + 1);
-                })
-                .catch(err => console.error("❌ Still failed:", err));
-                
-              document.removeEventListener("touchstart", enablePlay);
-              document.removeEventListener("click", enablePlay);
-            };
-            
-            document.addEventListener("touchstart", enablePlay, { once: true });
-            document.addEventListener("click", enablePlay, { once: true });
-          });
-      }
-      
+      // Force play for mobile
+      remoteVideo.play().catch((err) => {
+        console.error("Play error:", err);
+        // Require user interaction
+        const enablePlay = () => {
+          console.log("👆 User interaction, playing video");
+          remoteVideo.play();
+          document.removeEventListener("touchstart", enablePlay);
+          document.removeEventListener("click", enablePlay);
+        };
+        document.addEventListener("touchstart", enablePlay, { once: true });
+        document.addEventListener("click", enablePlay, { once: true });
+      });
       checkStream();
     };
 
-    // CRITICAL: Video element setup - MUST be muted
-    remoteVideo.muted = true;
+    // CRITICAL: Remote video should NOT be muted (audio plays through separate element)
+    remoteVideo.muted = true; // Mute video element to prevent audio duplication
     remoteVideo.volume = 0;
-    remoteVideo.playsInline = true;
-    remoteVideo.setAttribute('playsinline', '');
-    remoteVideo.setAttribute('webkit-playsinline', '');
-    remoteVideo.style.display = 'block';
-    remoteVideo.style.visibility = 'visible';
-    remoteVideo.style.opacity = '1';
-    remoteVideo.style.objectFit = 'cover';
-    remoteVideo.style.width = '100%';
-    remoteVideo.style.height = '100%';
-    remoteVideo.style.position = 'absolute';
-    remoteVideo.style.top = '0';
-    remoteVideo.style.left = '0';
-    remoteVideo.style.transform = 'translateZ(0)';
-    remoteVideo.style.webkitTransform = 'translateZ(0)';
-    remoteVideo.style.backfaceVisibility = 'hidden';
-    remoteVideo.style.webkitBackfaceVisibility = 'hidden';
 
     remoteVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
     remoteVideo.addEventListener("canplay", handleCanPlay);
@@ -365,13 +302,6 @@ const VideoCallDisplay = ({
     if (localVideoRef.current) {
       localVideoRef.current.muted = true;
       localVideoRef.current.volume = 0;
-      localVideoRef.current.playsInline = true;
-      localVideoRef.current.setAttribute('playsinline', '');
-      localVideoRef.current.setAttribute('webkit-playsinline', '');
-      localVideoRef.current.style.display = 'block';
-      localVideoRef.current.style.visibility = 'visible';
-      localVideoRef.current.style.transform = 'translateZ(0)';
-      localVideoRef.current.style.webkitTransform = 'translateZ(0)';
     }
   }, [localVideoRef]);
 
@@ -384,7 +314,6 @@ const VideoCallDisplay = ({
         playsInline
         muted
         controls={false}
-        key={forceRender}
         className="w-full h-full object-cover"
         style={{
           display: "block",
@@ -394,6 +323,7 @@ const VideoCallDisplay = ({
           position: "absolute",
           top: 0,
           left: 0,
+          inset: 0,
           width: "100%",
           height: "100%",
           objectFit: "cover",
@@ -414,11 +344,6 @@ const VideoCallDisplay = ({
             playsInline
             controls={false}
             className="w-full h-full object-cover"
-            style={{
-              display: "block",
-              visibility: "visible",
-              transform: "translateZ(0)",
-            }}
           />
           {isVideoMuted && (
             <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
@@ -429,9 +354,8 @@ const VideoCallDisplay = ({
       )}
 
       {/* Debug info */}
-      <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded z-20">
-        <div>{remoteStreamInfo}</div>
-        <div>Render: {forceRender}</div>
+      <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
+        {remoteStreamInfo}
       </div>
 
       {/* Video status overlay */}
@@ -441,25 +365,9 @@ const VideoCallDisplay = ({
             <Video size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">Waiting for video...</p>
             <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p>
-            {needsInteraction && (
-              <button
-                onClick={() => {
-                  const video = remoteVideoRef.current;
-                  if (video) {
-                    video.muted = true; // MUST stay muted!
-                    video.volume = 0;
-                    video.style.display = 'block';
-                    video.play().then(() => {
-                      setNeedsInteraction(false);
-                      setForceRender(prev => prev + 1);
-                    });
-                  }
-                }}
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg animate-pulse"
-              >
-                👆 TAP TO ENABLE VIDEO
-              </button>
-            )}
+            <p className="text-xs text-yellow-400">
+              Tap screen to enable playback
+            </p>
             <div className="mt-4 flex justify-center space-x-1">
               <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
               <div
@@ -559,17 +467,17 @@ const CallControls = ({
   onToggleVideoMute,
   onToggleRemoteAudio,
   onSwitchCallType,
-  onEndCall
+  onEndCall,
 }: any) => (
   <div className="flex items-center justify-center space-x-4 p-6 bg-gray-800 border-t border-gray-700">
     <button
       onClick={onToggleAudioMute}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-        isAudioMuted 
-          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
-          : 'bg-gray-600 hover:bg-gray-500'
+        isAudioMuted
+          ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
+          : "bg-gray-600 hover:bg-gray-500"
       }`}
-      title={isAudioMuted ? 'Unmute microphone' : 'Mute microphone'}
+      title={isAudioMuted ? "Unmute microphone" : "Mute microphone"}
     >
       {isAudioMuted ? <MicOff size={24} /> : <Mic size={24} />}
     </button>
@@ -578,11 +486,11 @@ const CallControls = ({
       <button
         onClick={onToggleVideoMute}
         className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-          isVideoMuted 
-            ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
-            : 'bg-gray-600 hover:bg-gray-500'
+          isVideoMuted
+            ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
+            : "bg-gray-600 hover:bg-gray-500"
         }`}
-        title={isVideoMuted ? 'Turn on camera' : 'Turn off camera'}
+        title={isVideoMuted ? "Turn on camera" : "Turn off camera"}
       >
         {isVideoMuted ? <VideoOff size={24} /> : <Video size={24} />}
       </button>
@@ -591,20 +499,20 @@ const CallControls = ({
     <button
       onClick={onToggleRemoteAudio}
       className={`p-4 rounded-full transition-all transform hover:scale-105 ${
-        isRemoteAudioMuted 
-          ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25' 
-          : 'bg-gray-600 hover:bg-gray-500'
+        isRemoteAudioMuted
+          ? "bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/25"
+          : "bg-gray-600 hover:bg-gray-500"
       }`}
-      title={isRemoteAudioMuted ? 'Unmute speaker' : 'Mute speaker'}
+      title={isRemoteAudioMuted ? "Unmute speaker" : "Mute speaker"}
     >
       {isRemoteAudioMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
     </button>
 
-    {callState === 'connected' && (
+    {callState === "connected" && (
       <button
         onClick={onSwitchCallType}
         className="p-4 bg-blue-500 hover:bg-blue-600 rounded-full transition-all transform hover:scale-105 shadow-lg shadow-blue-500/25"
-        title={isVideoCall ? 'Switch to voice call' : 'Switch to video call'}
+        title={isVideoCall ? "Switch to voice call" : "Switch to video call"}
       >
         {isVideoCall ? <Phone size={24} /> : <Video size={24} />}
       </button>
