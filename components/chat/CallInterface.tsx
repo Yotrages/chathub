@@ -1,3 +1,4 @@
+"use client"
 import {
   Phone,
   PhoneOff,
@@ -144,11 +145,6 @@ const CallHeader = ({
         avatar={currentChat?.avatar}
         className="w-8 h-8 mr-3 flex-shrink-0"
       />
-      {/* <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-        <span className="text-white text-sm font-semibold">
-          {currentChat.name?.charAt(0) || 'U'}
-        </span>
-      </div> */}
       <div className="min-w-0">
         <h4 className="font-medium text-white truncate">{currentChat.name}</h4>
         <p className="text-xs text-gray-300">
@@ -222,6 +218,7 @@ const VideoCallDisplay = ({
 }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
+  const [forceRender, setForceRender] = React.useState(0);
 
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
@@ -254,21 +251,42 @@ const VideoCallDisplay = ({
       );
 
       console.log("📊 Stream check:", remoteStreamInfo);
+      
+      // CRITICAL: If video exists but not showing, force re-render
+      if (hasVideo && remoteVideo.paused) {
+        console.log("⚠️ Video paused but should be playing, forcing play...");
+        remoteVideo.play().catch(err => console.error("Force play error:", err));
+      }
     };
 
     checkStream();
 
     const handleLoadedMetadata = () => {
       console.log("📥 Video metadata loaded");
+      console.log("Video dimensions:", remoteVideo.videoWidth, "x", remoteVideo.videoHeight);
       checkStream();
+      setForceRender(prev => prev + 1); // Force component re-render
     };
 
     const handleCanPlay = () => {
       console.log("✅ Video can play");
-      // Force play for mobile
+      
+      // CRITICAL: Force play immediately
       remoteVideo.play().catch((err) => {
         console.error("Play error:", err);
-        // Require user interaction
+        
+        // CRITICAL: For Android/Itel A16 - aggressive retry
+        const playAttempts = [0, 100, 300, 500, 1000];
+        playAttempts.forEach(delay => {
+          setTimeout(() => {
+            if (remoteVideo.paused) {
+              console.log(`Retry play after ${delay}ms`);
+              remoteVideo.play().catch(e => console.error("Retry failed:", e));
+            }
+          }, delay);
+        });
+        
+        // User interaction fallback
         const enablePlay = () => {
           console.log("👆 User interaction, playing video");
           remoteVideo.play();
@@ -281,38 +299,96 @@ const VideoCallDisplay = ({
       checkStream();
     };
 
-    // CRITICAL: Remote video should NOT be muted (audio plays through separate element)
-    remoteVideo.muted = true; // Mute video element to prevent audio duplication
+    // CRITICAL: Additional event listeners for mobile
+    const handlePlaying = () => {
+      console.log("✅ Video is playing");
+      setHasRemoteVideo(true);
+      setForceRender(prev => prev + 1);
+    };
+
+    const handleWaiting = () => {
+      console.log("⏳ Video is waiting");
+    };
+
+    const handleStalled = () => {
+      console.error("❌ Video stalled");
+      // Force reload
+      const src = remoteVideo.srcObject;
+      remoteVideo.srcObject = null;
+      setTimeout(() => {
+        remoteVideo.srcObject = src;
+        remoteVideo.play();
+      }, 100);
+    };
+
+    // CRITICAL: Remote video MUST be muted
+    remoteVideo.muted = true;
     remoteVideo.volume = 0;
+    
+    // CRITICAL: Additional mobile properties
+    remoteVideo.setAttribute('playsinline', '');
+    remoteVideo.setAttribute('webkit-playsinline', '');
+    remoteVideo.setAttribute('x5-video-player-type', 'h5'); // WeChat browser
+    remoteVideo.setAttribute('x5-video-player-fullscreen', 'false');
 
     remoteVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
     remoteVideo.addEventListener("canplay", handleCanPlay);
+    remoteVideo.addEventListener("playing", handlePlaying);
+    remoteVideo.addEventListener("waiting", handleWaiting);
+    remoteVideo.addEventListener("stalled", handleStalled);
 
     const interval = setInterval(checkStream, 2000);
 
     return () => {
       remoteVideo.removeEventListener("loadedmetadata", handleLoadedMetadata);
       remoteVideo.removeEventListener("canplay", handleCanPlay);
+      remoteVideo.removeEventListener("playing", handlePlaying);
+      remoteVideo.removeEventListener("waiting", handleWaiting);
+      remoteVideo.removeEventListener("stalled", handleStalled);
       clearInterval(interval);
     };
-  }, [remoteVideoRef]);
+  }, [remoteVideoRef, forceRender]);
 
   // CRITICAL: Local video always muted
   React.useEffect(() => {
     if (localVideoRef.current) {
       localVideoRef.current.muted = true;
       localVideoRef.current.volume = 0;
+      
+      // Also force play local video
+      localVideoRef.current.playsInline = true;
+      localVideoRef.current.setAttribute('playsinline', '');
+      localVideoRef.current.setAttribute('webkit-playsinline', '');
+      
+      localVideoRef.current.play().catch(err => {
+        console.error("Local video play error:", err);
+      });
     }
   }, [localVideoRef]);
 
+  // CRITICAL: Add click handler to force play on any user interaction
+  const handleUserInteraction = () => {
+    console.log("👆 User interaction detected");
+    if (remoteVideoRef.current && remoteVideoRef.current.paused) {
+      console.log("▶️ Playing video on user interaction");
+      remoteVideoRef.current.play().catch(err => {
+        console.error("Play on interaction failed:", err);
+      });
+    }
+  };
+
   return (
-    <div className="relative w-full h-full bg-black">
+    <div 
+      className="relative w-full h-full bg-black"
+      onClick={handleUserInteraction}
+      onTouchStart={handleUserInteraction}
+    >
       {/* Remote video - full screen */}
       <video
         ref={remoteVideoRef}
         autoPlay
         playsInline
-        muted
+        muted // CRITICAL: Must be true
         controls={false}
         className="w-full h-full object-cover"
         style={{
@@ -331,6 +407,8 @@ const VideoCallDisplay = ({
           WebkitTransform: "translateZ(0)",
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden",
+          willChange: "transform", 
+          zIndex: 1,
         }}
       />
 
@@ -340,10 +418,13 @@ const VideoCallDisplay = ({
           <video
             ref={localVideoRef}
             autoPlay
-            muted
+            muted // CRITICAL: Must be true
             playsInline
             controls={false}
             className="w-full h-full object-cover"
+            style={{
+              transform: "scaleX(-1)", // Mirror effect
+            }}
           />
           {isVideoMuted && (
             <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
@@ -354,13 +435,17 @@ const VideoCallDisplay = ({
       )}
 
       {/* Debug info */}
-      <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
-        {remoteStreamInfo}
+      <div className="absolute bottom-20 left-4 bg-black bg-opacity-50 text-white text-xs p-2 rounded z-20">
+        <div>{remoteStreamInfo}</div>
+        <div>Has Video: {hasRemoteVideo ? "✅" : "❌"}</div>
+        <div>Paused: {remoteVideoRef.current?.paused ? "Yes" : "No"}</div>
+        <div>Ready State: {remoteVideoRef.current?.readyState}</div>
+        <div>Network State: {remoteVideoRef.current?.networkState}</div>
       </div>
 
       {/* Video status overlay */}
       {!hasRemoteVideo && (
-        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400 z-5">
           <div className="text-center p-4">
             <Video size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2">Waiting for video...</p>
