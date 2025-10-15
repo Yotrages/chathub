@@ -18,6 +18,7 @@ import Link from "next/link";
 import NotificationIcon from "@/components/notification/NotificationIcon";
 import NotificationDropdown from "@/components/notification/NotificationDropDown";
 import { api } from "@/libs/axios/config";
+import { useNotifications } from "@/context/NotificationContext";
 
 interface User {
   _id: string;
@@ -67,6 +68,7 @@ const Header: React.FC = () => {
   const inputSearchRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRef = useRef<HTMLDivElement | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const { fetchNotifications } = useNotifications()
   
   const { user } = useSelector((state: RootState) => state.auth);
 
@@ -93,6 +95,10 @@ const Header: React.FC = () => {
   
   fetchFrequentSearches();
 }, [user]);
+
+useEffect(() => {
+  fetchNotifications()
+})
 
   const fetchAutocompleteSuggestions = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 2 || query.length > MAX_QUERY_LENGTH) {

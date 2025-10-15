@@ -1,117 +1,125 @@
-'use client';
-import { Provider, useDispatch, useSelector } from 'react-redux';
-import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor, RootState, AppDispatch } from '@/libs/redux/store';
-import { SocketProvider } from '@/context/socketContext';
-import ReactQueryProvider from '@/libs/react-query/react-query-provider';
-import { ThemeProvider } from '@/context/ThemeContext';
+"use client";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor, RootState, AppDispatch } from "@/libs/redux/store";
+import { SocketProvider } from "@/context/socketContext";
+import ReactQueryProvider from "@/libs/react-query/react-query-provider";
+import { ThemeProvider } from "@/context/ThemeContext";
 import "./globals.css";
-import toast, { Toaster } from 'react-hot-toast';
-import { NotificationProvider } from '@/context/NotificationContext';
-import { getCookie } from 'cookies-next';
-import NotificationPopup from '@/components/notification/NotificationPopUp';
-import { useEffect} from 'react';
-import { useSocket } from "@/context/socketContext"
-import { updateUserOnlineStatus } from '@/libs/redux/authSlice';
-import { api } from '@/libs/axios/config';
-import { Analytics } from "@vercel/analytics/next"
-import { usePathname } from 'next/navigation';
+import toast, { Toaster } from "react-hot-toast";
+import { NotificationProvider } from "@/context/NotificationContext";
+import { getCookie } from "cookies-next";
+import NotificationPopup from "@/components/notification/NotificationPopUp";
+import { useEffect } from "react";
+import { useSocket } from "@/context/socketContext";
+import { updateUserOnlineStatus } from "@/libs/redux/authSlice";
+import { api } from "@/libs/axios/config";
+import { Analytics } from "@vercel/analytics/next";
+import { usePathname } from "next/navigation";
 
 function NotificationWrapper({ children }: { children: React.ReactNode }) {
-  const { user} = useSelector((state: RootState) => state.auth);
-  const token = getCookie("auth-token")
-  const { socket, isConnected } = useSocket()
-  const dispatch: AppDispatch = useDispatch()
+  const { user } = useSelector((state: RootState) => state.auth);
+  const token = getCookie("auth-token");
+  const { socket, isConnected } = useSocket();
+  const dispatch: AppDispatch = useDispatch();
   const pathname = usePathname();
 
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
       if (
-        event.message?.includes('Loading chunk') ||
-        event.message?.includes('ChunkLoadError')
+        event.message?.includes("Loading chunk") ||
+        event.message?.includes("ChunkLoadError")
       ) {
-        console.log('Chunk load error detected, reloading page...');
+        console.log("Chunk load error detected, reloading page...");
         window.location.href = pathname;
       }
     };
 
-    window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+    window.addEventListener("error", handleError);
+    return () => window.removeEventListener("error", handleError);
   }, [pathname]);
 
   useEffect(() => {
     if (!user || !token || !socket || !isConnected) return;
 
-    socket.emit('user_online');
-    socket.on('online_success', () => {
+    socket.emit("user_online");
+    socket.on("online_success", () => {
       dispatch(updateUserOnlineStatus(true));
-      toast.success('You are now connected');
+      toast.success("You are now connected");
     });
 
     const heartbeatInterval = setInterval(() => {
-      socket.emit('heartbeat');
-      api.post(
-        '/auth/online-status',
-        { status: 'heartbeat', device: navigator.userAgent },
-      ).catch((err) => console.error('HTTP heartbeat error:', err));
+      socket.emit("heartbeat");
+      api
+        .post("/auth/online-status", {
+          status: "heartbeat",
+          device: navigator.userAgent,
+        })
+        .catch((err) => console.error("HTTP heartbeat error:", err));
     }, 120000);
 
     const handleOnline = () => {
-      socket.emit('user_online');
-      api.post(
-        '/auth/online-status',
-        { status: 'online', device: navigator.userAgent },
-      ).catch((err) => console.error('HTTP online error:', err));
+      socket.emit("user_online");
+      api
+        .post("/auth/online-status", {
+          status: "online",
+          device: navigator.userAgent,
+        })
+        .catch((err) => console.error("HTTP online error:", err));
       dispatch(updateUserOnlineStatus(true));
-      toast.success('You are now connected');
+      toast.success("You are now connected");
     };
 
     const handleOffline = () => {
-      socket.emit('user_offline');
-      api.post(
-        '/auth/online-status',
-        { status: 'offline', device: navigator.userAgent },
-      ).catch((err: any) => console.error('HTTP offline error:', err));
+      socket.emit("user_offline");
+      api
+        .post("/auth/online-status", {
+          status: "offline",
+          device: navigator.userAgent,
+        })
+        .catch((err: any) => console.error("HTTP offline error:", err));
       dispatch(updateUserOnlineStatus(false));
-      toast.error('You are not connected to the internet');
+      toast.error("You are not connected to the internet");
     };
 
     const handleBeforeUnload = () => {
-      socket.emit('user_offline');
-      api.post(
-        '/auth/online-status',
-        { status: 'offline', device: navigator.userAgent },
-      ).catch(() => {});
+      socket.emit("user_offline");
+      api
+        .post("/auth/online-status", {
+          status: "offline",
+          device: navigator.userAgent,
+        })
+        .catch(() => {});
     };
 
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
-    socket.on('error', (err) => {
-      console.error('Socket error:', err);
-      if (err.error === 'Authentication failed') {
+    socket.on("error", (err) => {
+      console.error("Socket error:", err);
+      if (err.error === "Authentication failed") {
         dispatch(updateUserOnlineStatus(false));
-        toast.error('Session expired. Please log in again.');
+        toast.error("Session expired. Please log in again.");
       }
     });
 
-    socket.on('connect', () => {
-      socket.emit('user_online');
+    socket.on("connect", () => {
+      socket.emit("user_online");
     });
 
     return () => {
       clearInterval(heartbeatInterval);
-      socket.off('online_success');
-      socket.off('offline_success');
-      socket.off('error');
-      socket.off('connect');
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      socket.off("online_success");
+      socket.off("offline_success");
+      socket.off("error");
+      socket.off("connect");
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [user, token, socket, isConnected, dispatch]);
-  
+
   return (
     <NotificationProvider userId={user?._id || null} token={token || null}>
       {children}
@@ -125,9 +133,21 @@ export default function MainLayout({
 }: {
   children: React.ReactNode;
 }) {
-
   return (
     <html suppressHydrationWarning>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
+
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
+      </head>
       <body>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
@@ -136,34 +156,32 @@ export default function MainLayout({
                 <SocketProvider>
                   <NotificationWrapper>
                     {/* Dark mode aware Toaster */}
-                    <Toaster 
+                    <Toaster
                       position="top-right"
                       toastOptions={{
-                        className: '',
+                        className: "",
                         style: {
-                          background: 'var(--toast-bg)',
-                          color: 'var(--toast-color)',
-                          border: '1px solid var(--toast-border)',
+                          background: "var(--toast-bg)",
+                          color: "var(--toast-color)",
+                          border: "1px solid var(--toast-border)",
                         },
                         success: {
                           iconTheme: {
-                            primary: '#10b981',
-                            secondary: '#fff',
+                            primary: "#10b981",
+                            secondary: "#fff",
                           },
                         },
                         error: {
                           iconTheme: {
-                            primary: '#ef4444',
-                            secondary: '#fff',
+                            primary: "#ef4444",
+                            secondary: "#fff",
                           },
                         },
                       }}
                     />
                     <Analytics />
                     <div className="min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-                      <main>
-                        {children}
-                      </main>
+                      <main>{children}</main>
                     </div>
                   </NotificationWrapper>
                 </SocketProvider>

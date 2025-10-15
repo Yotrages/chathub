@@ -15,7 +15,8 @@ const SignIn = ({from}: {from?: string}) => {
     
     const state = btoa(JSON.stringify({ 
       intent: intent, 
-      redirectUrl: intent === 'register' ? '/login' : '/oauth-success',
+      redirectUrl: intent === 'register' ? 'login' : 'oauth-success',
+      from: from,
       timestamp: Date.now()
     }));
     

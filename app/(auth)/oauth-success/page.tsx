@@ -20,20 +20,23 @@ const OAuthSuccess = () => {
     const name = queryParams.get('name');
     const id = queryParams.get('id');
     const email = queryParams.get('email');
+    const avatar = queryParams.get('avatar')
+    const from = queryParams.get('from')
 
     console.log('Received:', { token, name, email });
 
-    if (token && name && email && id) {
+    if (token && name && email && id && avatar) {
       setCookie('auth-token', token);
     dispatch(setUserCredentials({
         user: {
             _id: id,
             email: email,
             username: name,
-            online: true
+            online: true,
+            avatar: avatar
         }
     }))
-      router.push('/')
+      router.push(`${from ? from : "/"}`)
     } else {
       console.error('OAuth data missing from URL');
       router.push(`/login?error=${encodeURIComponent("OAuth data missing from URL")}`);

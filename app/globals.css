@@ -470,6 +470,8 @@ video {
   video {
     /* iOS/WebKit specific */
     -webkit-playsinline: true;
+     -webkit-transform: translate3d(0, 0, 0);
+      transform: translate3d(0, 0, 0);
   }
 }
 
@@ -490,3 +492,12 @@ video {
     image-rendering: crisp-edges;
   }
 }
+
+video[autoplay] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  video::cue {
+    display: none;
+  }

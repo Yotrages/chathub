@@ -138,20 +138,20 @@ export const MessageBubble = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showReactions]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (showContextMenu) {
-        setShowContextMenu(false);
-      }
-      if (showMobileContextMenu) {
-        setShowMobileContextMenu(false);
-      }
-    };
-    if (showContextMenu || showMobileContextMenu) {
-      window.addEventListener("scroll", handleScroll, true);
-    }
-    return () => window.removeEventListener("scroll", handleScroll, true);
-  }, [showContextMenu, showMobileContextMenu]);
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     if (showContextMenu) {
+  //       setShowContextMenu(false);
+  //     }
+  //     if (showMobileContextMenu) {
+  //       setShowMobileContextMenu(false);
+  //     }
+  //   };
+  //   if (showContextMenu || showMobileContextMenu) {
+  //     window.addEventListener("scroll", handleScroll, true);
+  //   }
+  //   return () => window.removeEventListener("scroll", handleScroll, true);
+  // }, [showContextMenu, showMobileContextMenu]);
 
   const handleLongPressStart = (e: React.TouchEvent): void => {
     e.preventDefault();
