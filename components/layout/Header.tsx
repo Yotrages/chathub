@@ -98,7 +98,7 @@ const Header: React.FC = () => {
 
 useEffect(() => {
   fetchNotifications()
-})
+}, [])
 
   const fetchAutocompleteSuggestions = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 2 || query.length > MAX_QUERY_LENGTH) {
