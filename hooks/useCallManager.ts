@@ -38,8 +38,6 @@ export const useCallManagement = (currentChat: any) => {
     isVideo: boolean;
     callId: string;
   } | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -94,60 +92,29 @@ export const useCallManagement = (currentChat: any) => {
     };
   }, []);
 
-  // Add this useEffect to your useCallManagement hook
-useEffect(() => {
-  // CRITICAL: Always mute local video elements to prevent audio feedback
-  if (localVideoRef.current) {
-    localVideoRef.current.muted = true;
-    localVideoRef.current.volume = 0;
-  }
-  
-  // Ensure remote video is always muted (audio comes from separate element)
-  if (remoteVideoRef.current) {
-    remoteVideoRef.current.muted = true;
-    remoteVideoRef.current.volume = 0;
-  }
-}, [localStream, remoteStream]);
-
-  useEffect(() => {
-  const checkMobile = () => {
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-    setIsMobile(isMobileDevice);
+  const configuration = {
+    iceServers: [
+      { urls: "stun:stun.l.google.com:19302" },
+      { urls: "stun:stun1.l.google.com:19302" },
+      {
+        urls: [
+          "turn:jb-turn1.xirsys.com:80?transport=udp",
+          "turn:jb-turn1.xirsys.com:3478?transport=udp",
+          "turn:jb-turn1.xirsys.com:80?transport=tcp",
+          "turn:jb-turn1.xirsys.com:3478?transport=tcp",
+          "turns:jb-turn1.xirsys.com:443?transport=tcp",
+          "turns:jb-turn1.xirsys.com:5349?transport=tcp",
+        ],
+        username:
+          "-vkE_HbUPxWY81OqkAwG7uEpErSNCRqPTX7nP6JyC8jwqzmrmSjtljr7ugCfPoayAAAAAGiBFnxxYXl5dW0=",
+        credential: "515cb5a6-67e7-11f0-b95a-0242ac120004",
+      },
+    ],
+    iceCandidatePoolSize: 10,
+    bundlePolicy: "max-bundle" as RTCBundlePolicy,
+    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+      iceTransportPolicy: 'all' as RTCIceTransportPolicy,
   };
-  checkMobile();
-}, []);
-
- const configuration = isMobile ? {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" }
-  ],
-  iceTransportPolicy: 'all' as RTCIceTransportPolicy,
-  bundlePolicy: 'max-bundle' as RTCBundlePolicy,
-  rtcpMuxPolicy: 'require' as RTCRtcpMuxPolicy,
-} : {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    {
-      urls: [
-        "turn:jb-turn1.xirsys.com:80?transport=udp",
-        "turn:jb-turn1.xirsys.com:3478?transport=udp",
-        "turn:jb-turn1.xirsys.com:80?transport=tcp",
-        "turn:jb-turn1.xirsys.com:3478?transport=tcp",
-        "turns:jb-turn1.xirsys.com:443?transport=tcp",
-        "turns:jb-turn1.xirsys.com:5349?transport=tcp",
-      ],
-      username: "-vkE_HbUPxWY81OqkAwG7uEpErSNCRqPTX7nP6JyC8jwqzmrmSjtljr7ugCfPoayAAAAAGiBFnxxYXl5dW0=",
-      credential: "515cb5a6-67e7-11f0-b95a-0242ac120004",
-    },
-  ],
-  iceCandidatePoolSize: 10,
-  bundlePolicy: "max-bundle" as RTCBundlePolicy,
-  rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
-  iceTransportPolicy: 'all' as RTCIceTransportPolicy,
-};
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -245,9 +212,6 @@ useEffect(() => {
     const pc = new RTCPeerConnection(configuration);
     peerConnectionRef.current = pc;
 
-      let audioContext: AudioContext | null = null;
-
-
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         console.log(
@@ -291,58 +255,60 @@ useEffect(() => {
           }))
         );
 
-       const remoteTracks = stream.getTracks().filter(track => {
-        if (!localStream) return true;
-        
-        const localTracks = localStream.getTracks();
-        return !localTracks.some(localTrack => 
-          localTrack.kind === track.kind && 
-          localTrack.id === track.id
-        );
-      });
-
-        const remoteStream = new MediaStream(remoteTracks);
-    setRemoteStream(remoteStream);
+        setRemoteStream(stream);
 
         // CRITICAL: Route audio and video separately
         if (event.track.kind === "audio") {
           console.log("🔊 Setting AUDIO stream to audio element");
           if (remoteAudioRef.current) {
-          // CRITICAL: Ensure no local audio feeds back
-          remoteAudioRef.current.srcObject = null;
-          setTimeout(() => {
-            remoteAudioRef.current!.srcObject = remoteStream;
-            remoteAudioRef.current!.volume = 1.0;
-            remoteAudioRef.current!.muted = false;
+            const audioStream = new MediaStream([event.track]);
+          remoteAudioRef.current.srcObject = audioStream;
+          remoteAudioRef.current.volume = 1.0;
+          remoteAudioRef.current.muted = false;
             
-            // Force play remote audio
-            remoteAudioRef.current!.play().catch(err => {
-              console.error("❌ Remote audio play failed:", err);
-            });
-          }, 100);
+
+            // Force play
+            remoteAudioRef.current
+              .play()
+              .then(() => console.log("✅ Audio playing"))
+              .catch((err) => {
+                console.error("❌ Audio play failed:", err);
+                // Try again after user interaction
+                const enableAudio = () => {
+                  remoteAudioRef.current?.play();
+                  document.removeEventListener("click", enableAudio);
+                  document.removeEventListener("touchstart", enableAudio);
+                };
+                document.addEventListener("click", enableAudio, { once: true });
+                document.addEventListener("touchstart", enableAudio, {
+                  once: true,
+                });
+              });
+          }
         }
-      }
 
         if (event.track.kind === "video") {
           console.log("📹 Setting VIDEO stream to video element");
           if (remoteVideoRef.current) {
-           const videoTracks = remoteTracks.filter(t => t.kind === 'video');
-           const videoOnlyStream = new MediaStream(videoTracks);
-          if (videoTracks.length > 0) {
-            
-            // CRITICAL: Video must be muted to prevent audio feedback
-            remoteVideoRef.current.srcObject = videoOnlyStream;
-            remoteVideoRef.current.muted = true;
-            remoteVideoRef.current.volume = 0;
-            
-            remoteVideoRef.current.play().catch(err => {
-              console.error("❌ Remote video play failed:", err);
-            });
-          }
+          remoteVideoRef.current.srcObject = stream;
+
+             remoteVideoRef.current.muted = true;
+          remoteVideoRef.current.volume = 0;
+          remoteVideoRef.current.playsInline = true;
+          remoteVideoRef.current.autoplay = true;
+          remoteVideoRef.current.play().catch(err => console.log(err));
+
+          
+          // Set mobile attributes
+          remoteVideoRef.current.setAttribute("playsinline", "");
+          remoteVideoRef.current.setAttribute("webkit-playsinline", "");
+          
+          console.log("📹 Attempting video play...");
+
             // Force play
             setTimeout(() => {
               if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = videoOnlyStream;
+                // remoteVideoRef.current.srcObject = videoOnlyStream;
 
                 // CRITICAL: Video element MUST be muted (audio plays through separate element)
                 remoteVideoRef.current.muted = true;
@@ -495,29 +461,6 @@ useEffect(() => {
     return pc;
   }, [socket, startCallTimer]);
 
-  const getVideoConstraints = (isVideo: boolean) => {
-  if (!isVideo) return false;
-  
-  // Lower quality for mobile devices
-  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
-  
-  if (isMobile) {
-    return {
-      width: { ideal: 640, max: 640 },
-      height: { ideal: 480, max: 480 },
-      frameRate: { ideal: 20, max: 24 },
-      facingMode: "user",
-    };
-  }
-  
-  return {
-    width: { ideal: 1280, max: 1920 },
-    height: { ideal: 720, max: 1080 },
-    frameRate: { ideal: 24, max: 30 },
-    facingMode: "user",
-  };
-};
-
   const startCall = useCallback(
     async (isVideo: boolean = false) => {
       console.log("📞 ===== STARTING CALL =====");
@@ -544,16 +487,20 @@ useEffect(() => {
         console.log("🎤 Requesting user media...");
 
         const stream = await navigator.mediaDevices.getUserMedia({
-  audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
-    autoGainControl: true,
-    sampleRate: 48000,
-    channelCount: 1,
-    sampleSize: 16,
-  },
-  video: getVideoConstraints(isVideo)
-});
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            sampleRate: 48000,
+          },
+          video: isVideo
+            ? {
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                facingMode: "user",
+              }
+            : false,
+        });
 
         console.log("✅ Got media stream");
         console.log(
@@ -686,17 +633,21 @@ useEffect(() => {
 
       console.log("🎤 Requesting user media...");
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-    echoCancellation: { ideal: true },
-    noiseSuppression: { ideal: true },
-    autoGainControl: { ideal: true },
-    sampleRate: 48000,
-    channelCount: 1,
-    sampleSize: 16,
-  },
-  video: getVideoConstraints(callData.isVideo)
-});
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 48000,
+        },
+        video: callData.isVideo
+          ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              facingMode: "user",
+            }
+          : false,
+      });
 
       console.log("✅ Got media stream");
       console.log(

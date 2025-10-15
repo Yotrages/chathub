@@ -88,7 +88,6 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         onEndCall={endCall}
         onToggleMinimize={() => setIsCallMinimized(!isCallMinimized)}
         formatDuration={formatDuration}
-        remoteStream={remoteStream}
       />
 
       {callState !== "idle" && (
