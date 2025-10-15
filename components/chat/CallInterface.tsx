@@ -222,10 +222,10 @@ const VideoCallDisplay = ({
   remoteStream
 }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
-  const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
-  const [debugInfo, setDebugInfo] = React.useState<any>({});
-  const retryCountRef = React.useRef(0);
-  const maxRetries = 20;
+  // const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
+  // const [debugInfo, setDebugInfo] = React.useState<any>({});
+  // const retryCountRef = React.useRef(0);
+  // const maxRetries = 20;
 
   // Replace the current useEffect in VideoCallDisplay with this enhanced version:
     React.useEffect(() => {
@@ -412,7 +412,7 @@ const VideoCallDisplay = ({
       )}
 
       {/* Enhanced debug info */}
-      <div className="absolute bottom-20 left-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-20 max-w-xs">
+      {/* <div className="absolute bottom-20 left-4 bg-black bg-opacity-75 text-white text-xs p-2 rounded z-20 max-w-xs">
         <div className="font-bold mb-1">Stream Debug:</div>
         <div>{remoteStreamInfo}</div>
         <div>Has Video: {hasRemoteVideo ? "✅" : "❌"}</div>
@@ -424,7 +424,7 @@ const VideoCallDisplay = ({
         <div>Dimensions: {debugInfo.videoWidth}x{debugInfo.videoHeight}</div>
         <div>Current Time: {debugInfo.currentTime?.toFixed(2)}</div>
         <div className="text-yellow-400 mt-1">👆 Tap screen to play</div>
-      </div>
+      </div> */}
 
       {/* Video status overlay */}
       {!hasRemoteVideo && (
@@ -432,7 +432,7 @@ const VideoCallDisplay = ({
           <div className="text-center p-4">
             <Video size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2 font-semibold">Waiting for video...</p>
-            <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p>
+            {/* <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p> */}
             <p className="text-sm text-yellow-400 mb-3 animate-pulse">
               👆 TAP ANYWHERE ON SCREEN 👆
             </p>
