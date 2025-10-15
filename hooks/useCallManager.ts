@@ -94,6 +94,21 @@ export const useCallManagement = (currentChat: any) => {
     };
   }, []);
 
+  // Add this useEffect to your useCallManagement hook
+useEffect(() => {
+  // CRITICAL: Always mute local video elements to prevent audio feedback
+  if (localVideoRef.current) {
+    localVideoRef.current.muted = true;
+    localVideoRef.current.volume = 0;
+  }
+  
+  // Ensure remote video is always muted (audio comes from separate element)
+  if (remoteVideoRef.current) {
+    remoteVideoRef.current.muted = true;
+    remoteVideoRef.current.volume = 0;
+  }
+}, [localStream, remoteStream]);
+
   useEffect(() => {
   const checkMobile = () => {
     const userAgent = navigator.userAgent.toLowerCase();
@@ -230,6 +245,9 @@ export const useCallManagement = (currentChat: any) => {
     const pc = new RTCPeerConnection(configuration);
     peerConnectionRef.current = pc;
 
+      let audioContext: AudioContext | null = null;
+
+
     pc.onicecandidate = (event) => {
       if (event.candidate) {
         console.log(
@@ -273,17 +291,15 @@ export const useCallManagement = (currentChat: any) => {
           }))
         );
 
-        const remoteTracks = stream.getTracks().filter(track => {
-      // Check if this is a remote track by comparing with local stream tracks
-      if (localStream) {
+       const remoteTracks = stream.getTracks().filter(track => {
+        if (!localStream) return true;
+        
         const localTracks = localStream.getTracks();
         return !localTracks.some(localTrack => 
           localTrack.kind === track.kind && 
-          localTrack.id !== track.id
+          localTrack.id === track.id
         );
-      }
-      return true;
-    });
+      });
 
         const remoteStream = new MediaStream(remoteTracks);
     setRemoteStream(remoteStream);
@@ -292,45 +308,37 @@ export const useCallManagement = (currentChat: any) => {
         if (event.track.kind === "audio") {
           console.log("🔊 Setting AUDIO stream to audio element");
           if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = remoteStream;
-            remoteAudioRef.current.volume = 1.0;
-            remoteAudioRef.current.muted = false;
+          // CRITICAL: Ensure no local audio feeds back
+          remoteAudioRef.current.srcObject = null;
+          setTimeout(() => {
+            remoteAudioRef.current!.srcObject = remoteStream;
+            remoteAudioRef.current!.volume = 1.0;
+            remoteAudioRef.current!.muted = false;
             
-             if (localVideoRef.current) {
-          localVideoRef.current.muted = true;
-          localVideoRef.current.volume = 0;
+            // Force play remote audio
+            remoteAudioRef.current!.play().catch(err => {
+              console.error("❌ Remote audio play failed:", err);
+            });
+          }, 100);
         }
-
-            // Force play
-            remoteAudioRef.current
-              .play()
-              .then(() => console.log("✅ Audio playing"))
-              .catch((err) => {
-                console.error("❌ Audio play failed:", err);
-                // Try again after user interaction
-                const enableAudio = () => {
-                  remoteAudioRef.current?.play();
-                  document.removeEventListener("click", enableAudio);
-                  document.removeEventListener("touchstart", enableAudio);
-                };
-                document.addEventListener("click", enableAudio, { once: true });
-                document.addEventListener("touchstart", enableAudio, {
-                  once: true,
-                });
-              });
-          }
-        }
+      }
 
         if (event.track.kind === "video") {
           console.log("📹 Setting VIDEO stream to video element");
           if (remoteVideoRef.current) {
-          const videoTracks = remoteTracks.filter(t => t.kind === 'video');
-            const videoOnlyStream = new MediaStream(videoTracks);
-
+           const videoTracks = remoteTracks.filter(t => t.kind === 'video');
+           const videoOnlyStream = new MediaStream(videoTracks);
+          if (videoTracks.length > 0) {
+            
+            // CRITICAL: Video must be muted to prevent audio feedback
             remoteVideoRef.current.srcObject = videoOnlyStream;
-            remoteVideoRef.current.muted = true; // Video should always be muted
+            remoteVideoRef.current.muted = true;
             remoteVideoRef.current.volume = 0;
-
+            
+            remoteVideoRef.current.play().catch(err => {
+              console.error("❌ Remote video play failed:", err);
+            });
+          }
             // Force play
             setTimeout(() => {
               if (remoteVideoRef.current) {
@@ -487,6 +495,29 @@ export const useCallManagement = (currentChat: any) => {
     return pc;
   }, [socket, startCallTimer]);
 
+  const getVideoConstraints = (isVideo: boolean) => {
+  if (!isVideo) return false;
+  
+  // Lower quality for mobile devices
+  const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent.toLowerCase());
+  
+  if (isMobile) {
+    return {
+      width: { ideal: 640, max: 640 },
+      height: { ideal: 480, max: 480 },
+      frameRate: { ideal: 20, max: 24 },
+      facingMode: "user",
+    };
+  }
+  
+  return {
+    width: { ideal: 1280, max: 1920 },
+    height: { ideal: 720, max: 1080 },
+    frameRate: { ideal: 24, max: 30 },
+    facingMode: "user",
+  };
+};
+
   const startCall = useCallback(
     async (isVideo: boolean = false) => {
       console.log("📞 ===== STARTING CALL =====");
@@ -521,14 +552,7 @@ export const useCallManagement = (currentChat: any) => {
     channelCount: 1,
     sampleSize: 16,
   },
-  video: isVideo
-    ? {
-        width: { ideal: 640, max: 1280 },
-        height: { ideal: 480, max: 720 },
-        frameRate: { ideal: 24, max: 30 },
-        facingMode: "user",
-      }
-    : false,
+  video: getVideoConstraints(isVideo)
 });
 
         console.log("✅ Got media stream");
@@ -671,14 +695,7 @@ export const useCallManagement = (currentChat: any) => {
     channelCount: 1,
     sampleSize: 16,
   },
-  video: callData.isVideo
-    ? {
-        width: { ideal: 640, max: 1280 },
-        height: { ideal: 480, max: 720 },
-        frameRate: { ideal: 24, max: 30 },
-        facingMode: "user",
-      }
-    : false,
+  video: getVideoConstraints(callData.isVideo)
 });
 
       console.log("✅ Got media stream");
