@@ -38,6 +38,8 @@ export const useCallManagement = (currentChat: any) => {
     isVideo: boolean;
     callId: string;
   } | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -92,29 +94,45 @@ export const useCallManagement = (currentChat: any) => {
     };
   }, []);
 
-  const configuration = {
-    iceServers: [
-      { urls: "stun:stun.l.google.com:19302" },
-      { urls: "stun:stun1.l.google.com:19302" },
-      {
-        urls: [
-          "turn:jb-turn1.xirsys.com:80?transport=udp",
-          "turn:jb-turn1.xirsys.com:3478?transport=udp",
-          "turn:jb-turn1.xirsys.com:80?transport=tcp",
-          "turn:jb-turn1.xirsys.com:3478?transport=tcp",
-          "turns:jb-turn1.xirsys.com:443?transport=tcp",
-          "turns:jb-turn1.xirsys.com:5349?transport=tcp",
-        ],
-        username:
-          "-vkE_HbUPxWY81OqkAwG7uEpErSNCRqPTX7nP6JyC8jwqzmrmSjtljr7ugCfPoayAAAAAGiBFnxxYXl5dW0=",
-        credential: "515cb5a6-67e7-11f0-b95a-0242ac120004",
-      },
-    ],
-    iceCandidatePoolSize: 10,
-    bundlePolicy: "max-bundle" as RTCBundlePolicy,
-    rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
-      iceTransportPolicy: 'all' as RTCIceTransportPolicy,
+  useEffect(() => {
+  const checkMobile = () => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    setIsMobile(isMobileDevice);
   };
+  checkMobile();
+}, []);
+
+ const configuration = isMobile ? {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" }
+  ],
+  iceTransportPolicy: 'all' as RTCIceTransportPolicy,
+  bundlePolicy: 'max-bundle' as RTCBundlePolicy,
+  rtcpMuxPolicy: 'require' as RTCRtcpMuxPolicy,
+} : {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    {
+      urls: [
+        "turn:jb-turn1.xirsys.com:80?transport=udp",
+        "turn:jb-turn1.xirsys.com:3478?transport=udp",
+        "turn:jb-turn1.xirsys.com:80?transport=tcp",
+        "turn:jb-turn1.xirsys.com:3478?transport=tcp",
+        "turns:jb-turn1.xirsys.com:443?transport=tcp",
+        "turns:jb-turn1.xirsys.com:5349?transport=tcp",
+      ],
+      username: "-vkE_HbUPxWY81OqkAwG7uEpErSNCRqPTX7nP6JyC8jwqzmrmSjtljr7ugCfPoayAAAAAGiBFnxxYXl5dW0=",
+      credential: "515cb5a6-67e7-11f0-b95a-0242ac120004",
+    },
+  ],
+  iceCandidatePoolSize: 10,
+  bundlePolicy: "max-bundle" as RTCBundlePolicy,
+  rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
+  iceTransportPolicy: 'all' as RTCIceTransportPolicy,
+};
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -255,16 +273,33 @@ export const useCallManagement = (currentChat: any) => {
           }))
         );
 
-        setRemoteStream(stream);
+        const remoteTracks = stream.getTracks().filter(track => {
+      // Check if this is a remote track by comparing with local stream tracks
+      if (localStream) {
+        const localTracks = localStream.getTracks();
+        return !localTracks.some(localTrack => 
+          localTrack.kind === track.kind && 
+          localTrack.id !== track.id
+        );
+      }
+      return true;
+    });
+
+        const remoteStream = new MediaStream(remoteTracks);
+    setRemoteStream(remoteStream);
 
         // CRITICAL: Route audio and video separately
         if (event.track.kind === "audio") {
           console.log("🔊 Setting AUDIO stream to audio element");
           if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = stream;
+            remoteAudioRef.current.srcObject = remoteStream;
             remoteAudioRef.current.volume = 1.0;
             remoteAudioRef.current.muted = false;
             
+             if (localVideoRef.current) {
+          localVideoRef.current.muted = true;
+          localVideoRef.current.volume = 0;
+        }
 
             // Force play
             remoteAudioRef.current
@@ -289,9 +324,12 @@ export const useCallManagement = (currentChat: any) => {
         if (event.track.kind === "video") {
           console.log("📹 Setting VIDEO stream to video element");
           if (remoteVideoRef.current) {
-            const videoOnlyStream = new MediaStream([event.track]);
+          const videoTracks = remoteTracks.filter(t => t.kind === 'video');
+            const videoOnlyStream = new MediaStream(videoTracks);
 
-            remoteVideoRef.current.srcObject = null;
+            remoteVideoRef.current.srcObject = videoOnlyStream;
+            remoteVideoRef.current.muted = true; // Video should always be muted
+            remoteVideoRef.current.volume = 0;
 
             // Force play
             setTimeout(() => {
@@ -475,20 +513,23 @@ export const useCallManagement = (currentChat: any) => {
         console.log("🎤 Requesting user media...");
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            sampleRate: 48000,
-          },
-          video: isVideo
-            ? {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                facingMode: "user",
-              }
-            : false,
-        });
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+    sampleRate: 48000,
+    channelCount: 1,
+    sampleSize: 16,
+  },
+  video: isVideo
+    ? {
+        width: { ideal: 640, max: 1280 },
+        height: { ideal: 480, max: 720 },
+        frameRate: { ideal: 24, max: 30 },
+        facingMode: "user",
+      }
+    : false,
+});
 
         console.log("✅ Got media stream");
         console.log(
@@ -621,21 +662,24 @@ export const useCallManagement = (currentChat: any) => {
 
       console.log("🎤 Requesting user media...");
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 48000,
-        },
-        video: callData.isVideo
-          ? {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              facingMode: "user",
-            }
-          : false,
-      });
+    const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+    echoCancellation: { ideal: true },
+    noiseSuppression: { ideal: true },
+    autoGainControl: { ideal: true },
+    sampleRate: 48000,
+    channelCount: 1,
+    sampleSize: 16,
+  },
+  video: callData.isVideo
+    ? {
+        width: { ideal: 640, max: 1280 },
+        height: { ideal: 480, max: 720 },
+        frameRate: { ideal: 24, max: 30 },
+        facingMode: "user",
+      }
+    : false,
+});
 
       console.log("✅ Got media stream");
       console.log(
