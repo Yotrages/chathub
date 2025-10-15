@@ -230,9 +230,6 @@ const VideoCallDisplay = ({
     const remoteVideo = remoteVideoRef.current;
     if (!remoteVideo) return;
 
-    let checkInterval: NodeJS.Timeout;
-    let playInterval: NodeJS.Timeout;
-
     const checkStream = () => {
       const srcObject = remoteVideo.srcObject as MediaStream;
       
@@ -304,10 +301,10 @@ const VideoCallDisplay = ({
     checkStream();
 
     // CRITICAL: Check stream status frequently
-    checkInterval = setInterval(checkStream, 1000);
+   const checkInterval = setInterval(checkStream, 1000);
     
     // CRITICAL: Continuously attempt to play (aggressive for Itel A16)
-    playInterval = setInterval(() => {
+    const playInterval = setInterval(() => {
       if (remoteVideo.srcObject && remoteVideo.paused) {
         console.log("🔄 Continuous play attempt...");
         remoteVideo.play().catch(() => {
