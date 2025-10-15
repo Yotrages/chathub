@@ -1,9 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { Notification, NotificationResponse } from '@/types/index';
 import { api } from '@/libs/axios/config';
+import { useSocket } from '@/context/socketContext';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -45,56 +45,54 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [popupNotification, setPopupNotification] = useState<Notification | null>(null);
 
+  const { socket, isConnected } = useSocket();
+
   useEffect(() => {
-    if (!userId || !token) {
-      console.log('Skipping socket connection: userId or token missing');
+    if (!socket || !isConnected || !userId || !token) {
+      console.log('Skipping notification socket listeners: missing requirements');
       return;
     }
 
-    const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000', {
-     auth: { 
-        token: token,
-        userId: userId 
-      },
-      timeout: 10000,
-      reconnectionAttempts: 10,
-      autoConnect: true,
-      reconnectionDelay: 1000,
-    });
+    console.log('Setting up notification socket listeners');
 
-    setSocket(newSocket);
-
-    newSocket.on('connect', () => {
-      console.log('notification Connected to socket server, Socket ID:', newSocket.id);
-    });
-
-    newSocket.on('new_notification', (notification: Notification) => {
+    const handleNewNotification = (notification: Notification) => {
+      console.log('Received new notification:', notification);
       setNotifications(prev => [notification, ...prev]);
       setUnreadCount(prev => prev + 1);
       showNotificationPopup(notification);
-    });
+    };
 
-    newSocket.on('notification_read', (notificationId: string) => {
+    const handleNotificationRead = (notificationId: string) => {
+      console.log('Notification marked as read:', notificationId);
       setNotifications(prev => 
         prev.map(n => 
           n._id === notificationId ? { ...n, isRead: true } : n
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-    });
-
-    newSocket.on('notification_all_read', () => {
-       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    })
-
-    return () => {
-      newSocket.disconnect();
     };
-  }, [userId, token]);
+
+    const handleAllNotificationsRead = () => {
+      console.log('All notifications marked as read');
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    };
+
+    // Register event listeners
+    socket.on('new_notification', handleNewNotification);
+    socket.on('notification_read', handleNotificationRead);
+    socket.on('notification_all_read', handleAllNotificationsRead);
+
+    // Cleanup listeners on unmount or when dependencies change
+    return () => {
+      console.log('Cleaning up notification socket listeners');
+      socket.off('new_notification', handleNewNotification);
+      socket.off('notification_read', handleNotificationRead);
+      socket.off('notification_all_read', handleAllNotificationsRead);
+    };
+  }, [socket, isConnected, userId, token]);
 
   const fetchNotifications = async (pageNum: number = 1) => {
     if (!userId || !token) {
@@ -104,7 +102,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
 
     setIsLoading(true);
     try {
-      const response = await api.get(`/notifications?page=${pageNum}&limit=20`)
+      const response = await api.get(`/notifications?page=${pageNum}&limit=20`);
 
       if (response.status === 500) throw new Error('Failed to fetch notifications');
 
@@ -130,7 +128,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!userId || !token) return;
 
     try {
-      const response = await api.put(`/notifications/${notificationId}/read`)
+      const response = await api.put(`/notifications/${notificationId}/read`);
 
       if (response.status === 500) throw new Error('Failed to mark notification as read');
 
@@ -148,19 +146,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
   const markAllAsRead = async () => {
     if (!userId || !token) return;
 
-    if (socket && socket.connected) {
-      socket.emit('mark_all_notification')
+    if (socket && isConnected) {
+      // Use socket if available
+      socket.emit('mark_all_notification');
     } else {
+      // Fallback to HTTP request
       try {
-      const response = await api.put('/notifications/read-all')
+        const response = await api.put('/notifications/read-all');
 
-      if (response.data === 500) throw new Error('Failed to mark all notifications as read');
+        if (response.status === 500) throw new Error('Failed to mark all notifications as read');
 
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-      setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-    }
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setUnreadCount(0);
+      } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+      }
     }
   };
 
@@ -168,7 +168,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!userId || !token) return;
 
     try {
-      const response = await api.delete(`/notifications/${notificationId}`)
+      const response = await api.delete(`/notifications/${notificationId}`);
 
       if (response.status === 500) throw new Error('Failed to delete notification');
 
@@ -199,7 +199,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     showNotificationPopup,
     popupNotification,
     hideNotificationPopup,
-    socket,
   };
 
   return (
@@ -208,5 +207,3 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     </NotificationContext.Provider>
   );
 };
-
-(() => {})

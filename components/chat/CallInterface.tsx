@@ -210,9 +210,6 @@ const CallHeader = ({
   </div>
 );
 
-
-// CallInterface.tsx - COMPLETE FIX for Itel A16 Video Rendering
-
 const VideoCallDisplay = ({
   localVideoRef,
   remoteVideoRef,
@@ -408,8 +405,6 @@ const VideoCallDisplay = ({
     };
 
     // CRITICAL: Ensure video is properly configured
-    remoteVideo.muted = true; // MUST be true (audio plays separately)
-    remoteVideo.volume = 0;
     remoteVideo.playsInline = true;
     remoteVideo.autoplay = true;
     
@@ -540,7 +535,7 @@ const VideoCallDisplay = ({
 
       {/* Local video - picture in picture */}
       {!isCallMinimized && (
-        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10">
+        <div className="absolute top-4 right-4 flex items-center justify-center w-32 h-24 bg-gray-800 rounded-lg overflow-scroll border-2 border-gray-600 shadow-lg z-10">
           <video
             ref={localVideoRef}
             onContextMenu={preventContextMenu}
