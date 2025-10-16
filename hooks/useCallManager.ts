@@ -92,6 +92,46 @@ export const useCallManagement = (currentChat: any) => {
     };
   }, []);
 
+  const refreshVideoStream = useCallback(() => {
+  if (remoteVideoRef.current && remoteStream) {
+    console.log("🔄 Refreshing video stream");
+    const video = remoteVideoRef.current;
+    const stream = remoteStream;
+    
+    // Force re-render
+    video.srcObject = null;
+    
+    setTimeout(() => {
+      video.srcObject = stream;
+      video.muted = true;
+      video.playsInline = true;
+      
+      video.play()
+        .then(() => console.log("✅ Video refreshed and playing"))
+        .catch(err => console.error("❌ Refresh play failed:", err));
+    }, 100);
+  }
+}, [remoteVideoRef, remoteStream]);
+
+useEffect(() => {
+  if (remoteVideoRef.current) {
+    const video = remoteVideoRef.current;
+    
+    const checkAndRefresh = () => {
+      if (video.videoWidth > 0 && video.videoHeight > 0 && video.paused) {
+        console.log("⚠️ Video has dimensions but paused - refreshing");
+        refreshVideoStream();
+      }
+    };
+    
+    video.addEventListener("loadedmetadata", checkAndRefresh);
+    
+    return () => {
+      video.removeEventListener("loadedmetadata", checkAndRefresh);
+    };
+  }
+}, [remoteVideoRef, refreshVideoStream]);
+
   const configuration = {
     iceServers: [
       { urls: "stun:stun.l.google.com:19302" },
@@ -327,24 +367,24 @@ export const useCallManagement = (currentChat: any) => {
             remoteVideoRef.current.setAttribute("x-webkit-airplay", "allow");
 
                 const video = remoteVideoRef.current;
-            video.style.display = "block";
-            video.style.visibility = "visible";
-            video.style.opacity = "1";
-            video.style.objectFit = "cover";
-            video.style.width = "100%";
-            video.style.height = "100%";
-            video.style.position = "absolute";
-            video.style.top = "0";
-            video.style.left = "0";
-            video.style.zIndex = "1";
+            video.style.display = "block !important";
+            video.style.visibility = "visible !important";
+            video.style.opacity = "1 !important";
+            video.style.objectFit = "cover !important";
+            video.style.width = "100% !important";
+            video.style.height = "100% !important";
+            video.style.position = "absolute !important";
+            video.style.top = "0 !important";
+            video.style.left = "0 !important";
+            video.style.zIndex = "1 !important";
             
             // Force hardware acceleration
-            video.style.transform = "translate3d(0, 0, 0)";
-            video.style.webkitTransform = "translate3d(0, 0, 0)";
-            video.style.backfaceVisibility = "hidden";
-            video.style.webkitBackfaceVisibility = "hidden";
-            video.style.willChange = "transform";
-            video.style.isolation = "isolate";
+            video.style.transform = "translate3d(0, 0, 0) !important";
+            video.style.webkitTransform = "translate3d(0, 0, 0) !important";
+            video.style.backfaceVisibility = "hidden !important";
+            video.style.webkitBackfaceVisibility = "hidden !important";
+            video.style.willChange = "transform !important";
+            video.style.isolation = "isolate !important";
 
                 console.log("📹 Attempting video play...");
 
@@ -522,7 +562,12 @@ export const useCallManagement = (currentChat: any) => {
         localVideoRef.current.playsInline = true;
         localVideoRef.current.autoplay = true;
 
-         localVideoRef.current.play().catch(err => {
+         localVideoRef.current.play().then(() => {
+          if (localVideoRef.current) {
+          localVideoRef.current.muted = true;
+          localVideoRef.current.volume = 0;
+         }
+         }).catch(err => {
           console.error("Local video play failed:", err);
         });
         }

@@ -213,6 +213,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     });
 
     newSocket.on("connection_confirmed", (data) => {
+      setIsConnected(true)
       console.log("✅ Connection confirmed by server:", data);
     });
 

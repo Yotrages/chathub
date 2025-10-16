@@ -219,13 +219,42 @@ const VideoCallDisplay = ({
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
   const [debugInfo, setDebugInfo] = React.useState<any>({});
+  const canvasRef = React.useRef<HTMLCanvasElement>(null);
+const [useCanvasFallback, setUseCanvasFallback] = React.useState(false);
   const retryCountRef = React.useRef(0);
   const maxRetries = 20;
+
+  React.useEffect(() => {
+  if (useCanvasFallback && remoteVideoRef.current && canvasRef.current) {
+    const video = remoteVideoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    const drawFrame = () => {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(drawFrame);
+    };
+    
+    drawFrame();
+  }
+}, [useCanvasFallback]);
 
   // CRITICAL: Aggressive video play monitoring for Itel A16
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
     if (!remoteVideo) return;
+    const video = remoteVideo;
+    video.style.display = "none";
+    void video.offsetHeight; // Trigger reflow
+    video.style.display = "block";
+
+        const rect = video.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(video);
+
 
     const checkStream = () => {
       const srcObject = remoteVideo.srcObject as MediaStream;
@@ -254,6 +283,9 @@ const VideoCallDisplay = ({
 
       setDebugInfo({
         hasVideo,
+        rectWidth: rect.width,
+      rectHeight: rect.height,
+            inDom: document.body.contains(video),
         videoTracks: videoTracks.length,
         audioTracks: audioTracks.length,
         trackReadyState: videoTrack?.readyState,
@@ -261,6 +293,8 @@ const VideoCallDisplay = ({
         videoPaused: remoteVideo.paused,
         videoMuted: remoteVideo.muted,
         videoVolume: remoteVideo.volume,
+         computedDisplay: computedStyle.display,
+      computedVisibility: computedStyle.visibility,
         readyState: remoteVideo.readyState,
         networkState: remoteVideo.networkState,
         videoWidth: remoteVideo.videoWidth,
@@ -287,6 +321,10 @@ const VideoCallDisplay = ({
               `✅ Successfully played video on retry ${retryCountRef.current}`
             );
             retryCountRef.current = 0; // Reset on success
+            const video = remoteVideo;
+            video.style.display = "none";
+            void video.offsetHeight; // Trigger reflow
+            video.style.display = "block";
           })
           .catch((err) => {
             console.error(
@@ -530,6 +568,20 @@ const VideoCallDisplay = ({
     [remoteVideoRef, hasRemoteVideo]
   );
 
+  React.useEffect(() => {
+  const timer = setTimeout(() => {
+    if (remoteVideoRef.current) {
+      const rect = remoteVideoRef.current.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) {
+        console.log("🔄 Switching to canvas fallback");
+        setUseCanvasFallback(true);
+      }
+    }
+  }, 10000);
+  
+  return () => clearTimeout(timer);
+}, []);
+
   const preventContextMenu = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -561,7 +613,6 @@ const VideoCallDisplay = ({
         playsInline
         muted
         controls={false}
-        className="w-full h-full object-cover"
         style={{
           position: "absolute",
           top: 0,
@@ -577,16 +628,33 @@ const VideoCallDisplay = ({
           // CRITICAL: Z-index ABOVE background (1 > 0)
           zIndex: 9999,
           // CRITICAL: Hardware acceleration for mobile
-          transform: "translateZ(0)",
-          WebkitTransform: "translateZ(0)",
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden",
+          transform: "translate3d(0, 0, 0) scale(1)",
+          WebkitTransform: "translate3d(0, 0, 0) scale(1)",
+          transformStyle: "preserve-3d",
+          WebkitTransformStyle: "preserve-3d",
         }}
       />
 
+      {useCanvasFallback && (
+  <canvas
+    ref={canvasRef}
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      zIndex: 2,
+    }}
+  />
+)}
+
       {/* Local video - picture in picture */}
       {!isCallMinimized && (
-        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-scroll border-2 border-gray-600 shadow-lg z-[9999]">
+        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-[9999]">
           <video
             ref={localVideoRef}
             onContextMenu={preventContextMenu}
