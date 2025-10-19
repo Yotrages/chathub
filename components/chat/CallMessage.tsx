@@ -1,12 +1,8 @@
-import { Phone, Video, PhoneMissed, PhoneOff, Clock } from 'lucide-react';
+import { Message } from '@/types';
+import { Phone, Video, PhoneMissed, PhoneOff } from 'lucide-react';
 
 interface CallMessageProps {
-  message: {
-    content: string;
-    callStatus?: 'missed' | 'ended' | 'declined' | 'failed' | 'ongoing';
-    callDuration?: string;
-    createdAt?: string;
-  };
+  message: Message;
   isOwnMessage: boolean;
 }
 
@@ -14,24 +10,23 @@ const CallMessage = ({ message, isOwnMessage }: CallMessageProps) => {
   const isVideo = message.content?.toLowerCase().includes("video");
   const status = message.callStatus;
   
-  // Extract duration from content if available
   const durationMatch = message.content?.match(/\((\d+:\d+)\)/) || 
                         message.content?.match(/(\d+:\d+)/);
-  const duration = message.callDuration || (durationMatch ? durationMatch[1] : null);
+  const duration = durationMatch ? durationMatch[1] : null;
 
   // Determine the actual message and styling based on status
   const getCallInfo = () => {
-    if (!status || status === 'ongoing') {
-      // Should not happen for ended calls, but handle it
-      return {
-        icon: isVideo ? Video : Phone,
-        text: isVideo ? "Video call" : "Voice call",
-        subtext: "In progress...",
-        bgColor: "bg-blue-100 dark:bg-blue-900/40",
-        iconColor: "text-blue-600 dark:text-blue-400",
-        textColor: "text-blue-900 dark:text-blue-100",
-      };
-    }
+    // if (!status || status === 'ongoing') {
+    //   // Should not happen for ended calls, but handle it
+    //   return {
+    //     icon: isVideo ? Video : Phone,
+    //     text: isVideo ? "Video call" : "Voice call",
+    //     subtext: "In progress...",
+    //     bgColor: "bg-blue-100 dark:bg-blue-900/40",
+    //     iconColor: "text-blue-600 dark:text-blue-400",
+    //     textColor: "text-blue-900 dark:text-blue-100",
+    //   };
+    // }
 
     switch (status) {
       case 'missed':

@@ -597,7 +597,7 @@ const VideoCallDisplay = ({
             </div>
 
             <div className="text-xs text-gray-500 mb-3">
-              Keep tapping if video doesn't appear
+              Keep tapping if video does not appear
             </div>
 
             <div className="mt-4 flex justify-center space-x-1">
