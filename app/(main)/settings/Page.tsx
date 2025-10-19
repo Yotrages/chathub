@@ -11,7 +11,7 @@ import AccountSettings from '@/components/settings/AccountSettings';
 import ReportsSettings from '@/components/settings/ReportSettings';
 import { Report, UserSettings } from '@/types';
 
-export default function SettingsPage() {
+const SettingsPage = ()=> {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [activeTab, setActiveTab] = useState('privacy');
   const [loading, setLoading] = useState(true);
@@ -335,3 +335,5 @@ export default function SettingsPage() {
     </div>
   );
 }
+
+export default SettingsPage;

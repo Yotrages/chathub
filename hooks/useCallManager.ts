@@ -41,7 +41,7 @@ export const useCallManagement = (currentChat: any) => {
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteAudioRef = useRef<HTMLAudioElement | null>(null); // CRITICAL: Separate audio element
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const callStartTimeRef = useRef<number | null>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,7 +73,7 @@ export const useCallManagement = (currentChat: any) => {
     callStateRef.current = callState;
   }, [callState]);
 
-  // Create audio element for remote audio
+  // FIXED: Create audio element for remote audio ONLY
   useEffect(() => {
     if (!remoteAudioRef.current) {
       const audio = document.createElement("audio");
@@ -91,42 +91,6 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
   }, []);
-
-  useEffect(() => {
-  if (!remoteAudioRef.current) return;
-
-  const audio = remoteAudioRef.current;
-  
-  const checkAudioSource = () => {
-    const srcObject = audio.srcObject as MediaStream;
-    if (srcObject) {
-      const audioTracks = srcObject.getAudioTracks();
-      console.log("🔊 Audio element tracks:", audioTracks.map(t => ({
-        kind: t.kind,
-        id: t.id,
-        label: t.label,
-        enabled: t.enabled,
-      })));
-      
-      // CRITICAL: If audio track label matches local microphone, STOP IT
-      audioTracks.forEach(track => {
-        if (localStream) {
-          const localAudioTrack = localStream.getAudioTracks()[0];
-          if (localAudioTrack && track.id === localAudioTrack.id) {
-            console.error("❌❌ ECHO DETECTED: Local audio in remote audio element!");
-            console.error("Removing local audio from remote audio element");
-            track.stop();
-            audio.srcObject = null;
-          }
-        }
-      });
-    }
-  };
-
-  const interval = setInterval(checkAudioSource, 2000);
-
-  return () => clearInterval(interval);
-}, [localStream]);
 
   const configuration = {
     iceServers: [
@@ -149,7 +113,7 @@ export const useCallManagement = (currentChat: any) => {
     iceCandidatePoolSize: 10,
     bundlePolicy: "max-bundle" as RTCBundlePolicy,
     rtcpMuxPolicy: "require" as RTCRtcpMuxPolicy,
-      iceTransportPolicy: 'all' as RTCIceTransportPolicy,
+    iceTransportPolicy: "all" as RTCIceTransportPolicy,
   };
 
   const formatDuration = (seconds: number) => {
@@ -267,7 +231,7 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
-    // CRITICAL: Proper track handling
+    // FIXED: Proper track handling with separate audio/video routing
     pc.ontrack = (event) => {
       console.log("📥 ===== ONTRACK FIRED =====");
       console.log("📥 Track kind:", event.track.kind);
@@ -280,35 +244,24 @@ export const useCallManagement = (currentChat: any) => {
       if (event.streams && event.streams[0]) {
         const stream = event.streams[0];
         console.log("📥 Stream ID:", stream.id);
-        console.log(
-          "📥 Stream tracks:",
-          stream.getTracks().map((t) => ({
-            kind: t.kind,
-            id: t.id,
-            enabled: t.enabled,
-            muted: t.muted,
-            readyState: t.readyState,
-          }))
-        );
 
         setRemoteStream(stream);
 
-        // CRITICAL: Route audio and video separately
+        // CRITICAL: Route audio ONLY to audio element
         if (event.track.kind === "audio") {
           console.log("🔊 Setting AUDIO stream to audio element");
           if (remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = stream;
+            // Create audio-only stream
+            const audioStream = new MediaStream([event.track]);
+            remoteAudioRef.current.srcObject = audioStream;
             remoteAudioRef.current.volume = 1.0;
             remoteAudioRef.current.muted = false;
-            
 
-            // Force play
             remoteAudioRef.current
               .play()
               .then(() => console.log("✅ Audio playing"))
               .catch((err) => {
                 console.error("❌ Audio play failed:", err);
-                // Try again after user interaction
                 const enableAudio = () => {
                   remoteAudioRef.current?.play();
                   document.removeEventListener("click", enableAudio);
@@ -322,96 +275,76 @@ export const useCallManagement = (currentChat: any) => {
           }
         }
 
+        // CRITICAL: Route video ONLY to video element
         if (event.track.kind === "video") {
           console.log("📹 Setting VIDEO stream to video element");
           if (remoteVideoRef.current) {
+            // FIXED: Create video-only stream (no audio track)
             const videoOnlyStream = new MediaStream([event.track]);
 
+            // Clear existing srcObject first
             remoteVideoRef.current.srcObject = null;
 
-            // Force play
+            // Small delay to ensure clean slate
             setTimeout(() => {
               if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = videoOnlyStream;
 
-                // CRITICAL: Video element MUST be muted (audio plays through separate element)
+                // CRITICAL: Video element MUST be muted (no audio)
                 remoteVideoRef.current.muted = true;
                 remoteVideoRef.current.volume = 0;
                 remoteVideoRef.current.playsInline = true;
                 remoteVideoRef.current.autoplay = true;
                 remoteVideoRef.current.controls = false;
-                remoteVideoRef.current.setAttribute("playsinline", "");
-                remoteVideoRef.current.setAttribute("webkit-playsinline", "");
 
+                // Mobile-specific attributes
                 remoteVideoRef.current.setAttribute("playsinline", "true");
-            remoteVideoRef.current.setAttribute("webkit-playsinline", "true");
-            remoteVideoRef.current.setAttribute("x5-playsinline", "true");
-            remoteVideoRef.current.setAttribute("x5-video-player-type", "h5");
-            remoteVideoRef.current.setAttribute("x5-video-player-fullscreen", "false");
-            remoteVideoRef.current.setAttribute("x-webkit-airplay", "allow");
+                remoteVideoRef.current.setAttribute("webkit-playsinline", "true");
+                remoteVideoRef.current.setAttribute("x5-playsinline", "true");
+                remoteVideoRef.current.setAttribute("x5-video-player-type", "h5");
+                remoteVideoRef.current.setAttribute("x5-video-player-fullscreen", "false");
+                remoteVideoRef.current.setAttribute("x-webkit-airplay", "allow");
 
+                // FIXED: Force display styles for Itel A16
                 const video = remoteVideoRef.current;
-            video.style.cssText = `
-          position: absolute !important;
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          max-width: 100% !important;
-          max-height: 100% !important;
-          min-width: 100% !important;
-          min-height: 100% !important;
-          object-fit: cover !important;
-          background-color: #000 !important;
-          display: block !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          z-index: 1 !important;
-          transform: translate3d(0, 0, 0) !important;
-          -webkit-transform: translate3d(0, 0, 0) !important;
-          backfaceVisibility = "hidden !important";
-          webkitBackfaceVisibility = "hidden !important";
-          willChange = "transform !important";
-          isolation = "isolate !important";
-        `;
+                video.style.display = "block";
+                video.style.visibility = "visible";
+                video.style.opacity = "1";
+                video.style.objectFit = "cover";
+                video.style.width = "100%";
+                video.style.height = "100%";
+                video.style.position = "absolute";
+                video.style.top = "0";
+                video.style.left = "0";
+                video.style.zIndex = "1";
+
+                // Force hardware acceleration
+                video.style.transform = "translate3d(0, 0, 0)";
+                video.style.webkitTransform = "translate3d(0, 0, 0)";
+                video.style.backfaceVisibility = "hidden";
+                video.style.webkitBackfaceVisibility = "hidden";
+                video.style.willChange = "transform";
 
                 console.log("📹 Attempting video play...");
 
-                // Force play with error handling
                 const playPromise = remoteVideoRef.current.play();
 
                 if (playPromise !== undefined) {
                   playPromise
                     .then(() => {
                       console.log("✅ Video playing successfully");
-                      if (remoteVideoRef.current) {
-                        remoteVideoRef.current.muted = true
-                        remoteVideoRef.current.volume = 0
-                        console.log("✅ Video element properties:", {
-                          paused: remoteVideoRef.current.paused,
-                          muted: remoteVideoRef.current.muted,
-                          videoWidth: remoteVideoRef.current.videoWidth,
-                          videoHeight: remoteVideoRef.current.videoHeight,
-                          readyState: remoteVideoRef.current.readyState,
-                        });
-                      }
                     })
                     .catch((err) => {
                       console.error("❌ Video play failed:", err);
+                      // Retry on user interaction
                       const enableVideo = () => {
                         if (remoteVideoRef.current) {
-                          remoteVideoRef.current.muted = true; // Keep muted!
-                          remoteVideoRef.current.volume = 0;
-                          remoteVideoRef.current.style.display = "block";
+                          remoteVideoRef.current.muted = true;
                           remoteVideoRef.current
                             .play()
-                            .then(() => {
-                              console.log("✅ Video playing after interaction");
-                              if (remoteVideoRef.current) {
-                                remoteVideoRef.current.muted = true;
-                                remoteVideoRef.current.volume = 0;
-                              }
-                        })
+                            .then(() =>
+                              console.log("✅ Video playing after interaction")
+                            )
                             .catch((e) => console.error("❌ Still failed:", e));
                         }
                         document.removeEventListener("click", enableVideo);
@@ -426,7 +359,7 @@ export const useCallManagement = (currentChat: any) => {
                     });
                 }
               }
-            }, 150);
+            }, 100);
           }
         }
       }
@@ -434,12 +367,6 @@ export const useCallManagement = (currentChat: any) => {
 
     pc.oniceconnectionstatechange = () => {
       console.log("🧊 ICE connection state:", pc.iceConnectionState);
-      if (
-        pc.iceConnectionState === "connected" ||
-        pc.iceConnectionState === "completed"
-      ) {
-        console.log("✅ ICE connected!");
-      }
     };
 
     pc.onicegatheringstatechange = () => {
@@ -456,19 +383,7 @@ export const useCallManagement = (currentChat: any) => {
       setConnectionState(state as ConnectionState);
 
       if (state === "connected") {
-        console.log("✅ ===== PEER CONNECTION CONNECTED =====");
-
-        // Log all tracks
-        const receivers = pc.getReceivers();
-        console.log("📊 Active receivers:", receivers.length);
-        receivers.forEach((receiver) => {
-          if (receiver.track) {
-            console.log(
-              `  - ${receiver.track.kind}: enabled=${receiver.track.enabled}, readyState=${receiver.track.readyState}`
-            );
-          }
-        });
-
+        console.log("✅ PEER CONNECTION CONNECTED");
         setCallState("connected");
         setCallError(null);
         reconnectAttemptsRef.current = 0;
@@ -500,7 +415,6 @@ export const useCallManagement = (currentChat: any) => {
   const startCall = useCallback(
     async (isVideo: boolean = false) => {
       console.log("📞 ===== STARTING CALL =====");
-      console.log("📞 Video:", isVideo, "To:", otherUserId.current);
 
       if (!currentChat || !socket || !otherUserId.current) {
         toast.error("Cannot start call");
@@ -539,53 +453,29 @@ export const useCallManagement = (currentChat: any) => {
         });
 
         console.log("✅ Got media stream");
-        console.log(
-          "📊 Local tracks:",
-          stream.getTracks().map((t) => ({
-            kind: t.kind,
-            id: t.id,
-            enabled: t.enabled,
-            readyState: t.readyState,
-            label: t.label,
-          }))
-        );
 
         setLocalStream(stream);
+        
+        // FIXED: Local video MUST be muted to prevent echo
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
-        localVideoRef.current.muted = true; // MUST be true
-        localVideoRef.current.volume = 0;   // MUST be 0
-        localVideoRef.current.playsInline = true;
-        localVideoRef.current.autoplay = true;
+          localVideoRef.current.muted = true; // CRITICAL: Prevent echo
+          localVideoRef.current.volume = 0;
+          localVideoRef.current.playsInline = true;
+          localVideoRef.current.autoplay = true;
 
-         localVideoRef.current.play().then(() => {
-          if (localVideoRef.current) {
-            localVideoRef.current.muted = true; 
-            localVideoRef.current.volume = 0;   
-          }
-         }).catch(err => {
-          console.error("Local video play failed:", err);
-        });
+          localVideoRef.current.play().catch((err) => {
+            console.error("Local video play failed:", err);
+          });
         }
 
         console.log("🔌 Initializing peer connection...");
         const pc = initializePeerConnection();
 
-        // Add transceivers for better control
         stream.getTracks().forEach((track) => {
-          console.log("➕ Adding track to PC:", track.kind, track.id);
-          const sender = pc.addTrack(track, stream);
-          console.log("✅ Track added, sender:", sender);
+          console.log("➕ Adding track to PC:", track.kind);
+          pc.addTrack(track, stream);
         });
-
-        // Log senders
-        console.log(
-          "📊 Peer connection senders:",
-          pc.getSenders().map((s) => ({
-            kind: s.track?.kind,
-            id: s.track?.id,
-          }))
-        );
 
         console.log("📤 Sending call_request");
         socket.emit("call_request", {
@@ -602,11 +492,9 @@ export const useCallManagement = (currentChat: any) => {
           offerToReceiveVideo: isVideo,
         });
 
-        console.log("📝 Setting local description...");
         await pc.setLocalDescription(offer);
-        console.log("✅ Local description set:", pc.localDescription?.type);
+        console.log("✅ Local description set");
 
-        console.log("📤 Sending offer");
         socket.emit("offer", {
           sdp: offer,
           to: otherUserId.current,
@@ -691,34 +579,20 @@ export const useCallManagement = (currentChat: any) => {
       });
 
       console.log("✅ Got media stream");
-      console.log(
-        "📊 Local tracks:",
-        stream.getTracks().map((t) => ({
-          kind: t.kind,
-          id: t.id,
-          enabled: t.enabled,
-          readyState: t.readyState,
-          label: t.label,
-        }))
-      );
 
       setLocalStream(stream);
-      if (localVideoRef.current) {
-         localVideoRef.current.srcObject = stream;
-      localVideoRef.current.muted = true; 
-      localVideoRef.current.volume = 0;   
-      localVideoRef.current.playsInline = true;
-      localVideoRef.current.autoplay = true;
       
-      // Force play
-      localVideoRef.current.play().then(() => {
-        if (localVideoRef.current) {
-          localVideoRef.current.muted = true; 
-          localVideoRef.current.volume = 0;
-        }
-      }).catch(err => {
-        console.error("Local video play failed:", err);
-      });
+      // FIXED: Local video MUST be muted
+      if (localVideoRef.current) {
+        localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true; // CRITICAL: Prevent echo
+        localVideoRef.current.volume = 0;
+        localVideoRef.current.playsInline = true;
+        localVideoRef.current.autoplay = true;
+
+        localVideoRef.current.play().catch((err) => {
+          console.error("Local video play failed:", err);
+        });
       }
 
       let pc = peerConnectionRef.current;
@@ -727,21 +601,10 @@ export const useCallManagement = (currentChat: any) => {
         pc = initializePeerConnection();
       }
 
-      // Add tracks
       stream.getTracks().forEach((track) => {
-        console.log("➕ Adding track to PC:", track.kind, track.id);
-        const sender = pc.addTrack(track, stream);
-        console.log("✅ Track added, sender:", sender);
+        console.log("➕ Adding track to PC:", track.kind);
+        pc.addTrack(track, stream);
       });
-
-      // Log senders
-      console.log(
-        "📊 Peer connection senders:",
-        pc.getSenders().map((s) => ({
-          kind: s.track?.kind,
-          id: s.track?.id,
-        }))
-      );
 
       // Wait for offer if not set
       if (!pc.remoteDescription) {
@@ -761,27 +624,23 @@ export const useCallManagement = (currentChat: any) => {
       console.log("📝 Creating answer...");
       const answer = await pc.createAnswer();
 
-      console.log("📝 Setting local description...");
       await pc.setLocalDescription(answer);
-      console.log("✅ Local description set:", pc.localDescription?.type);
+      console.log("✅ Local description set");
 
       // Process queued ICE candidates
       while (iceCandidateQueue.current.length > 0) {
         const candidate = iceCandidateQueue.current.shift();
         if (candidate) {
-          console.log("🧊 Adding queued ICE candidate");
           await pc.addIceCandidate(new RTCIceCandidate(candidate));
         }
       }
 
-      console.log("📤 Sending answer");
       socket.emit("answer", {
         sdp: answer,
         to: callData.from,
         callId: callData.callId,
       });
 
-      console.log("📤 Sending call_accept");
       socket.emit("call_accept", {
         to: callData.from,
         callId: callData.callId,
@@ -889,6 +748,7 @@ export const useCallManagement = (currentChat: any) => {
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
+        localVideoRef.current.muted = true; // Keep muted
       }
       setIsVideoCall(newIsVideo);
     } catch (error) {
@@ -901,8 +761,6 @@ export const useCallManagement = (currentChat: any) => {
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    console.log("🔌 Setting up socket handlers...");
-
     const handleCallError = (data: { error: string; reason?: string }) => {
       console.log("❌ call_error:", data);
       setCallError(data.error);
@@ -910,12 +768,12 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleCallWaiting = (data: { message: string; status: string }) => {
-      console.log('⏳ call_waiting:', data);
-      if (data.status === 'offline') {
-        setCallError('Calling... (user offline)');
-      } else if (data.status === 'online') {
+      console.log("⏳ call_waiting:", data);
+      if (data.status === "offline") {
+        setCallError("Calling... (user offline)");
+      } else if (data.status === "online") {
         setCallError(null);
-        setCallState('ringing');
+        setCallState("ringing");
       }
     };
 
@@ -925,44 +783,33 @@ export const useCallManagement = (currentChat: any) => {
       isVideo: boolean;
       callId: string;
     }) => {
-      console.log("📥 ===== RECEIVED OFFER =====");
-      console.log("📥 From:", data.from, "CallID:", data.callId);
+      console.log("📥 RECEIVED OFFER");
 
       let pc = peerConnectionRef.current;
       if (!pc) {
-        console.log("⚠️ No PC, creating one");
         pc = initializePeerConnection();
       }
 
       try {
-        console.log("📝 Setting remote description (offer)...");
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         console.log("✅ Remote description set");
-        console.log("📊 Remote description type:", pc.remoteDescription?.type);
 
-        // If we have local stream (already accepted), create answer
         if (localStream) {
-          console.log("📝 Creating answer (have local stream)...");
-
-          // Ensure tracks are added
           const senders = pc.getSenders();
           localStream.getTracks().forEach((track) => {
             if (!senders.find((s) => s.track === track)) {
-              console.log("➕ Adding track:", track.kind);
               pc.addTrack(track, localStream);
             }
           });
 
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
-          console.log("✅ Answer created and set");
 
           socket.emit("answer", {
             sdp: answer,
             to: data.from,
             callId: data.callId,
           });
-          console.log("📤 Answer sent");
         }
       } catch (err) {
         console.error("❌ Error handling offer:", err);
@@ -973,8 +820,7 @@ export const useCallManagement = (currentChat: any) => {
       sdp: RTCSessionDescriptionInit;
       from: string;
     }) => {
-      console.log("📥 ===== RECEIVED ANSWER =====");
-      console.log("📥 From:", data.from);
+      console.log("📥 RECEIVED ANSWER");
 
       const pc = peerConnectionRef.current;
       if (!pc) {
@@ -983,16 +829,12 @@ export const useCallManagement = (currentChat: any) => {
       }
 
       try {
-        console.log("📝 Setting remote description (answer)...");
         await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));
         console.log("✅ Remote description set");
-        console.log("📊 Remote description type:", pc.remoteDescription?.type);
 
-        // Process queued ICE candidates
         while (iceCandidateQueue.current.length > 0) {
           const candidate = iceCandidateQueue.current.shift();
           if (candidate) {
-            console.log("🧊 Adding queued ICE candidate");
             await pc.addIceCandidate(new RTCIceCandidate(candidate));
           }
         }
@@ -1011,20 +853,17 @@ export const useCallManagement = (currentChat: any) => {
 
       const pc = peerConnectionRef.current;
       if (!pc) {
-        console.log("⚠️ No PC, queuing");
         iceCandidateQueue.current.push(data.candidate);
         return;
       }
 
       if (!pc.remoteDescription) {
-        console.log("⚠️ No remote desc, queuing");
         iceCandidateQueue.current.push(data.candidate);
         return;
       }
 
       try {
         await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
-        console.log("✅ ICE candidate added");
       } catch (err) {
         console.error("❌ Error adding ICE candidate:", err);
       }
@@ -1035,18 +874,9 @@ export const useCallManagement = (currentChat: any) => {
       isVideo: boolean;
       callId: string;
     }) => {
-      console.log("📞 ===== RECEIVED CALL_REQUEST =====");
-      console.log(
-        "📞 From:",
-        data.from,
-        "Video:",
-        data.isVideo,
-        "CallID:",
-        data.callId
-      );
+      console.log("📞 RECEIVED CALL_REQUEST");
 
       if (callStateRef.current !== "idle") {
-        console.log("⚠️ Already in call, ignoring");
         return;
       }
 
@@ -1061,18 +891,16 @@ export const useCallManagement = (currentChat: any) => {
       setCallState("ringing");
       setIsVideoCall(data.isVideo);
 
-      // Initialize PC
       initializePeerConnection();
 
       callTimeoutRef.current = setTimeout(() => {
-        console.log("⏰ Auto-declining call");
         declineCall();
         toast.error("Missed call");
       }, 45000);
     };
 
     const handleCallAccept = (data: { from: string; callId: string }) => {
-      console.log("✅ RECEIVED CALL_ACCEPT from:", data.from);
+      console.log("✅ RECEIVED CALL_ACCEPT");
 
       if (callTimeoutRef.current) {
         clearTimeout(callTimeoutRef.current);
@@ -1083,13 +911,13 @@ export const useCallManagement = (currentChat: any) => {
     };
 
     const handleCallEnd = (data: { from: string }) => {
-      console.log("🔚 RECEIVED CALL_END from:", data.from);
+      console.log("🔚 RECEIVED CALL_END");
       cleanup();
       toast.success("Call ended");
     };
 
     const handleCallDecline = (data: { from: string }) => {
-      console.log("❌ RECEIVED CALL_DECLINE from:", data.from);
+      console.log("❌ RECEIVED CALL_DECLINE");
       cleanup();
       toast.error("Call declined");
     };
@@ -1110,8 +938,7 @@ export const useCallManagement = (currentChat: any) => {
     socket.on("call_decline", handleCallDecline);
     socket.on("call_error", handleCallError);
     socket.on("call_timeout", handleCallTimeout);
-    socket.on('call_waiting', handleCallWaiting);
-
+    socket.on("call_waiting", handleCallWaiting);
 
     return () => {
       socket.off("offer", handleOffer);
@@ -1123,8 +950,7 @@ export const useCallManagement = (currentChat: any) => {
       socket.off("call_decline", handleCallDecline);
       socket.off("call_error", handleCallError);
       socket.off("call_timeout", handleCallTimeout);
-      socket.off('call_waiting', handleCallWaiting);
-
+      socket.off("call_waiting", handleCallWaiting);
     };
   }, [
     socket,

@@ -6,7 +6,7 @@ import { Message } from '@/types';
 import Link from 'next/link';
 import { api } from '@/libs/axios/config';
 import { toast } from 'react-hot-toast';
-import { CallMessage } from './CallMessage';
+import  CallMessage  from './CallMessage';
 
 interface MessageContentProps {
   message: Message;
@@ -348,9 +348,13 @@ export const MessageContent = ({
             )}
           </div>
         );
-
+         
       case 'call': 
-        return <CallMessage message={message} isOwnMessage={isOwn}/>;
+        return (
+          <>
+          <CallMessage message={message} isOwnMessage={isOwn}/>;
+          </>
+        );
         
       case 'file':
         return (
