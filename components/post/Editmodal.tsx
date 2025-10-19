@@ -159,7 +159,7 @@ const EditModal = ({ postId, onClose }: EditModalProps) => {
       return;
     }
 
-    const keepFiles = existingFiles.map((file) => file.url);
+    const keepFiles = existingFiles?.map((file) => file.url);
 
     const updatedData = {
       content: data.content,

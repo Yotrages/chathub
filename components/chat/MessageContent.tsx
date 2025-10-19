@@ -6,6 +6,7 @@ import { Message } from '@/types';
 import Link from 'next/link';
 import { api } from '@/libs/axios/config';
 import { toast } from 'react-hot-toast';
+import { CallMessage } from './CallMessage';
 
 interface MessageContentProps {
   message: Message;
@@ -181,21 +182,7 @@ export const MessageContent = ({
   };
 
   const renderMessageContent = () => {
-    const getCallIcon = (callStatus: string | undefined, isVideo: boolean) => {
-      switch (callStatus) {
-        case "missed":
-          return isVideo ? "📹❌" : "📞❌";
-        case "ended":
-          return isVideo ? "📹✅" : "📞✅";
-        case "declined":
-          return isVideo ? "📹🚫" : "📞🚫";
-        case "failed":
-          return isVideo ? "📹⚠️" : "📞⚠️";
-        default:
-          return isVideo ? "📹" : "📞";
-      }
-    };
-
+    
     switch (message.messageType) {
       case 'image':
         return (
@@ -310,9 +297,11 @@ export const MessageContent = ({
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-100 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-300">
-                <Mic className="mx-auto mb-2 text-gray-400" size={24} />
-                <p className="text-sm text-gray-600 text-center font-medium">Audio unavailable</p>
+              <div className='pr-2'>
+                <div className="bg-gray-100 p-4 sm:p-6 rounded-xl sm:rounded-2xl border-2 border-dashed border-gray-300">
+                  <Mic className="mx-auto mb-2 text-gray-400" size={24} />
+                  <p className="text-sm text-gray-600 text-center font-medium">Audio unavailable</p>
+                </div>
               </div>
             )}
             {mediaError && message.content && (
@@ -361,12 +350,7 @@ export const MessageContent = ({
         );
 
       case 'call': 
-        return (
-          <div className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg text-sm max-w-xs text-center">
-            <span className="mr-2">{getCallIcon(message.callStatus, message.content.includes("Video"))}</span>
-            {message.content}
-          </div>
-        );
+        return <CallMessage message={message} isOwnMessage={isOwn}/>;
         
       case 'file':
         return (

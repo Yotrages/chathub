@@ -10,12 +10,13 @@ import toast, { Toaster } from "react-hot-toast";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { getCookie } from "cookies-next";
 import NotificationPopup from "@/components/notification/NotificationPopUp";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSocket } from "@/context/socketContext";
 import { updateUserOnlineStatus } from "@/libs/redux/authSlice";
 import { api } from "@/libs/axios/config";
 import { Analytics } from "@vercel/analytics/next";
 import { usePathname } from "next/navigation";
+import { ChunkErrorBoundary } from "@/components/layout/ChunckErrorBoundary";
 
 function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -23,29 +24,97 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const { socket, isConnected } = useSocket();
   const dispatch: AppDispatch = useDispatch();
   const pathname = usePathname();
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
 
   useEffect(() => {
+    let reloadTimeout: NodeJS.Timeout;
+
     const handleError = (event: ErrorEvent) => {
-      if (
+      const isChunkError = 
         event.message?.includes("Loading chunk") ||
-        event.message?.includes("ChunkLoadError")
-      ) {
-        console.log("Chunk load error detected, reloading page...");
-        window.location.href = pathname;
+        event.message?.includes("ChunkLoadError") ||
+        event.message?.includes("Failed to fetch dynamically imported module") ||
+        event.message?.includes("error loading dynamically imported module");
+
+      if (isChunkError) {
+        event.preventDefault();
+        console.warn("🔄 Chunk load error detected:", event.message);
+        
+        if (retryCount >= MAX_RETRIES) {
+          console.error("❌ Max retry attempts reached. Manual refresh required.");
+          toast.error("Failed to load page. Please refresh your browser.", {
+            duration: 10000,
+          });
+          return;
+        }
+
+        console.log(`🔄 Attempting recovery (${retryCount + 1}/${MAX_RETRIES})...`);
+        setRetryCount(prev => prev + 1);
+        
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            Promise.all(names.map(name => caches.delete(name)))
+              .then(() => {
+                console.log("✅ Cache cleared");
+              });
+          });
+        }
+
+        reloadTimeout = setTimeout(() => {
+          console.log("🔄 Reloading page...");
+          window.location.href = pathname;
+        }, 1500);
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const errorMsg = event.reason?.message || event.reason?.toString() || '';
+      const isChunkError = 
+        errorMsg.includes("Loading chunk") ||
+        errorMsg.includes("ChunkLoadError") ||
+        errorMsg.includes("Failed to fetch") ||
+        errorMsg.includes("dynamically imported module");
+
+      if (isChunkError) {
+        event.preventDefault();
+        console.warn("🔄 Unhandled rejection (chunk error):", errorMsg);
+        
+        const syntheticEvent = new ErrorEvent('error', { 
+          message: errorMsg,
+          error: event.reason 
+        });
+        handleError(syntheticEvent);
       }
     };
 
     window.addEventListener("error", handleError);
-    return () => window.removeEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      if (reloadTimeout) {
+        clearTimeout(reloadTimeout);
+      }
+    };
+  }, [pathname, retryCount, MAX_RETRIES]);
+
+  useEffect(() => {
+    console.log("✅ Navigation successful, resetting retry count");
+    setRetryCount(0);
   }, [pathname]);
 
   useEffect(() => {
     if (!user || !token || !socket || !isConnected) return;
 
+    console.log("🔌 Initializing socket connection for user:", user.username);
+
     socket.emit("user_online");
+    
     socket.on("online_success", () => {
       dispatch(updateUserOnlineStatus(true));
-      toast.success("You are now connected");
+      toast.success("You are now connected", { duration: 2000 });
     });
 
     const heartbeatInterval = setInterval(() => {
@@ -55,31 +124,33 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
           status: "heartbeat",
           device: navigator.userAgent,
         })
-        .catch((err) => console.error("HTTP heartbeat error:", err));
+        .catch((err) => console.error("❌ HTTP heartbeat error:", err));
     }, 120000);
 
     const handleOnline = () => {
+      console.log("User is online");
       socket.emit("user_online");
       api
         .post("/auth/online-status", {
           status: "online",
           device: navigator.userAgent,
         })
-        .catch((err) => console.error("HTTP online error:", err));
+        .catch((err) => console.error("❌ HTTP online error:", err));
       dispatch(updateUserOnlineStatus(true));
-      toast.success("You are now connected");
+      toast.success("You are now connected", { duration: 2000 });
     };
 
     const handleOffline = () => {
+      console.log("User is offline");
       socket.emit("user_offline");
       api
         .post("/auth/online-status", {
           status: "offline",
           device: navigator.userAgent,
         })
-        .catch((err: any) => console.error("HTTP offline error:", err));
+        .catch((err: any) => console.error("❌ HTTP offline error:", err));
       dispatch(updateUserOnlineStatus(false));
-      toast.error("You are not connected to the internet");
+      toast.error("You are not connected to the internet", { duration: 5000 });
     };
 
     const handleBeforeUnload = () => {
@@ -100,20 +171,27 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
       console.error("Socket error:", err);
       if (err.error === "Authentication failed") {
         dispatch(updateUserOnlineStatus(false));
-        toast.error("Session expired. Please log in again.");
+        toast.error("Session expired. Please log in again.", { duration: 5000 });
       }
     });
 
     socket.on("connect", () => {
+      console.log("Socket reconnected");
       socket.emit("user_online");
     });
 
+    socket.on("disconnect", (reason) => {
+      console.warn("Socket disconnected:", reason);
+    });
+
     return () => {
+      console.log("🧹 Cleaning up socket listeners");
       clearInterval(heartbeatInterval);
       socket.off("online_success");
       socket.off("offline_success");
       socket.off("error");
       socket.off("connect");
+      socket.off("disconnect");
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("beforeunload", handleBeforeUnload);
@@ -140,22 +218,26 @@ export default function MainLayout({
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
         />
-
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        
+        <meta name="format-detection" content="telephone=no" />
       </head>
       <body>
+        <ChunkErrorBoundary>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <ThemeProvider defaultTheme="system" storageKey="chathub-theme">
+            <ThemeProvider defaultTheme="light" storageKey="chathub-theme">
               <ReactQueryProvider>
                 <SocketProvider>
                   <NotificationWrapper>
-                    {/* Dark mode aware Toaster */}
                     <Toaster
                       position="top-right"
                       toastOptions={{
@@ -189,6 +271,7 @@ export default function MainLayout({
             </ThemeProvider>
           </PersistGate>
         </Provider>
+        </ChunkErrorBoundary>
       </body>
     </html>
   );

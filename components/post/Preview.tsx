@@ -1,4 +1,6 @@
 import { Download, FileText, Play, Video} from "lucide-react";
+import { MediaModal } from "../chat/MediaModal";
+import { useState } from "react";
 
 export const FilePreview = ({url} : {url: string}) => {
     const extension = url.split(".").pop()?.toLowerCase();
@@ -11,17 +13,41 @@ export const FilePreview = ({url} : {url: string}) => {
         type = "audio"
     }
     const name = url.split("/").pop()
+
+      const [mediaModal, setMediaModal] = useState<{
+          isOpen: boolean;
+          src: string;
+          type: 'image' | 'video';
+          fileName?: string;
+        }>({
+          isOpen: false,
+          src: '',
+          type: 'image',
+          fileName: ''
+        });
+    
+        const handleOpenMediaModal = (src: string, type: 'image' | 'video', fileName?: string) => {
+        console.log('Opening media modal:', { src, type, fileName });
+        setMediaModal({ isOpen: true, src, type, fileName });
+      };
+    
+      const handleCloseMediaModal = () => {
+        console.log('Closing media modal');
+        setMediaModal({ isOpen: false, src: '', type: 'image', fileName: '' });
+      };
+
     return (
-      <div className="px-12 relative group">
-        <div className="relative w-36 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+      <>
+      <div className="px-2 sm:px-4 md:px-6 lg:px-12 relative group">
+        <div className="relative w-24 sm:w-28 md:w-32 lg:w-36 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg sm:rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
           <div className="aspect-square">
             {type === "image" && url && (
-              <img src={url} alt="New url" className="w-full h-full object-cover" />
+              <img onClick={() => handleOpenMediaModal(url, 'image', name)} src={url} alt={name} className="w-full h-full object-cover" />
             )}
             {type === "video" && (
               <div className="relative w-full h-full bg-gray-900 flex items-center justify-center">
                 {url ? (
-                  <video src={url} loop controls className="w-full h-full object-cover" />
+                  <video onClick={() => handleOpenMediaModal(url, 'video', name)} src={url} loop controls className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gray-800 flex items-center justify-center">
                     <Video size={32} className="text-gray-400" />
@@ -65,5 +91,13 @@ export const FilePreview = ({url} : {url: string}) => {
           </div>
         </div>
       </div>
+      <MediaModal
+                  isOpen={mediaModal.isOpen}
+                  onClose={handleCloseMediaModal}
+                  src={mediaModal.src}
+                  type={mediaModal.type}
+                  fileName={mediaModal.fileName}
+                />
+      </>
     );
   };

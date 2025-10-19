@@ -125,6 +125,7 @@ export const useChat = () => {
           : undefined,
         lastMessageTime: conversation.lastMessage?.createdAt,
         unreadCount: 0,
+        admins: conversation?.admins,
         avatar:
           conversation.avatar ||
           conversation.participants.find((p: any) => p._id !== user?._id)
@@ -153,6 +154,7 @@ export const useChat = () => {
           _id: conversation._id,
           name: conversation.name || "Group Chat",
           type: conversation.type,
+          admins: conversation?.admins,
           participants: conversation.participants.map((p: any) => ({
             _id: p._id,
             username: p.username,

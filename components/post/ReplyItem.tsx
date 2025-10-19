@@ -274,7 +274,7 @@ export const ReplyItem: React.FC<ReplyItemProps> = ({
                 </div>
                 {reply.file && <FilePreview url={reply.file} />}
               </div>
-              <div className="flex select-none relative items-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
+              <div className="flex select-none relative items-center gap-3.5 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
                 <span className="text-gray-500 flex-shrink-0">
                   {formatTimeAgo(reply.createdAt)}
                 </span>

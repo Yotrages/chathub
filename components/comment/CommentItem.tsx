@@ -78,6 +78,25 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     setShowContextMenu(true);
   };
 
+  const handleMobileLongPress = () => {
+    if (isSmallScreen) {
+      const headerElement = document.querySelector(`#comment-${comment._id} .comment-header-wrapper`);
+      if (headerElement) {
+        const rect = headerElement.getBoundingClientRect();
+        setContextMenuPosition({ 
+          x: rect.left + rect.width / 2, 
+          y: rect.top + rect.height / 2 
+        });
+      } else {
+        setContextMenuPosition({ 
+          x: window.innerWidth / 2, 
+          y: window.innerHeight / 2 
+        });
+      }
+      setShowContextMenu(true);
+    }
+  };
+
   const handleUpdateComment = (e: React.FormEvent) => {
     e.preventDefault();
     if (commentContent.trim() && user && commentContent !== comment.content) {
@@ -200,11 +219,15 @@ export const CommentItem: React.FC<CommentItemProps> = ({
             </div>
           ) : (
             <>
-              <CommentHeader
-                username={comment.authorId.username}
-                content={comment.content}
-                file={comment.file}
-              />
+              <div className="comment-header-wrapper">
+                <CommentHeader
+                  username={comment.authorId.username}
+                  content={comment.content}
+                  file={comment.file}
+                  onLongPress={handleMobileLongPress}
+                  isMobile={isSmallScreen}
+                />
+              </div>
               <CommentActions
                 type={type}
                 comment={comment}

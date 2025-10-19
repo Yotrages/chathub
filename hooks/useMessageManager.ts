@@ -159,7 +159,7 @@ export const useMessageManagement = (currentChat: any) => {
     } else {
       console.log(`Messages already loaded for chat: ${activeChat} or conditions not met`);
     }
-  }, [activeChat, currentChat, joinChat, loadChatMessages, navigator.onLine]);
+  }, [activeChat, currentChat, joinChat, loadChatMessages]);
 
   useEffect(() => {
     if (!activeChat || chatMessages.length === 0 || authFailedRef.current) return;

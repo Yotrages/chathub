@@ -257,14 +257,9 @@ const PostComments: React.FC<PostCommentsProps> = ({
   const participantUsername = postAuthor?.authorId?.username;
 
   return (
-    <div className="flex flex-col border-t border-gray-50 bg-gray-50 w-full">
-      {/* Scrollable Comments Section */}
-      <div className="flex-1 overflow-y-auto px-1 sm:px-4 md:px-6 w-full pb-4 sm:pb-6">
-        <CommentList type={type} dynamicId={dynamicId} comments={comments} />
-      </div>
-
-      {/* Sticky Comment Input Area */}
-      <div className="flex-shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-10">
+    <div className="flex flex-col h-full w-full bg-gray-50">
+      {/* Sticky Comment Input Area at TOP */}
+      <div className="sticky top-0 bg-white border-b border-gray-200 shadow-sm z-20">
         {preview && <div className="pt-3">{renderFilePreview(preview, previewType, originalFile)}</div>}
         
         {user && (
@@ -314,8 +309,8 @@ const PostComments: React.FC<PostCommentsProps> = ({
                 </div>
                 
                 {showEmojiPicker && (
-                  <div ref={emojiRef} className="absolute bottom-full mb-2 right-0 z-[150]">
-                    <div className="scale-75 sm:scale-100 origin-bottom-right">
+                  <div ref={emojiRef} className="absolute top-full mt-2 right-0 z-[150]">
+                    <div className="scale-75 sm:scale-100 origin-top-right">
                       <EmojiPicker onEmojiClick={handleEmojiClick} />
                     </div>
                   </div>
@@ -352,6 +347,11 @@ const PostComments: React.FC<PostCommentsProps> = ({
             )}
           </div>
         )}
+      </div>
+
+      {/* Scrollable Comments Section BELOW Input */}
+      <div className="flex-1 overflow-y-auto px-1 sm:px-4 md:px-6 w-full py-4 sm:py-6">
+        <CommentList type={type} dynamicId={dynamicId} comments={comments} />
       </div>
     </div>
   );

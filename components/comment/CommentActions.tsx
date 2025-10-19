@@ -34,7 +34,6 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
   const isSmallScreen = useScreenSize();
   const { mutate: likeComment } = useLikeComment(dynamicId, comment._id);
   const { mutate: reactReelComment } = useReactReelComment(dynamicId, comment._id);
-  // const [longPressActive, setLongPressActive] = useState(false);
   const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
   const reactionRef = useRef<HTMLDivElement | null>(null);
 
@@ -61,7 +60,6 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
   const handleLongPressStart = () => {
     if (isSmallScreen) {
       longPressTimeout.current = setTimeout(() => {
-        // setLongPressActive(true);
         setShowReactions(true);
       }, 500);
     }
@@ -72,7 +70,6 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
       if (longPressTimeout.current) {
         clearTimeout(longPressTimeout.current);
       }
-      // setLongPressActive(false);
       if (!showReactions) {
         handleReaction("👍", "Like");
       }
@@ -85,19 +82,19 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
   })?.emoji || null;
 
   useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          reactionRef.current &&
-          !reactionRef.current.contains(event.target as Node)
-        ) {
-          setShowReactions(false);
-        }
-      };
-      if (showReactions) {
-        document.addEventListener("mousedown", handleClickOutside);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        reactionRef.current &&
+        !reactionRef.current.contains(event.target as Node)
+      ) {
+        setShowReactions(false);
       }
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [showReactions]);
+    };
+    if (showReactions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showReactions]);
 
   const groupedReactions = comment.reactions?.reduce((acc, reaction) => {
     const emoji = reaction.emoji.category;
@@ -107,13 +104,13 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
   }, {} as Record<string, Array<{ userId: any; emoji: { category: string; name: string } }>>) || {};
 
   return (
-    <div className="flex select-none relative items-center gap-2 sm:gap-4 md:gap-6 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
-      <span className="text-gray-500 flex-shrink-0">{createdAt}</span>
+    <div className="flex select-none relative items-center gap-3 md:gap-4 mt-2 px-2 sm:px-4 w-full text-xs sm:text-sm">
+      <span className="text-gray-500 flex-shrink-0 text-xs">{createdAt}</span>
       
       {/* Reactions popup */}
       <div
         onMouseLeave={() => setShowReactions(false)}
-        className="absolute -top-24 flex items-center w-full flex-wrap"
+        className="absolute -top-24 flex items-center w-full flex-wrap z-50"
       >
         {showReactions && (
           <div ref={reactionRef} className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg px-2 py-2 sm:py-3 flex items-center justify-center gap-1 backdrop-blur-sm">
@@ -147,9 +144,9 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
           }`}
         >
           {userReactionEmoji ? (
-            <span className="capitalize select-none truncate">{userReactionEmoji.name}</span>
+            <span className="capitalize select-none truncate text-xs sm:text-sm">{userReactionEmoji.name}</span>
           ) : (
-            <span className="select-none">Like</span>
+            <span className="select-none text-xs sm:text-sm">Like</span>
           )}
         </button>
       </div>
@@ -157,14 +154,14 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
       {/* Reply button */}
       <button
         onClick={() => setShowReplyForm((prev) => !prev)}
-        className="font-semibold text-gray-600 hover:text-blue-600 transition-colors flex-shrink-0"
+        className="font-semibold text-gray-600 hover:text-blue-600 transition-colors flex-shrink-0 text-xs sm:text-sm"
       >
         Reply
       </button>
       
       {/* Reaction count */}
       <button 
-        className="flex items-center min-w-0"
+        className="flex items-center gap-0.5 min-w-0 ml-auto"
         onClick={() => comment.reactions.length > 0 && onShowReactions(comment.reactions, "comment")}
       >
         <div className="flex -space-x-0.5 items-center">
@@ -172,7 +169,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
             comment.reactions.length > 0 &&
             Object.entries(groupedReactions).slice(0, 2).map(([emoji]) => (
               <span
-                className="text-xs sm:text-base"
+                className="text-xs sm:text-sm"
                 key={emoji}
               >
                 {emoji}
@@ -180,19 +177,21 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
             ))}
         </div>
         {comment.reactions.length > 0 && (
-          <span className="hover:text-gray-800 cursor-pointer transition-colors text-gray-600 flex-shrink-0">
+          <span className="hover:text-gray-800 cursor-pointer transition-colors text-gray-600 flex-shrink-0 text-xs sm:text-sm">
             {comment.reactions.length}
           </span>
         )}
       </button>
       
-      {/* More options */}
-      <button 
-        onClick={handleContextMenu}
-        className="ml-auto p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
-      >
-        <MoreHorizontal className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600" />
-      </button>
+      {/* More options - ONLY show on desktop */}
+      {!isSmallScreen && (
+        <button 
+          onClick={handleContextMenu}
+          className="p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
+        >
+          <MoreHorizontal className="w-4 h-4 text-gray-600" />
+        </button>
+      )}
     </div>
   );
 };

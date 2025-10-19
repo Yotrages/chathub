@@ -94,7 +94,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   }, [stopHeartbeat]);
 
   useEffect(() => {
-    // Prevent multiple initializations
     if (isInitializedRef.current) {
       console.log("Socket already initialized, skipping...");
       return;
@@ -128,9 +127,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       reconnectionDelayMax: 5000,
       timeout: 20000,
       autoConnect: true,
-      // Critical: Increase these values
-      // pingTimeout: 120000, // 2 minutes before considering connection dead
-      // pingInterval: 25000, // Send ping every 25 seconds
+      // pingTimeout: 120000, 
+      // pingInterval: 25000, 
     });
 
     newSocket.on("connect", () => {
@@ -141,13 +139,10 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       setIsConnected(true);
       setConnectionError(null);
 
-      // Start heartbeat
       startHeartbeat(newSocket);
 
-      // Emit user online status
       newSocket.emit('user_online', { userId: user._id });
       
-      // Confirm connection
       newSocket.emit('connection_confirmed');
     });
 
@@ -167,7 +162,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       setIsConnected(true);
       setConnectionError(null);
 
-      // Restart heartbeat
       startHeartbeat(newSocket);
 
       try {
@@ -189,12 +183,10 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       setIsConnected(false);
       stopHeartbeat();
 
-      // Don't set error for intentional disconnects
       if (reason !== "io client disconnect") {
         setConnectionError(`Disconnected: ${reason}`);
       }
 
-      // Auto-reconnect for most disconnect reasons
       if (reason === "io server disconnect" || 
           reason === "ping timeout" || 
           reason === "transport close" ||
@@ -217,7 +209,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       console.log("✅ Connection confirmed by server:", data);
     });
 
-    // Monitor connection
     newSocket.io.engine.on("ping", () => {
       console.log("🏓 Ping sent");
     });
@@ -239,7 +230,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       }
       
       if (socketRef.current) {
-        // Emit offline before disconnecting
         socketRef.current.emit('user_offline', { userId: user._id });
         socketRef.current.removeAllListeners();
         socketRef.current.close();
@@ -251,9 +241,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       setConnectionError(null);
       setOnlineUsers([]);
     };
-  }, []); // Empty dependency array - only run once
+  }, []); 
 
-  // Handle token expiration
   useEffect(() => {
     if (!socket) return;
 

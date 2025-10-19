@@ -139,7 +139,14 @@ export interface Chat {
     _id: string;
     username: string;
     avatar?: string;
+    online: boolean;
+    email: string;
   }>;
+  admins: Array<{
+    _id: string;
+    username: string;
+    avatar: string;
+  }>
   lastMessage?: Message;
   lastMessageTime?: string;
   unreadCount: number;

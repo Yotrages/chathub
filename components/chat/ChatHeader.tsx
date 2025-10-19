@@ -1,4 +1,4 @@
-import { Phone, Video, MoreVertical } from 'lucide-react';
+import { Phone, Video, MoreVertical, ArrowLeft } from 'lucide-react';
 import { Chat, UserStatus } from '@/types';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/redux/store';
@@ -90,21 +90,18 @@ export const ChatHeader = ({
   return (
     <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
       <div className="flex items-center justify-between min-w-0">
+
+          <button onClick={() => router.push('/chat')} className={`${window.location.pathname.includes('message') ? 'flex' : 'hidden'} items-center w-5 h-5 rounded-full bg-blue-300 justify-center p-1 mr-3`}>
+            <ArrowLeft size={16}/>
+          </button>
         {/* Left side - Avatar and info */}
         <div className="flex items-center min-w-0 flex-1 mr-2">
-          {currentChat.avatar ? (
             <UserAvatar 
               avatar={currentChat.avatar} 
               username={currentChat.name} 
               className='w-8 h-8 sm:w-10 sm:h-10 rounded-full flex-shrink-0 mr-2 sm:mr-3'
             />
-          ) : (
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-2 sm:mr-3 flex-shrink-0">
-              <span className="text-white font-semibold text-xs sm:text-sm">
-                {currentChat.name?.charAt(0) || 'U'}
-              </span>
-            </div>
-          )}
+         
           <div className="min-w-0 flex-1">
             <h2 
               onClick={() => currentChat.type !== 'group' && router.push(`/profile/${otherUserId?._id}`)} 

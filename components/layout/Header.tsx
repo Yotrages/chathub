@@ -156,20 +156,24 @@ useEffect(() => {
 
   const handleFrequentSearchClick = (query: string) => {
     setSearchQuery(query);
-    setIsFocused(false);
-    setShowSearch(false);
     setAutocompleteSuggestions(null);
     
-    router.push(`/search/${encodeURIComponent(query)}`);
+    setTimeout(() => {
+      setIsFocused(false);
+      setShowSearch(false);
+      router.push(`/search/${encodeURIComponent(query)}`);
+    }, 0);
   };
 
   const handleSuggestionClick = (query: string) => {
     setSearchQuery(query);
-    setIsFocused(false);
-    setShowSearch(false);
     setAutocompleteSuggestions(null);
     
-    router.push(`/search/${encodeURIComponent(query)}`);
+    setTimeout(() => {
+      setIsFocused(false);
+      setShowSearch(false);
+      router.push(`/search/${encodeURIComponent(query)}`);
+    }, 0);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,7 +278,7 @@ useEffect(() => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (inputSearchRef.current && !inputSearchRef.current.contains(event.target as Node)) {
-        setIsFocused(false);
+        setTimeout(() => setIsFocused(false), 200);
       }
       if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target as Node)) {
         setShowSearch(false);
@@ -344,11 +348,16 @@ useEffect(() => {
                     onChange={handleSearchInputChange}
                     onKeyPress={handleSearchKeyPress}
                     onFocus={() => setIsFocused(true)}
+                    onBlur={(e) => {
+                      if (!e.relatedTarget || !inputSearchRef.current?.contains(e.relatedTarget as Node)) {
+                        setTimeout(() => setIsFocused(false), 200);
+                      }
+                    }}
                   />
                   
                   {/* Desktop Search Dropdown */}
                   {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches || shouldShowAutocomplete) && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-50">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-[200]">
                       <div className="p-2">
                         {/* Frequent/Recent Searches */}
                         {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches) && (
@@ -561,7 +570,7 @@ useEffect(() => {
 
       {/* Mobile Search Modal */}
       {showSearch && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 sm:hidden">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] sm:hidden">
           <div 
             ref={mobileSearchRef}
             className="bg-white m-4 mt-8 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4 duration-300"
@@ -592,6 +601,11 @@ useEffect(() => {
                   onChange={handleSearchInputChange}
                   onKeyPress={handleSearchKeyPress}
                   onFocus={() => setIsFocused(true)}
+                  onBlur={(e) => {
+                    if (!e.relatedTarget || !mobileSearchRef.current?.contains(e.relatedTarget as Node)) {
+                      setTimeout(() => setIsFocused(false), 200);
+                    }
+                  }}
                   autoFocus={true}
                 />
               </form>

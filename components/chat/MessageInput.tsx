@@ -614,7 +614,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
           )}
           
           {/* Message Input Container */}
-          <div className="flex-1 relative min-w-0">
+          <div className="flex-1 relative pl-0.5 min-w-0">
             <div className="relative">
               <textarea
                 ref={textareaRef}
@@ -648,7 +648,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
+                className="absolute right-2 bottom-2 p-1 text-gray-500 hover:text-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
                 title="Add emoji"
               >
                 <Smile size={isVerySmallScreen ? 14 : 16} />

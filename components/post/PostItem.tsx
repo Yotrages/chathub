@@ -17,11 +17,11 @@ import { useGetComments } from "@/hooks/usePosts";
 
 interface PostItemProps {
   post: Post;
-  isModal?: boolean; 
+  isModal?: boolean;
 }
 
 export const PostItem = ({ post, isModal = false }: PostItemProps) => {
-  const [showComments, setShowComments] = useState(isModal); 
+  const [showComments, setShowComments] = useState(isModal);
   const [showPostModal, setShowPostModal] = useState(false);
   const [commentContent, setCommentContent] = useState("");
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
@@ -204,14 +204,15 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
           setShowLikes={setShowLikes}
           post={post}
         />
+
         {showComments && (
-          <div className="w-full max-w-full h-[400px] sm:h-[500px] flex flex-col">
+          <div className="w-full max-w-full h-[400px] sm:h-[500px] border-t border-gray-100">
             {isFetchingComments ? (
-              <div className="text-center py-4 text-gray-500">
+              <div className="flex items-center justify-center h-full text-gray-500">
                 <p>Loading comments...</p>
               </div>
             ) : !hasSuccessfullyFetched && fetchAttempted ? (
-              <div className="text-center py-4 text-gray-500">
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <p>Failed to load comments.</p>
                 <button
                   onClick={retryFetchComments}

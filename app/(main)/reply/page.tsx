@@ -35,9 +35,9 @@ const ReplyPage = () => {
   };
 
 
-  const reduxPostComment = postComments[dynamicId].find((item) => item._id === commentId)
+  const reduxPostComment = postComments[dynamicId]?.find((item) => item._id === commentId)
   const comment = reduxPostComment 
-  const reduxReelComment = reelComments[dynamicId].find((item) => item._id === commentId)
+  const reduxReelComment = reelComments[dynamicId]?.find((item) => item._id === commentId)
   const reelComment = reduxReelComment 
 
   let originalComment: IComment | undefined;

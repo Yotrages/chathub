@@ -1,11 +1,10 @@
 'use client';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
   theme: Theme;
-  effectiveTheme: 'light' | 'dark';
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
@@ -24,86 +23,57 @@ interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
-  attribute?: string;
-  enableSystem?: boolean;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
-  defaultTheme = 'system',
-  storageKey = 'theme',
-  attribute = 'class',
-  enableSystem = true,
+  defaultTheme = 'light',
+  storageKey = 'chathub-theme',
 }) => {
   const [theme, setThemeState] = useState<Theme>(defaultTheme);
-  const [effectiveTheme, setEffectiveTheme] = useState<'light' | 'dark'>('light');
-
-  const getSystemTheme = (): 'light' | 'dark' => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'light';
-  };
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem(storageKey) as Theme;
-      if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
+      if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
         setThemeState(savedTheme);
+      } else {
+        setThemeState('light');
+        localStorage.setItem(storageKey, 'light');
       }
     }
   }, [storageKey]);
 
   useEffect(() => {
-    const updateEffectiveTheme = () => {
-      const newEffectiveTheme = theme === 'system' ? getSystemTheme() : theme;
-      setEffectiveTheme(newEffectiveTheme);
+    if (!mounted) return;
 
-      if (typeof window !== 'undefined') {
-        const root = window.document.documentElement;
-        
-        if (attribute === 'class') {
-          root.classList.remove('light', 'dark');
-          root.classList.add(newEffectiveTheme);
-        } else {
-          root.setAttribute(attribute, newEffectiveTheme);
-        }
-      }
-    };
-
-    updateEffectiveTheme();
-
-    if (enableSystem && theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => updateEffectiveTheme();
-      
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme, attribute, enableSystem]);
+    const root = window.document.documentElement;
+    
+    root.classList.remove('light', 'dark');
+    
+    root.classList.add(theme);
+    
+    localStorage.setItem(storageKey, theme);
+  }, [theme, storageKey, mounted]);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, newTheme);
-    }
   };
 
   const toggleTheme = () => {
-    if (theme === 'light') {
-      setTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('system');
-    } else {
-      setTheme('light');
-    }
+    setTheme(theme === 'light' ? 'dark' : 'light');
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <ThemeContext.Provider
       value={{
         theme,
-        effectiveTheme,
         setTheme,
         toggleTheme,
       }}

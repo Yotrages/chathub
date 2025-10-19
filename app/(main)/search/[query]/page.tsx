@@ -24,6 +24,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { UserAvatar } from "@/components/constant/UserAvatar";
 
 interface SearchResult {
   posts: Post[];
@@ -271,13 +272,7 @@ const [loadingHistory, setLoadingHistory] = useState(false);
           className="group flex items-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-blue-200"
         >
           <div className="relative">
-            <Image
-              src={user.avatar || ""}
-              alt={user?.username || ""}
-              width={56}
-              height={56}
-              className="rounded-full ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all"
-            />
+            <UserAvatar avatar={user.avatar} username={user.username} className="w-14 h-14"/>
             {user.online && (
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
             )}

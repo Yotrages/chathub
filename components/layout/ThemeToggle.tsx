@@ -9,7 +9,7 @@ const ThemeToggle = () => {
   const themes = [
     { value: 'light', icon: Sun, label: 'Light' },
     { value: 'dark', icon: Moon, label: 'Dark' },
-    { value: 'system', icon: Monitor, label: 'System' },
+    { value: 'light', icon: Monitor, label: 'System' },
   ] as const;
 
   return (
@@ -42,7 +42,7 @@ export const ThemeToggleDropdown = () => {
   const themes = [
     { value: 'light', icon: Sun, label: 'Light' },
     { value: 'dark', icon: Moon, label: 'Dark' },
-    { value: 'system', icon: Monitor, label: 'System' },
+    { value: 'light', icon: Monitor, label: 'System' },
   ] as const;
 
   const currentTheme = themes.find(t => t.value === theme);

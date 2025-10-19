@@ -18,7 +18,6 @@ interface ReplyFormProps {
 
 export const ReplyForm: React.FC<ReplyFormProps> = ({
   dynamicId,
-  // commentId,
   username,
   avatar,
   onClose,
@@ -200,86 +199,100 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
   };
 
   return (
-    <div className="mt-5 sm:mt-4 flex-col ml-1 sm:ml-3 w-full max-w-full">
-      {preview && <span className="block w-full">{renderFilePreview(preview, previewType, originalFile)}</span>}
-      <div className="flex gap-1 sm:gap-2 items-start w-full min-w-0">
-        <UserAvatar 
-          username={username} 
-          avatar={avatar} 
-          className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 hidden xs:flex" 
-        />
-        <button 
-          type="button" 
-          onClick={() => fileInputRef.current?.click()}
-          className="flex-shrink-0 p-1 hover:bg-gray-100 rounded-full transition-colors"
-        >
-          <Image size={16} className="sm:w-[18px] sm:h-[18px]" />
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,video/*,.pdf,.doc,.docx,.txt,audio/*"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-        />
-        <form onSubmit={onSubmit} className="flex items-end w-full min-w-0 relative">
-          <div className="relative w-full min-w-0">
+    <div className="mt-3 sm:mt-4 w-full max-w-full">
+      {preview && (
+        <div className="mb-2">
+          {renderFilePreview(preview, previewType, originalFile)}
+        </div>
+      )}
+      
+      <form onSubmit={onSubmit} className="w-full">
+        <div className="flex gap-2 items-center w-full min-w-0">
+          {/* Avatar */}
+          <UserAvatar 
+            username={username} 
+            avatar={avatar} 
+            className="w-7 h-7 sm:w-8 sm:h-8 flex-shrink-0 hidden xs:flex" 
+          />
+          
+          {/* Image Upload Button */}
+          <button 
+            type="button" 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-shrink-0 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors self-end mb-1"
+          >
+            <Image size={18} className="sm:w-5 sm:h-5 text-gray-600" />
+          </button>
+          
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,video/*,.pdf,.doc,.docx,.txt,audio/*"
+            multiple
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          
+          {/* Textarea with Emoji Button */}
+          <div className="flex-1 relative min-w-0">
             <textarea
               ref={textareaRef}
               value={replyContent}
               onChange={handleTextareaChange}
               placeholder={`Reply to ${username}...`}
               rows={1}
-              className="w-full bg-gray-50 rounded-2xl sm:rounded-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm border-none outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 transition-all resize-none overflow-hidden pr-16 sm:pr-20 min-h-[36px] sm:min-h-[40px]"
+              className="w-full bg-gray-50 rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-200 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none overflow-hidden pr-9 sm:pr-10"
               style={{ 
-                minHeight: '36px',
+                minHeight: '38px',
                 maxHeight: '120px',
-                lineHeight: '1.4'
+                lineHeight: '1.5'
               }}
             />
-            <div className="absolute flex items-center gap-1 sm:gap-2 right-2 sm:right-3 bottom-2 sm:bottom-2.5">
-              <button
-                type="button"
-                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="hover:scale-110 transition-transform text-sm sm:text-base flex-shrink-0"
-              >
-                😊
-              </button>
-              <button 
-                type="submit" 
-                disabled={!replyContent.trim()}
-                className="flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 transition-transform"
-              >
-                <Send className="w-4 h-4 sm:w-5 sm:h-5 text-black" />
-              </button>
-            </div>
-          </div>
-          {showEmojiPicker && (
-            <div 
-              ref={emojiRef} 
-              className="absolute bottom-full right-0 z-50 mb-2"
-              style={{
-                transform: window.innerWidth < 400 ? 'translateX(-50%)' : 'none',
-                right: window.innerWidth < 400 ? '50%' : '0'
-              }}
+            
+            {/* Emoji Button Inside Textarea */}
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 hover:scale-110 transition-transform text-base sm:text-lg"
             >
-              <div className="max-w-[280px] xs:max-w-none">
-                <EmojiPicker 
-                  onEmojiClick={handleEmojiClick}
-                  width={Math.min(320, window.innerWidth - 20)}
-                  height={Math.min(400, window.innerHeight * 0.4)}
-                />
+              😊
+            </button>
+            
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+              <div 
+                ref={emojiRef} 
+                className="absolute bottom-full right-0 z-[150] mb-2"
+              >
+                <div className="scale-75 sm:scale-90 origin-bottom-right">
+                  <EmojiPicker 
+                    onEmojiClick={handleEmojiClick}
+                    width={Math.min(350, window.innerWidth - 40)}
+                    height={350}
+                  />
+                </div>
               </div>
-            </div>
-          )}
-        </form>
-      </div>
-      {(errors.content || reelErrors.content) && (
-        <span className="text-red-500 mt-2 text-center text-xs sm:text-sm block w-full px-2">
-          {errors.content?.message || reelErrors.content?.message}
-        </span>
-      )}
+            )}
+          </div>
+          
+          {/* Send Button - Outside */}
+          <button 
+            type="submit" 
+            disabled={!replyContent.trim()}
+            className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:transform-none mb-1"
+          >
+            <Send size={16} className="sm:w-[18px] sm:h-[18px] text-white" />
+          </button>
+        </div>
+        
+        {(errors.content || reelErrors.content) && (
+          <div className="mt-2 px-2">
+            <span className="text-red-500 text-xs sm:text-sm">
+              {errors.content?.message || reelErrors.content?.message}
+            </span>
+          </div>
+        )}
+      </form>
     </div>
   );
 };

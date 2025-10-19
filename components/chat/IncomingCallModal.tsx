@@ -16,13 +16,12 @@ export const IncomingCallModal = ({
   onAccept,
   onDecline
 }: IncomingCallModalProps) => {
-  const [timeRemaining, setTimeRemaining] = useState(45); // Match backend timeout
+  const [timeRemaining, setTimeRemaining] = useState(45); 
   const [isRinging, setIsRinging] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!incomingCall || callState !== 'ringing') {
-      // Clean up timer
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -34,7 +33,6 @@ export const IncomingCallModal = ({
 
     setIsRinging(true);
     
-    // Start countdown timer
     timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
         if (prev <= 1) {
@@ -53,7 +51,7 @@ export const IncomingCallModal = ({
       setTimeRemaining(45);
       setIsRinging(false);
     };
-  }, [incomingCall, callState]); // Removed onDecline from dependencies
+  }, [incomingCall, callState]); 
 
   if (!incomingCall || callState !== 'ringing') return null;
 

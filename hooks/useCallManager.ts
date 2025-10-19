@@ -92,45 +92,41 @@ export const useCallManagement = (currentChat: any) => {
     };
   }, []);
 
-  const refreshVideoStream = useCallback(() => {
-  if (remoteVideoRef.current && remoteStream) {
-    console.log("🔄 Refreshing video stream");
-    const video = remoteVideoRef.current;
-    const stream = remoteStream;
-    
-    // Force re-render
-    video.srcObject = null;
-    
-    setTimeout(() => {
-      video.srcObject = stream;
-      video.muted = true;
-      video.playsInline = true;
-      
-      video.play()
-        .then(() => console.log("✅ Video refreshed and playing"))
-        .catch(err => console.error("❌ Refresh play failed:", err));
-    }, 100);
-  }
-}, [remoteVideoRef, remoteStream]);
+  useEffect(() => {
+  if (!remoteAudioRef.current) return;
 
-useEffect(() => {
-  if (remoteVideoRef.current) {
-    const video = remoteVideoRef.current;
-    
-    const checkAndRefresh = () => {
-      if (video.videoWidth > 0 && video.videoHeight > 0 && video.paused) {
-        console.log("⚠️ Video has dimensions but paused - refreshing");
-        refreshVideoStream();
-      }
-    };
-    
-    video.addEventListener("loadedmetadata", checkAndRefresh);
-    
-    return () => {
-      video.removeEventListener("loadedmetadata", checkAndRefresh);
-    };
-  }
-}, [remoteVideoRef, refreshVideoStream]);
+  const audio = remoteAudioRef.current;
+  
+  const checkAudioSource = () => {
+    const srcObject = audio.srcObject as MediaStream;
+    if (srcObject) {
+      const audioTracks = srcObject.getAudioTracks();
+      console.log("🔊 Audio element tracks:", audioTracks.map(t => ({
+        kind: t.kind,
+        id: t.id,
+        label: t.label,
+        enabled: t.enabled,
+      })));
+      
+      // CRITICAL: If audio track label matches local microphone, STOP IT
+      audioTracks.forEach(track => {
+        if (localStream) {
+          const localAudioTrack = localStream.getAudioTracks()[0];
+          if (localAudioTrack && track.id === localAudioTrack.id) {
+            console.error("❌❌ ECHO DETECTED: Local audio in remote audio element!");
+            console.error("Removing local audio from remote audio element");
+            track.stop();
+            audio.srcObject = null;
+          }
+        }
+      });
+    }
+  };
+
+  const interval = setInterval(checkAudioSource, 2000);
+
+  return () => clearInterval(interval);
+}, [localStream]);
 
   const configuration = {
     iceServers: [
@@ -301,10 +297,9 @@ useEffect(() => {
         if (event.track.kind === "audio") {
           console.log("🔊 Setting AUDIO stream to audio element");
           if (remoteAudioRef.current) {
-            const audioStream = new MediaStream([event.track]);
-          remoteAudioRef.current.srcObject = audioStream;
-          remoteAudioRef.current.volume = 1.0;
-          remoteAudioRef.current.muted = false;
+            remoteAudioRef.current.srcObject = stream;
+            remoteAudioRef.current.volume = 1.0;
+            remoteAudioRef.current.muted = false;
             
 
             // Force play
@@ -330,25 +325,14 @@ useEffect(() => {
         if (event.track.kind === "video") {
           console.log("📹 Setting VIDEO stream to video element");
           if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = stream;
+            const videoOnlyStream = new MediaStream([event.track]);
 
-             remoteVideoRef.current.muted = true;
-          remoteVideoRef.current.volume = 0;
-          remoteVideoRef.current.playsInline = true;
-          remoteVideoRef.current.autoplay = true;
-          remoteVideoRef.current.play().catch(err => console.log(err));
-
-          
-          // Set mobile attributes
-          remoteVideoRef.current.setAttribute("playsinline", "");
-          remoteVideoRef.current.setAttribute("webkit-playsinline", "");
-          
-          console.log("📹 Attempting video play...");
+            remoteVideoRef.current.srcObject = null;
 
             // Force play
             setTimeout(() => {
               if (remoteVideoRef.current) {
-                // remoteVideoRef.current.srcObject = videoOnlyStream;
+                remoteVideoRef.current.srcObject = videoOnlyStream;
 
                 // CRITICAL: Video element MUST be muted (audio plays through separate element)
                 remoteVideoRef.current.muted = true;
@@ -367,24 +351,29 @@ useEffect(() => {
             remoteVideoRef.current.setAttribute("x-webkit-airplay", "allow");
 
                 const video = remoteVideoRef.current;
-            video.style.display = "block !important";
-            video.style.visibility = "visible !important";
-            video.style.opacity = "1 !important";
-            video.style.objectFit = "cover !important";
-            video.style.width = "100% !important";
-            video.style.height = "100% !important";
-            video.style.position = "absolute !important";
-            video.style.top = "0 !important";
-            video.style.left = "0 !important";
-            video.style.zIndex = "1 !important";
-            
-            // Force hardware acceleration
-            video.style.transform = "translate3d(0, 0, 0) !important";
-            video.style.webkitTransform = "translate3d(0, 0, 0) !important";
-            video.style.backfaceVisibility = "hidden !important";
-            video.style.webkitBackfaceVisibility = "hidden !important";
-            video.style.willChange = "transform !important";
-            video.style.isolation = "isolate !important";
+            video.style.cssText = `
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          min-width: 100% !important;
+          min-height: 100% !important;
+          object-fit: cover !important;
+          background-color: #000 !important;
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          z-index: 1 !important;
+          transform: translate3d(0, 0, 0) !important;
+          -webkit-transform: translate3d(0, 0, 0) !important;
+          backfaceVisibility = "hidden !important";
+          webkitBackfaceVisibility = "hidden !important";
+          willChange = "transform !important";
+          isolation = "isolate !important";
+        `;
 
                 console.log("📹 Attempting video play...");
 
@@ -396,6 +385,8 @@ useEffect(() => {
                     .then(() => {
                       console.log("✅ Video playing successfully");
                       if (remoteVideoRef.current) {
+                        remoteVideoRef.current.muted = true
+                        remoteVideoRef.current.volume = 0
                         console.log("✅ Video element properties:", {
                           paused: remoteVideoRef.current.paused,
                           muted: remoteVideoRef.current.muted,
@@ -410,12 +401,17 @@ useEffect(() => {
                       const enableVideo = () => {
                         if (remoteVideoRef.current) {
                           remoteVideoRef.current.muted = true; // Keep muted!
+                          remoteVideoRef.current.volume = 0;
                           remoteVideoRef.current.style.display = "block";
                           remoteVideoRef.current
                             .play()
-                            .then(() =>
-                              console.log("✅ Video playing after interaction")
-                            )
+                            .then(() => {
+                              console.log("✅ Video playing after interaction");
+                              if (remoteVideoRef.current) {
+                                remoteVideoRef.current.muted = true;
+                                remoteVideoRef.current.volume = 0;
+                              }
+                        })
                             .catch((e) => console.error("❌ Still failed:", e));
                         }
                         document.removeEventListener("click", enableVideo);
@@ -564,9 +560,9 @@ useEffect(() => {
 
          localVideoRef.current.play().then(() => {
           if (localVideoRef.current) {
-          localVideoRef.current.muted = true;
-          localVideoRef.current.volume = 0;
-         }
+            localVideoRef.current.muted = true; 
+            localVideoRef.current.volume = 0;   
+          }
          }).catch(err => {
           console.error("Local video play failed:", err);
         });
@@ -709,13 +705,18 @@ useEffect(() => {
       setLocalStream(stream);
       if (localVideoRef.current) {
          localVideoRef.current.srcObject = stream;
-      localVideoRef.current.muted = true; // MUST be true
-      localVideoRef.current.volume = 0;   // MUST be 0
+      localVideoRef.current.muted = true; 
+      localVideoRef.current.volume = 0;   
       localVideoRef.current.playsInline = true;
       localVideoRef.current.autoplay = true;
       
       // Force play
-      localVideoRef.current.play().catch(err => {
+      localVideoRef.current.play().then(() => {
+        if (localVideoRef.current) {
+          localVideoRef.current.muted = true; 
+          localVideoRef.current.volume = 0;
+        }
+      }).catch(err => {
         console.error("Local video play failed:", err);
       });
       }

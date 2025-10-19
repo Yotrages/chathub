@@ -80,12 +80,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
       setUnreadCount(0);
     };
 
-    // Register event listeners
     socket.on('new_notification', handleNewNotification);
     socket.on('notification_read', handleNotificationRead);
     socket.on('notification_all_read', handleAllNotificationsRead);
 
-    // Cleanup listeners on unmount or when dependencies change
     return () => {
       console.log('Cleaning up notification socket listeners');
       socket.off('new_notification', handleNewNotification);
@@ -147,10 +145,8 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({
     if (!userId || !token) return;
 
     if (socket && isConnected) {
-      // Use socket if available
       socket.emit('mark_all_notification');
     } else {
-      // Fallback to HTTP request
       try {
         const response = await api.put('/notifications/read-all');
 
