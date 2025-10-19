@@ -101,7 +101,6 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
   }, [pathname, retryCount, MAX_RETRIES]);
 
   useEffect(() => {
-    console.log("✅ Navigation successful, resetting retry count");
     setRetryCount(0);
   }, [pathname]);
 
@@ -114,7 +113,6 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
     
     socket.on("online_success", () => {
       dispatch(updateUserOnlineStatus(true));
-      toast.success("You are now connected", { duration: 2000 });
     });
 
     const heartbeatInterval = setInterval(() => {
@@ -171,7 +169,6 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
       console.error("Socket error:", err);
       if (err.error === "Authentication failed") {
         dispatch(updateUserOnlineStatus(false));
-        toast.error("Session expired. Please log in again.", { duration: 5000 });
       }
     });
 

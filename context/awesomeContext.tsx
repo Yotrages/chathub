@@ -15,8 +15,7 @@ const AwesomeContext = createContext<Awesome>({
     user: null,
     token: null,
     setUserCV: (user: Partial<User>, token: string) => {},
-    logout() {
-        
+    logout() {    
     },
 })
 

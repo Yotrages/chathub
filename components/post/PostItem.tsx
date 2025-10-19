@@ -156,6 +156,14 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
     dispatch(removePost(post._id));
   };
 
+  const handleEdit = () => {
+    if (window.innerWidth <= 600) {
+          router.push(`/post/${post._id}/edit`)
+        } else {
+          setIsOpen(true)
+        }
+  }
+
   const retryFetchComments = () => {
     if (!isOnline) {
       console.log("Cannot retry - user is offline");
@@ -177,7 +185,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
           createdAt={post.createdAt}
           postId={post._id}
           content={post.content}
-          onEdit={() => setIsOpen(true)}
+          onEdit={handleEdit}
           onHide={hidePost}
         />
         <PostContent content={post.content} />

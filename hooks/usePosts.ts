@@ -34,6 +34,7 @@ import { IComment, Post, ReactedUser } from "@/types";
 import { errorMessageHandler } from "@/libs/feedback/error-handler";
 import { useState } from "react";
 import { successNotification } from "@/libs/feedback/notification";
+import { useRouter } from "next/navigation";
 
 const createPostSchema = z.object({
   content: z.string().min(1, "Post content is required"),
@@ -287,6 +288,7 @@ export const useUpdatePost = (
   options?: Partial<UseApiControllerOptions<EditPostData, CreatePostResponse>>
 ): MutationResult<EditPostData, CreatePostResponse> => {
   const dispatch: AppDispatch = useDispatch();
+  const router = useRouter()
   return useApiController<EditPostData, CreatePostResponse>({
     method: "PUT",
     url: `/posts/${postId}`,
@@ -294,6 +296,9 @@ export const useUpdatePost = (
     successMessage: "Post updated successfully!",
     onSuccess: (data: CreatePostResponse) => {
       dispatch(updatePost({ post: data.post, _id: data.post._id }));
+      if (window.location.pathname.includes('edit')) {
+        router.back()
+      }
     },
     onError: (error: any) => {
       errorMessageHandler(error);

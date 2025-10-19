@@ -103,12 +103,8 @@ const PostHeader: React.FC<PostHeaderProps> = ({
       icon: Edit3,
       label: "Edit post",
       onClick: () => {
-        if (window.innerWidth <= 600) {
-          router.push(`/post/${postId}/edit`)
-        } else {
-          setShowDropdown(false);
-        }
         onEdit();
+        setShowDropdown(false);
       },
       color: "text-blue-600",
       hoverBg: "hover:bg-blue-50"
