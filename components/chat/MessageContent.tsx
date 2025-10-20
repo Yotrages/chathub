@@ -350,9 +350,10 @@ export const MessageContent = ({
         );
          
       case 'call': 
+       console.log('Call status:', message.callStatus);
         return (
           <>
-          <CallMessage message={message} isOwnMessage={isOwn}/>;
+          <CallMessage message={message} isOwnMessage={isOwn}/>
           </>
         );
         

@@ -581,6 +581,7 @@ export const useChat = () => {
         _id: msg._id,
         conversationId: msg.conversationId,
         senderId: msg.senderId,
+        callStatus: msg.callStatus,
         content: msg.content,
         messageType: msg.messageType || "text",
         fileUrl: msg.fileUrl,

@@ -23,7 +23,7 @@ const NotificationIcon: React.FC<NotificationIconProps> = ({
       <span className="relative flex">
         <Bell size={18} className="text-gray-600" />
       {unreadCount > 0 && (
-        <span className="absolute -top-[6px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+        <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
           {unreadCount > 99 ? "99+" : unreadCount}
         </span>
       )}

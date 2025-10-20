@@ -61,44 +61,45 @@ const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [frequentSearches, setFrequentSearches] = useState<string[]>([]);
-  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<AutocompleteSuggestions | null>(null);
+  const [autocompleteSuggestions, setAutocompleteSuggestions] =
+    useState<AutocompleteSuggestions | null>(null);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const inputSearchRef = useRef<HTMLDivElement | null>(null);
   const mobileSearchRef = useRef<HTMLDivElement | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const { fetchNotifications } = useNotifications()
-  
+  const { fetchNotifications } = useNotifications();
+
   const { user } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-  const fetchFrequentSearches = async () => {
-    if (!user) {
-      setFrequentSearches([]);
-      return;
-    }
-
-    try {
-      const res = await api.get("/search/tracking");
-      if (res.status === 200 && res.data.success) {
-        setFrequentSearches(res.data.searches.map((s: any) => s.query));
-      }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
+    const fetchFrequentSearches = async () => {
+      if (!user) {
         setFrequentSearches([]);
-      } else {
-        setFrequentSearches([]);
+        return;
       }
-    }
-  };
-  
-  fetchFrequentSearches();
-}, [user]);
 
-useEffect(() => {
-  fetchNotifications()
-}, [])
+      try {
+        const res = await api.get("/search/tracking");
+        if (res.status === 200 && res.data.success) {
+          setFrequentSearches(res.data.searches.map((s: any) => s.query));
+        }
+      } catch (error: any) {
+        if (error.response?.status === 401) {
+          setFrequentSearches([]);
+        } else {
+          setFrequentSearches([]);
+        }
+      }
+    };
+
+    fetchFrequentSearches();
+  }, [user]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const fetchAutocompleteSuggestions = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 2 || query.length > MAX_QUERY_LENGTH) {
@@ -109,10 +110,10 @@ useEffect(() => {
 
     try {
       setIsLoadingSuggestions(true);
-      
+
       const [suggestionsRes, searchRes] = await Promise.all([
         api.get(`/search/suggestions?query=${encodeURIComponent(query)}`),
-        api.get(`/search?query=${encodeURIComponent(query)}&type=all&limit=3`)
+        api.get(`/search?query=${encodeURIComponent(query)}&type=all&limit=3`),
       ]);
 
       const suggestions: AutocompleteSuggestions = {
@@ -120,7 +121,7 @@ useEffect(() => {
         posts: [],
         reels: [],
         hashtags: [],
-        recent: []
+        recent: [],
       };
 
       if (suggestionsRes.status === 200 && suggestionsRes.data.success) {
@@ -149,31 +150,27 @@ useEffect(() => {
       setIsFocused(false);
       setShowSearch(false);
       setAutocompleteSuggestions(null);
-      
+
       router.push(`/search/${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
   const handleFrequentSearchClick = (query: string) => {
     setSearchQuery(query);
+    setIsFocused(false);
+    setShowSearch(false);
     setAutocompleteSuggestions(null);
-    
-    setTimeout(() => {
-      setIsFocused(false);
-      setShowSearch(false);
-      router.push(`/search/${encodeURIComponent(query)}`);
-    }, 0);
+
+    router.push(`/search/${encodeURIComponent(query)}`);
   };
 
   const handleSuggestionClick = (query: string) => {
     setSearchQuery(query);
+    setIsFocused(false);
+    setShowSearch(false);
     setAutocompleteSuggestions(null);
-    
-    setTimeout(() => {
-      setIsFocused(false);
-      setShowSearch(false);
-      router.push(`/search/${encodeURIComponent(query)}`);
-    }, 0);
+
+    router.push(`/search/${encodeURIComponent(query)}`);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,23 +205,23 @@ useEffect(() => {
 
     debounceTimerRef.current = setTimeout(() => {
       fetchAutocompleteSuggestions(value);
-    }, 300); 
+    }, 300);
   };
 
   const handleSearchKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSearchSubmit(e as any);
     }
   };
 
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+    return text.substring(0, maxLength) + "...";
   };
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setShowSearch(false);
         setShowNotifications(false);
         setIsFocused(false);
@@ -232,15 +229,15 @@ useEffect(() => {
     };
 
     if (showSearch) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
+      document.addEventListener("keydown", handleEscape);
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "unset";
     };
   }, [showSearch]);
 
@@ -261,12 +258,12 @@ useEffect(() => {
     {
       icon: <Users size={18} />,
       name: "Network",
-      route: `/profile/${user?._id}/connections`
+      route: `/profile/${user?._id}/connections`,
     },
     {
-      icon: <Video size={18}/>,
-      name: 'Reels',
-      route: '/reels'
+      icon: <Video size={18} />,
+      name: "Reels",
+      route: "/reels",
     },
     {
       icon: <MessageCircleMore size={18} />,
@@ -277,63 +274,88 @@ useEffect(() => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (inputSearchRef.current && !inputSearchRef.current.contains(event.target as Node)) {
-        setTimeout(() => setIsFocused(false), 200);
+      if (
+        inputSearchRef.current &&
+        !inputSearchRef.current.contains(event.target as Node)
+      ) {
+        setIsFocused(false);
       }
-      if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target as Node)) {
+      if (
+        mobileSearchRef.current &&
+        !mobileSearchRef.current.contains(event.target as Node)
+      ) {
         setShowSearch(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleNotificationNavigate = () => {
-    router.push('/notification');
+    router.push("/notification");
     setShowNotifications(false);
   };
 
-  const shouldShowFrequentSearches = isFocused && !searchQuery.trim() && frequentSearches.length > 0;
-  const shouldShowFilteredFrequentSearches = isFocused && searchQuery.trim() && frequentSearches.some(q => q.toLowerCase().includes(searchQuery.toLowerCase()));
-  const shouldShowAutocomplete = isFocused && searchQuery.trim() && autocompleteSuggestions && (
-    autocompleteSuggestions.users.length > 0 ||
-    autocompleteSuggestions.posts.length > 0 ||
-    autocompleteSuggestions.reels.length > 0 ||
-    autocompleteSuggestions.hashtags.length > 0 ||
-    autocompleteSuggestions.recent.length > 0
-  );
+  const shouldShowFrequentSearches =
+    isFocused && !searchQuery.trim() && frequentSearches.length > 0;
+  const shouldShowFilteredFrequentSearches =
+    isFocused &&
+    searchQuery.trim() &&
+    frequentSearches.some((q) =>
+      q.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  const shouldShowAutocomplete =
+    isFocused &&
+    searchQuery.trim() &&
+    autocompleteSuggestions &&
+    (autocompleteSuggestions.users.length > 0 ||
+      autocompleteSuggestions.posts.length > 0 ||
+      autocompleteSuggestions.reels.length > 0 ||
+      autocompleteSuggestions.hashtags.length > 0 ||
+      autocompleteSuggestions.recent.length > 0);
 
   return (
     <div className="bg-gray-50">
       <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-3 xs:px-4 py-3 xs:py-4">
           <div className="sm:flex items-center justify-between gap-2 xs:gap-4">
-            
             {/* Logo Section */}
             <div className="flex items-center justify-between">
-              <Link href="/" className="hover:opacity-80 transition-opacity duration-200">
+              <Link
+                href="/"
+                className="hover:opacity-80 transition-opacity duration-200"
+              >
                 <h1 className="text-xl xs:text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                   ChatHub
                 </h1>
               </Link>
               {/* Mobile Controls - Search & Settings */}
-            <div className="flex sm:hidden items-center gap-2">
-              <button 
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 flex-shrink-0"
-                onClick={() => setShowSearch(true)}
-                aria-label="Open search"
-              >
-                <Search size={18} className="text-gray-600" />
-              </button>
-              <Link href="/settings" className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150">
-                <Settings size={18} className="text-gray-600" />
-              </Link>
-            </div>
+              <div className="flex sm:hidden items-center gap-2">
+                <button
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 flex-shrink-0"
+                  onClick={() => {
+                    setShowSearch(true);
+                    setIsFocused(true); // Add this line
+                  }}
+                  aria-label="Open search"
+                >
+                  <Search size={18} className="text-gray-600" />
+                </button>
+                <Link
+                  href="/settings"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150"
+                >
+                  <Settings size={18} className="text-gray-600" />
+                </Link>
+              </div>
             </div>
 
             {/* Desktop Search - Hidden on mobile */}
-            <div ref={inputSearchRef} className="hidden sm:block flex-1 max-w-lg mx-4">
+            <div
+              ref={inputSearchRef}
+              className="hidden sm:block flex-1 max-w-lg mx-4"
+            >
               <form onSubmit={handleSearchSubmit} className="relative">
                 <div className="relative w-full">
                   <Input
@@ -348,25 +370,29 @@ useEffect(() => {
                     onChange={handleSearchInputChange}
                     onKeyPress={handleSearchKeyPress}
                     onFocus={() => setIsFocused(true)}
-                    onBlur={(e) => {
-                      if (!e.relatedTarget || !inputSearchRef.current?.contains(e.relatedTarget as Node)) {
-                        setTimeout(() => setIsFocused(false), 200);
-                      }
-                    }}
                   />
-                  
+
                   {/* Desktop Search Dropdown */}
-                  {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches || shouldShowAutocomplete) && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-[200]">
+                  {(shouldShowFrequentSearches ||
+                    shouldShowFilteredFrequentSearches ||
+                    shouldShowAutocomplete) && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-50">
                       <div className="p-2">
                         {/* Frequent/Recent Searches */}
-                        {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches) && (
+                        {(shouldShowFrequentSearches ||
+                          shouldShowFilteredFrequentSearches) && (
                           <>
                             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
                               Recent Searches
                             </p>
                             {frequentSearches
-                              .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                              .filter((q) =>
+                                searchQuery
+                                  ? q
+                                      .toLowerCase()
+                                      .includes(searchQuery.toLowerCase())
+                                  : true
+                              )
                               .slice(0, 5)
                               .map((q, index) => (
                                 <div
@@ -374,8 +400,13 @@ useEffect(() => {
                                   onClick={() => handleFrequentSearchClick(q)}
                                   className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
                                 >
-                                  <Search size={14} className="text-gray-400 mr-3 flex-shrink-0" />
-                                  <span className="text-gray-700 truncate">{q}</span>
+                                  <Search
+                                    size={14}
+                                    className="text-gray-400 mr-3 flex-shrink-0"
+                                  />
+                                  <span className="text-gray-700 truncate">
+                                    {q}
+                                  </span>
                                 </div>
                               ))}
                           </>
@@ -393,21 +424,35 @@ useEffect(() => {
                                 {autocompleteSuggestions.users.map((user) => (
                                   <div
                                     key={user._id}
-                                    onClick={() => handleSuggestionClick(user.username)}
+                                    onClick={() =>
+                                      handleSuggestionClick(user.username)
+                                    }
                                     className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
                                   >
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
                                       {user.avatar ? (
-                                        <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                                        <img
+                                          src={user.avatar}
+                                          alt={user.username}
+                                          className="w-full h-full object-cover"
+                                        />
                                       ) : (
                                         <span className="text-xs font-semibold text-white">
-                                          {user.username.charAt(0).toUpperCase()}
+                                          {user.username
+                                            .charAt(0)
+                                            .toUpperCase()}
                                         </span>
                                       )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 truncate font-medium">{user.username}</p>
-                                      {user.name && <p className="text-xs text-gray-500 truncate">{user.name}</p>}
+                                      <p className="text-sm text-gray-700 truncate font-medium">
+                                        {user.username}
+                                      </p>
+                                      {user.name && (
+                                        <p className="text-xs text-gray-500 truncate">
+                                          {user.name}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
                                 ))}
@@ -423,13 +468,24 @@ useEffect(() => {
                                 {autocompleteSuggestions.posts.map((post) => (
                                   <div
                                     key={post._id}
-                                    onClick={() => handleSuggestionClick(post.content.substring(0, 50))}
+                                    onClick={() =>
+                                      handleSuggestionClick(
+                                        post.content.substring(0, 50)
+                                      )
+                                    }
                                     className="flex items-start px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
                                   >
-                                    <FileText size={16} className="text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+                                    <FileText
+                                      size={16}
+                                      className="text-gray-400 mr-3 flex-shrink-0 mt-0.5"
+                                    />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 line-clamp-2">{truncateText(post.content, 80)}</p>
-                                      <p className="text-xs text-gray-500 mt-1">by @{post.authorId.username}</p>
+                                      <p className="text-sm text-gray-700 line-clamp-2">
+                                        {truncateText(post.content, 80)}
+                                      </p>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        by @{post.authorId.username}
+                                      </p>
                                     </div>
                                   </div>
                                 ))}
@@ -445,13 +501,22 @@ useEffect(() => {
                                 {autocompleteSuggestions.reels.map((reel) => (
                                   <div
                                     key={reel._id}
-                                    onClick={() => handleSuggestionClick(reel.title)}
+                                    onClick={() =>
+                                      handleSuggestionClick(reel.title)
+                                    }
                                     className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
                                   >
-                                    <Video size={16} className="text-gray-400 mr-3 flex-shrink-0" />
+                                    <Video
+                                      size={16}
+                                      className="text-gray-400 mr-3 flex-shrink-0"
+                                    />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 truncate font-medium">{reel.title}</p>
-                                      <p className="text-xs text-gray-500 truncate">by @{reel.authorId.username}</p>
+                                      <p className="text-sm text-gray-700 truncate font-medium">
+                                        {reel.title}
+                                      </p>
+                                      <p className="text-xs text-gray-500 truncate">
+                                        by @{reel.authorId.username}
+                                      </p>
                                     </div>
                                   </div>
                                 ))}
@@ -464,16 +529,24 @@ useEffect(() => {
                                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
                                   Hashtags
                                 </p>
-                                {autocompleteSuggestions.hashtags.map((hashtag, index) => (
-                                  <div
-                                    key={`hashtag-${index}`}
-                                    onClick={() => handleSuggestionClick(hashtag)}
-                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
-                                  >
-                                    <span className="text-blue-500 mr-3 font-semibold">#</span>
-                                    <span className="text-gray-700 truncate">{hashtag.slice(1)}</span>
-                                  </div>
-                                ))}
+                                {autocompleteSuggestions.hashtags.map(
+                                  (hashtag, index) => (
+                                    <div
+                                      key={`hashtag-${index}`}
+                                      onClick={() =>
+                                        handleSuggestionClick(hashtag)
+                                      }
+                                      className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                    >
+                                      <span className="text-blue-500 mr-3 font-semibold">
+                                        #
+                                      </span>
+                                      <span className="text-gray-700 truncate">
+                                        {hashtag.slice(1)}
+                                      </span>
+                                    </div>
+                                  )
+                                )}
                               </>
                             )}
                           </>
@@ -485,15 +558,22 @@ useEffect(() => {
                             <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                           </div>
                         )}
-                        
+
                         {/* Current search option */}
                         {searchQuery && (
                           <div
-                            onClick={() => handleFrequentSearchClick(searchQuery)}
+                            onClick={() =>
+                              handleFrequentSearchClick(searchQuery)
+                            }
                             className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
                           >
-                            <Search size={14} className="text-blue-500 mr-3 flex-shrink-0" />
-                            <span className="text-gray-700 truncate">Search for &quot;{searchQuery}&quot;</span>
+                            <Search
+                              size={14}
+                              className="text-blue-500 mr-3 flex-shrink-0"
+                            />
+                            <span className="text-gray-700 truncate">
+                              Search for &quot;{searchQuery}&quot;
+                            </span>
                           </div>
                         )}
                       </div>
@@ -505,7 +585,6 @@ useEffect(() => {
 
             {/* Navigation & User Section */}
             <div className="flex items-center justify-between sm:space-x-4">
-              
               {/* Navigation Links */}
               <nav className="flex flex-1 pr-4 items-center justify-between md:gap-5 gap-1">
                 {NavLinks.map((item, index) => (
@@ -522,12 +601,16 @@ useEffect(() => {
                     </p>
                   </Link>
                 ))}
-                
+
                 {/* Notification Icon */}
                 <div className="relative max-w-full">
                   {user && (
-                    <NotificationIcon 
-                      onClick={() => window.innerWidth >= 632 ? setShowNotifications(!showNotifications) : handleNotificationNavigate()}
+                    <NotificationIcon
+                      onClick={() =>
+                        window.innerWidth >= 632
+                          ? setShowNotifications(!showNotifications)
+                          : handleNotificationNavigate()
+                      }
                       className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 transition-colors duration-150 min-w-0"
                     />
                   )}
@@ -570,8 +653,8 @@ useEffect(() => {
 
       {/* Mobile Search Modal */}
       {showSearch && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] sm:hidden">
-          <div 
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 sm:hidden">
+          <div
             ref={mobileSearchRef}
             className="bg-white m-4 mt-8 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4 duration-300"
           >
@@ -601,36 +684,46 @@ useEffect(() => {
                   onChange={handleSearchInputChange}
                   onKeyPress={handleSearchKeyPress}
                   onFocus={() => setIsFocused(true)}
-                  onBlur={(e) => {
-                    if (!e.relatedTarget || !mobileSearchRef.current?.contains(e.relatedTarget as Node)) {
-                      setTimeout(() => setIsFocused(false), 200);
-                    }
-                  }}
                   autoFocus={true}
                 />
               </form>
             </div>
 
             {/* Mobile Search Results */}
-            {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches || shouldShowAutocomplete) && (
+            {(shouldShowFrequentSearches ||
+              shouldShowFilteredFrequentSearches ||
+              shouldShowAutocomplete) && (
               <div className="max-h-96 overflow-y-auto">
                 <div className="p-2">
                   {/* Frequent/Recent Searches */}
-                  {(shouldShowFrequentSearches || shouldShowFilteredFrequentSearches) && (
+                  {(shouldShowFrequentSearches ||
+                    shouldShowFilteredFrequentSearches) && (
                     <>
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
                         Recent Searches
                       </p>
                       {frequentSearches
-                        .filter((q) => searchQuery ? q.toLowerCase().includes(searchQuery.toLowerCase()) : true)
+                        .filter((q) =>
+                          searchQuery
+                            ? q
+                                .toLowerCase()
+                                .includes(searchQuery.toLowerCase())
+                            : true
+                        )
                         .slice(0, 8)
                         .map((q, index) => (
                           <div
                             key={`mobile-frequent-${index}`}
-                            onClick={() => handleFrequentSearchClick(q)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFrequentSearchClick(q);
+                            }}
                             className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                           >
-                            <Search size={16} className="text-gray-400 mr-3 flex-shrink-0" />
+                            <Search
+                              size={16}
+                              className="text-gray-400 mr-3 flex-shrink-0"
+                            />
                             <span className="text-gray-700 truncate">{q}</span>
                           </div>
                         ))}
@@ -649,12 +742,19 @@ useEffect(() => {
                           {autocompleteSuggestions.users.map((user) => (
                             <div
                               key={`mobile-${user._id}`}
-                              onClick={() => handleSuggestionClick(user.username)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSuggestionClick(user.username);
+                              }}
                               className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                             >
                               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
                                 {user.avatar ? (
-                                  <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
+                                  <img
+                                    src={user.avatar}
+                                    alt={user.username}
+                                    className="w-full h-full object-cover"
+                                  />
                                 ) : (
                                   <span className="text-sm font-semibold text-white">
                                     {user.username.charAt(0).toUpperCase()}
@@ -662,8 +762,14 @@ useEffect(() => {
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 truncate font-medium">{user.username}</p>
-                                {user.name && <p className="text-xs text-gray-500 truncate">{user.name}</p>}
+                                <p className="text-sm text-gray-700 truncate font-medium">
+                                  {user.username}
+                                </p>
+                                {user.name && (
+                                  <p className="text-xs text-gray-500 truncate">
+                                    {user.name}
+                                  </p>
+                                )}
                               </div>
                             </div>
                           ))}
@@ -679,13 +785,25 @@ useEffect(() => {
                           {autocompleteSuggestions.posts.map((post) => (
                             <div
                               key={`mobile-post-${post._id}`}
-                              onClick={() => handleSuggestionClick(post.content.substring(0, 50))}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSuggestionClick(
+                                  post.content.substring(0, 50)
+                                );
+                              }}
                               className="flex items-start px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                             >
-                              <FileText size={18} className="text-gray-400 mr-3 flex-shrink-0 mt-0.5" />
+                              <FileText
+                                size={18}
+                                className="text-gray-400 mr-3 flex-shrink-0 mt-0.5"
+                              />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 line-clamp-2">{truncateText(post.content, 80)}</p>
-                                <p className="text-xs text-gray-500 mt-1">by @{post.authorId.username}</p>
+                                <p className="text-sm text-gray-700 line-clamp-2">
+                                  {truncateText(post.content, 80)}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  by @{post.authorId.username}
+                                </p>
                               </div>
                             </div>
                           ))}
@@ -701,13 +819,23 @@ useEffect(() => {
                           {autocompleteSuggestions.reels.map((reel) => (
                             <div
                               key={`mobile-reel-${reel._id}`}
-                              onClick={() => handleSuggestionClick(reel.title)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSuggestionClick(reel.title);
+                              }}
                               className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                             >
-                              <Video size={18} className="text-gray-400 mr-3 flex-shrink-0" />
+                              <Video
+                                size={18}
+                                className="text-gray-400 mr-3 flex-shrink-0"
+                              />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 truncate font-medium">{reel.title}</p>
-                                <p className="text-xs text-gray-500 truncate">by @{reel.authorId.username}</p>
+                                <p className="text-sm text-gray-700 truncate font-medium">
+                                  {reel.title}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  by @{reel.authorId.username}
+                                </p>
                               </div>
                             </div>
                           ))}
@@ -720,16 +848,25 @@ useEffect(() => {
                           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
                             Hashtags
                           </p>
-                          {autocompleteSuggestions.hashtags.map((hashtag, index) => (
-                            <div
-                              key={`mobile-hashtag-${index}`}
-                              onClick={() => handleSuggestionClick(hashtag)}
-                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                            >
-                              <span className="text-blue-500 mr-3 font-semibold text-lg">#</span>
-                              <span className="text-gray-700 truncate">{hashtag.slice(1)}</span>
-                            </div>
-                          ))}
+                          {autocompleteSuggestions.hashtags.map(
+                            (hashtag, index) => (
+                              <div
+                                key={`mobile-hashtag-${index}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSuggestionClick(hashtag);
+                                }}
+                                className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                              >
+                                <span className="text-blue-500 mr-3 font-semibold text-lg">
+                                  #
+                                </span>
+                                <span className="text-gray-700 truncate">
+                                  {hashtag.slice(1)}
+                                </span>
+                              </div>
+                            )
+                          )}
                         </>
                       )}
                     </>
@@ -741,15 +878,23 @@ useEffect(() => {
                       <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                     </div>
                   )}
-                  
+
                   {/* Current search option */}
                   {searchQuery && (
                     <div
-                      onClick={() => handleFrequentSearchClick(searchQuery)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFrequentSearchClick(searchQuery);
+                      }}
                       className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
                     >
-                      <Search size={14} className="text-blue-500 mr-3 flex-shrink-0" />
-                      <span className="text-gray-700 truncate">Search for &apos;{searchQuery}&apos;</span>
+                      <Search
+                        size={14}
+                        className="text-blue-500 mr-3 flex-shrink-0"
+                      />
+                      <span className="text-gray-700 truncate">
+                        Search for &apos;{searchQuery}&apos;
+                      </span>
                     </div>
                   )}
                 </div>
@@ -757,12 +902,15 @@ useEffect(() => {
             )}
 
             {/* Empty State */}
-            {!shouldShowFrequentSearches && !shouldShowFilteredFrequentSearches && !shouldShowAutocomplete && !isLoadingSuggestions && (
-              <div className="p-8 text-center">
-                <Search size={32} className="text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Start typing to search</p>
-              </div>
-            )}
+            {!shouldShowFrequentSearches &&
+              !shouldShowFilteredFrequentSearches &&
+              !shouldShowAutocomplete &&
+              !isLoadingSuggestions && (
+                <div className="p-8 text-center">
+                  <Search size={32} className="text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">Start typing to search</p>
+                </div>
+              )}
           </div>
         </div>
       )}
