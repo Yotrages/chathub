@@ -219,11 +219,11 @@ const VideoCallDisplay = ({
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [hasLocalVideo, setHasLocalVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
-  const [localStreamInfo, setLocalStreamInfo] = React.useState<string>("");
-  const [debugInfo, setDebugInfo] = React.useState<any>({});
+  // const [localStreamInfo, setLocalStreamInfo] = React.useState<string>("");
+  // const [debugInfo, setDebugInfo] = React.useState<any>({});
   const retryCountRef = React.useRef(0);
   const localRetryCountRef = React.useRef(0);
-  const maxRetries = 50; // Increased for Itel A16
+  const maxRetries = 50; 
   const forcePlayIntervalRef = React.useRef<any>(null);
   const forceLocalPlayIntervalRef = React.useRef<any>(null);
 
@@ -239,7 +239,7 @@ const VideoCallDisplay = ({
       if (!srcObject) {
         setHasRemoteVideo(false);
         setRemoteStreamInfo("No stream");
-        setDebugInfo((prev: any)=> ({ ...prev, remoteError: "No srcObject" }));
+        // setDebugInfo((prev: any)=> ({ ...prev, remoteError: "No srcObject" }));
         return;
       }
 
@@ -255,22 +255,22 @@ const VideoCallDisplay = ({
         `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || "none"})`
       );
       
-      setDebugInfo((prev: any) => ({
-        ...prev,
-        hasRemoteVideo: hasVideo,
-        remoteVideoTracks: videoTracks.length,
-        remoteAudioTracks: audioTracks.length,
-        remoteTrackReadyState: videoTrack?.readyState,
-        remoteTrackEnabled: videoTrack?.enabled,
-        remoteVideoPaused: remoteVideo.paused,
-        remoteVideoMuted: remoteVideo.muted,
-        remoteVideoVolume: remoteVideo.volume,
-        remoteReadyState: remoteVideo.readyState,
-        remoteNetworkState: remoteVideo.networkState,
-        remoteVideoWidth: remoteVideo.videoWidth,
-        remoteVideoHeight: remoteVideo.videoHeight,
-        remoteCurrentTime: remoteVideo.currentTime?.toFixed(2),
-      }));
+      // setDebugInfo((prev: any) => ({
+      //   ...prev,
+      //   hasRemoteVideo: hasVideo,
+      //   remoteVideoTracks: videoTracks.length,
+      //   remoteAudioTracks: audioTracks.length,
+      //   remoteTrackReadyState: videoTrack?.readyState,
+      //   remoteTrackEnabled: videoTrack?.enabled,
+      //   remoteVideoPaused: remoteVideo.paused,
+      //   remoteVideoMuted: remoteVideo.muted,
+      //   remoteVideoVolume: remoteVideo.volume,
+      //   remoteReadyState: remoteVideo.readyState,
+      //   remoteNetworkState: remoteVideo.networkState,
+      //   remoteVideoWidth: remoteVideo.videoWidth,
+      //   remoteVideoHeight: remoteVideo.videoHeight,
+      //   remoteCurrentTime: remoteVideo.currentTime?.toFixed(2),
+      // }));
 
       if (hasVideo && remoteVideo.paused && retryCountRef.current < maxRetries) {
         console.warn(`⚠️ REMOTE video paused, FORCE PLAY attempt ${retryCountRef.current}`);
@@ -462,34 +462,34 @@ const VideoCallDisplay = ({
       
       if (!srcObject) {
         setHasLocalVideo(false);
-        setLocalStreamInfo("No stream");
+        // setLocalStreamInfo("No stream");
         return;
       }
 
       const videoTracks = srcObject.getVideoTracks();
-      const audioTracks = srcObject.getAudioTracks();
+      // const audioTracks = srcObject.getAudioTracks();
       
       const videoTrack = videoTracks[0];
       const hasVideo = videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
 
       setHasLocalVideo(hasVideo);
-      setLocalStreamInfo(
-        `Video: ${videoTracks.length}(${videoTrack?.readyState || "none"}) ` +
-        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || "none"})`
-      );
+      // setLocalStreamInfo(
+      //   `Video: ${videoTracks.length}(${videoTrack?.readyState || "none"}) ` +
+      //   `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || "none"})`
+      // );
       
-      setDebugInfo((prev: any) => ({
-        ...prev,
-        hasLocalVideo: hasVideo,
-        localVideoTracks: videoTracks.length,
-        localAudioTracks: audioTracks.length,
-        localVideoPaused: localVideo.paused,
-        localVideoMuted: localVideo.muted,
-        localVideoVolume: localVideo.volume,
-        localReadyState: localVideo.readyState,
-        localVideoWidth: localVideo.videoWidth,
-        localVideoHeight: localVideo.videoHeight,
-      }));
+      // setDebugInfo((prev: any) => ({
+      //   ...prev,
+      //   hasLocalVideo: hasVideo,
+      //   localVideoTracks: videoTracks.length,
+      //   localAudioTracks: audioTracks.length,
+      //   localVideoPaused: localVideo.paused,
+      //   localVideoMuted: localVideo.muted,
+      //   localVideoVolume: localVideo.volume,
+      //   localReadyState: localVideo.readyState,
+      //   localVideoWidth: localVideo.videoWidth,
+      //   localVideoHeight: localVideo.videoHeight,
+      // }));
 
       // 🔴 CRITICAL: Local video MUST be muted to prevent echo
       if (localVideo.muted !== true || localVideo.volume !== 0) {
@@ -671,7 +671,7 @@ const VideoCallDisplay = ({
       )}
 
       {/* 🔴 ENHANCED Debug Panel */}
-      <div className="absolute bottom-20 left-2 right-2 bg-black bg-opacity-90 text-white text-xs p-3 rounded z-20 max-h-48 overflow-y-auto">
+      {/* <div className="absolute bottom-20 left-2 right-2 bg-black bg-opacity-90 text-white text-xs p-3 rounded z-20 max-h-48 overflow-y-auto">
         <div className="font-bold mb-2 text-yellow-400">🔍 Stream Debug</div>
         
         <div className="mb-2 border-b border-gray-700 pb-2">
@@ -700,7 +700,7 @@ const VideoCallDisplay = ({
         <div className="text-yellow-400 font-bold animate-pulse text-center mt-2">
           👆 TAP SCREEN ANYWHERE 👆
         </div>
-      </div>
+      </div> */}
 
       {/* Video status overlay */}
       {!hasRemoteVideo && (

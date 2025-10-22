@@ -60,6 +60,7 @@ const Header: React.FC = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [frequentSearches, setFrequentSearches] = useState<string[]>([]);
   const [autocompleteSuggestions, setAutocompleteSuggestions] =
     useState<AutocompleteSuggestions | null>(null);
@@ -155,22 +156,32 @@ const Header: React.FC = () => {
     }
   };
 
-  const handleFrequentSearchClick = (query: string) => {
-    const cleanQuery = query.trim();
+const handleFrequentSearchClick = (query: string) => {
+  const cleanQuery = query.trim();
+  setIsNavigating(true); // Prevent click-outside from interfering
+  router.push(`/search/${encodeURIComponent(cleanQuery)}`);
+  setShowSearch(false);
+  setIsFocused(false);
+  setAutocompleteSuggestions(null);
+  setSearchQuery("");
+  setTimeout(() => setIsNavigating(false), 100); // Reset flag
+};
 
-    router.push(`/search/${encodeURIComponent(cleanQuery)}`);
-  };
-
-  const handleSuggestionClick = (query: string) => {
-    const cleanQuery = query.trim();
-
-    router.push(`/search/${encodeURIComponent(cleanQuery)}`);
-  };
+const handleSuggestionClick = (query: string) => {
+  const cleanQuery = query.trim();
+  setIsNavigating(true); 
+  router.push(`/search/${encodeURIComponent(cleanQuery)}`);
+  setShowSearch(false);
+  setIsFocused(false);
+  setAutocompleteSuggestions(null);
+  setSearchQuery("");
+  setTimeout(() => setIsNavigating(false), 100); // Reset flag
+};
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-
+    
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -180,7 +191,7 @@ const Header: React.FC = () => {
       setIsLoadingSuggestions(false);
       return;
     }
-
+    
     const matchesFrequentSearch = frequentSearches.some(
       (q) => q.toLowerCase() === value.toLowerCase()
     );
@@ -190,13 +201,13 @@ const Header: React.FC = () => {
       setIsLoadingSuggestions(false);
       return;
     }
-
+    
     if (value.length > MAX_QUERY_LENGTH) {
       setAutocompleteSuggestions(null);
       setIsLoadingSuggestions(false);
       return;
     }
-
+    
     debounceTimerRef.current = setTimeout(() => {
       fetchAutocompleteSuggestions(value);
     }, 300);
@@ -207,7 +218,7 @@ const Header: React.FC = () => {
       handleSearchSubmit(e as any);
     }
   };
-
+  
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
@@ -228,12 +239,34 @@ const Header: React.FC = () => {
     } else {
       document.body.style.overflow = "unset";
     }
-
+    
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
   }, [showSearch]);
+  
+useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+    if (isNavigating) return; // Don't close if navigating
+    
+    if (
+      inputSearchRef.current &&
+      !inputSearchRef.current.contains(event.target as Node)
+    ) {
+      setIsFocused(false);
+    }
+    if (
+      mobileSearchRef.current &&
+      !mobileSearchRef.current.contains(event.target as Node)
+    ) {
+      setShowSearch(false);
+    }
+  };
+
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, [isNavigating]);
 
   useEffect(() => {
     return () => {
@@ -266,25 +299,6 @@ const Header: React.FC = () => {
     },
   ];
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        inputSearchRef.current &&
-        !inputSearchRef.current.contains(event.target as Node)
-      ) {
-        setIsFocused(false);
-      }
-      if (
-        mobileSearchRef.current &&
-        !mobileSearchRef.current.contains(event.target as Node)
-      ) {
-        setShowSearch(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleNotificationNavigate = () => {
     router.push("/notification");

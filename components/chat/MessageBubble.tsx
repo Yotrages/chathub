@@ -670,7 +670,7 @@ const MobileContextMenu = ({
                     {messageInfo.readBy.map((reader, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between"
+                        className="flex xs:flex-row flex-col items-center justify-between"
                       >
                         <div className="flex items-center gap-2">
                           <UserAvatar
@@ -739,7 +739,7 @@ const MobileContextMenu = ({
         </div>
 
         {/* Menu Items */}
-        <div className="px-2 py-1 max-h-80 overflow-y-auto">
+        <div className="px-2 py-2 max-h-80 overflow-y-auto">
           <MobileContextMenuItem
             label="Reply"
             icon="↩️"
