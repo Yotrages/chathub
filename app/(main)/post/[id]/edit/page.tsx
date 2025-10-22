@@ -344,9 +344,8 @@ const EditModal = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header - Fixed */}
       <div
-        className="sticky top-0 bg-white border-b border-gray-200 z-10"
+        className="sticky top-0 h-full w-full bg-white border-b border-gray-200 z-20"
       >
         <div className="flex items-center justify-between px-3 py-3">
           <button
@@ -368,14 +367,12 @@ const EditModal = () => {
         </div>
       </div>
 
-      {/* Content - Scrollable */}
       <div className="pb-4">
         <form
           id="edit-post-form"
           onSubmit={handleSubmit(onSubmit)}
           className="space-y-4"
         >
-          {/* Content Input */}
           <div className="bg-white px-3 py-4">
             <label className="block text-xs font-medium text-gray-700 mb-2">
               What&apos;s on your mind?

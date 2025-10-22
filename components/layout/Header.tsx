@@ -156,21 +156,29 @@ const Header: React.FC = () => {
   };
 
   const handleFrequentSearchClick = (query: string) => {
-    setSearchQuery(query);
-    setIsFocused(false);
-    setShowSearch(false);
-    setAutocompleteSuggestions(null);
+    const cleanQuery = query.trim();
 
-    router.push(`/search/${encodeURIComponent(query)}`);
+    router.push(`/search/${encodeURIComponent(cleanQuery)}`);
+
+    setTimeout(() => {
+      setSearchQuery(cleanQuery);
+      setIsFocused(false);
+      setShowSearch(false);
+      setAutocompleteSuggestions(null);
+    }, 100);
   };
 
   const handleSuggestionClick = (query: string) => {
-    setSearchQuery(query);
-    setIsFocused(false);
-    setShowSearch(false);
-    setAutocompleteSuggestions(null);
+    const cleanQuery = query.trim();
 
-    router.push(`/search/${encodeURIComponent(query)}`);
+    router.push(`/search/${encodeURIComponent(cleanQuery)}`);
+
+    setTimeout(() => {
+      setSearchQuery(cleanQuery);
+      setIsFocused(false);
+      setShowSearch(false);
+      setAutocompleteSuggestions(null);
+    }, 100);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -376,7 +384,7 @@ const Header: React.FC = () => {
                   {(shouldShowFrequentSearches ||
                     shouldShowFilteredFrequentSearches ||
                     shouldShowAutocomplete) && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-50">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-[9999]">
                       <div className="p-2">
                         {/* Frequent/Recent Searches */}
                         {(shouldShowFrequentSearches ||
@@ -743,6 +751,7 @@ const Header: React.FC = () => {
                             <div
                               key={`mobile-${user._id}`}
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 handleSuggestionClick(user.username);
                               }}
@@ -786,6 +795,7 @@ const Header: React.FC = () => {
                             <div
                               key={`mobile-post-${post._id}`}
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 handleSuggestionClick(
                                   post.content.substring(0, 50)
@@ -820,8 +830,11 @@ const Header: React.FC = () => {
                             <div
                               key={`mobile-reel-${reel._id}`}
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
-                                handleSuggestionClick(reel.title);
+                                handleSuggestionClick(
+                                  reel.title.substring(0, 50)
+                                );
                               }}
                               className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
                             >
@@ -853,6 +866,7 @@ const Header: React.FC = () => {
                               <div
                                 key={`mobile-hashtag-${index}`}
                                 onClick={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
                                   handleSuggestionClick(hashtag);
                                 }}
@@ -883,6 +897,7 @@ const Header: React.FC = () => {
                   {searchQuery && (
                     <div
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         handleFrequentSearchClick(searchQuery);
                       }}

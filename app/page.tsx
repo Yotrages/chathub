@@ -80,7 +80,7 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       <div
         className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-sm transition-transform duration-300 ${
-          isHeaderVisible ? "translate-y-0" : "-translate-y-full"
+          isHeaderVisible ? "translate-y-0" : "-translate-y-[105%]"
         }`}
       >
         <Header />

@@ -24,7 +24,7 @@ const ReelsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
   const reelRefs = useRef<(ReelCardRef | null)[]>([]);
-  const router = useRouter()
+  const router = useRouter();
 
   const currentPage = pagination.reels?.currentPage || 1;
 
@@ -34,6 +34,23 @@ const ReelsPage: React.FC = () => {
   const { mutate: reactToReel } = useReactReel(currentReelId);
 
   const hasMore = pagination.reels?.hasNextPage ?? false;
+
+  // Set CSS variable for actual viewport height
+  useEffect(() => {
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+
+    return () => {
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
+    };
+  }, []);
 
   useEffect(() => {
     if (!hasInitialized && !reelsLoading) {
@@ -154,7 +171,10 @@ const ReelsPage: React.FC = () => {
 
   if (isLoading && !reels.length) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div 
+        className="bg-black flex items-center justify-center"
+        style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+      >
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
           <p className="mt-4 text-white">Loading reels...</p>
@@ -165,7 +185,10 @@ const ReelsPage: React.FC = () => {
 
   if (!isLoading && reels.length === 0) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div 
+        className="bg-black flex items-center justify-center"
+        style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+      >
         <div className="text-center">
           <p className="text-white">No reels yet. Be the first to post!</p>
           <button
@@ -184,7 +207,10 @@ const ReelsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div 
+      className="bg-black"
+      style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+    >
       {/* Fixed Header */}
       <div className="fixed top-0 left-0 w-full z-30 bg-black bg-opacity-50 backdrop-blur-sm p-4 flex justify-between items-center">
         <h1 className="text-2xl sm:visible invisible font-bold text-white">Reels</h1>
@@ -197,7 +223,10 @@ const ReelsPage: React.FC = () => {
         </button>
       </div>
 
-      <div className="relative w-full h-screen overflow-hidden">
+      <div 
+        className="relative w-full overflow-hidden"
+        style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+      >
         {reels.map((reel, index) => (
           <div
             key={reel?._id ?? `reel-fallback-${index}`}

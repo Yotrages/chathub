@@ -14,6 +14,8 @@ const nextConfig: NextConfig = {
     if (!isServer && !dev) {
       config.optimization = {
         ...config.optimization,
+        // 🔥 NEW: Use deterministic module IDs for better caching
+        moduleIds: 'deterministic',
         splitChunks: {
           chunks: 'all',
           cacheGroups: {
@@ -52,6 +54,16 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // 🔥 NEW: Add headers for chunk files
+      {
+        source: '/_next/static/chunks/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ];
   },
   
@@ -66,6 +78,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   
   output: 'standalone',
+  
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn', 'info'],
+    } : false,
+  },
 };
 
 export default nextConfig;

@@ -10,7 +10,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { getCookie } from "cookies-next";
 import NotificationPopup from "@/components/notification/NotificationPopUp";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSocket } from "@/context/socketContext";
 import { updateUserOnlineStatus } from "@/libs/redux/authSlice";
 import { api } from "@/libs/axios/config";
@@ -25,9 +25,26 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const dispatch: AppDispatch = useDispatch();
   const pathname = usePathname();
   const [retryCount, setRetryCount] = useState(0);
+  const lastErrorTime = useRef<number>(0);
+  const isReloading = useRef<boolean>(false);
   const MAX_RETRIES = 3;
+  const ERROR_THROTTLE_TIME = 5000;
 
   useEffect(() => {
+    const isDev = 
+      process.env.NODE_ENV === 'development' || 
+      process.env.NODE_ENV !== 'production' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.port === '3000';
+
+    if (isDev) {
+      console.log('🛑 Error handler DISABLED (Development Mode)');
+      return; 
+    }
+
+    console.log('✅ Error handler ENABLED (Production Mode)');
+    
     let reloadTimeout: NodeJS.Timeout;
 
     const handleError = (event: ErrorEvent) => {
@@ -37,35 +54,54 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
         event.message?.includes("Failed to fetch dynamically imported module") ||
         event.message?.includes("error loading dynamically imported module");
 
-      if (isChunkError) {
-        event.preventDefault();
-        console.warn("🔄 Chunk load error detected:", event.message);
-        
-        if (retryCount >= MAX_RETRIES) {
-          console.error("❌ Max retry attempts reached. Manual refresh required.");
-          toast.error("Failed to load page. Please refresh your browser.", {
-            duration: 10000,
-          });
-          return;
-        }
+      if (!isChunkError) return;
 
-        console.log(`🔄 Attempting recovery (${retryCount + 1}/${MAX_RETRIES})...`);
-        setRetryCount(prev => prev + 1);
-        
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            Promise.all(names.map(name => caches.delete(name)))
-              .then(() => {
-                console.log("✅ Cache cleared");
-              });
-          });
-        }
-
-        reloadTimeout = setTimeout(() => {
-          console.log("🔄 Reloading page...");
-          window.location.href = pathname;
-        }, 1500);
+      event.preventDefault();
+      
+      const now = Date.now();
+      if (now - lastErrorTime.current < ERROR_THROTTLE_TIME) {
+        console.log("⏸️ Chunk error throttled");
+        return;
       }
+      lastErrorTime.current = now;
+
+      if (isReloading.current) {
+        console.log("⏸️ Already reloading");
+        return;
+      }
+
+      console.warn("🔄 Production chunk error:", event.message);
+      
+      if (retryCount >= MAX_RETRIES) {
+        console.error("❌ Max retries reached");
+        toast.error("Failed to load page. Please refresh your browser.", {
+          duration: 10000,
+          id: 'chunk-error-max-retry',
+        });
+        return;
+      }
+
+      console.log(`🔄 Recovery attempt ${retryCount + 1}/${MAX_RETRIES}`);
+      setRetryCount(prev => prev + 1);
+      isReloading.current = true;
+      
+      toast.loading("Refreshing page...", {
+        duration: 1500,
+        id: 'chunk-error-reload',
+      });
+
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          Promise.all(names.map(name => caches.delete(name)))
+            .then(() => console.log("✅ Cache cleared"))
+            .catch(err => console.error("Cache error:", err));
+        });
+      }
+
+      reloadTimeout = setTimeout(() => {
+        console.log("🔄 Reloading...");
+        window.location.href = pathname;
+      }, 1500);
     };
 
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
@@ -76,16 +112,16 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
         errorMsg.includes("Failed to fetch") ||
         errorMsg.includes("dynamically imported module");
 
-      if (isChunkError) {
-        event.preventDefault();
-        console.warn("🔄 Unhandled rejection (chunk error):", errorMsg);
-        
-        const syntheticEvent = new ErrorEvent('error', { 
-          message: errorMsg,
-          error: event.reason 
-        });
-        handleError(syntheticEvent);
-      }
+      if (!isChunkError) return;
+
+      event.preventDefault();
+      console.warn("🔄 Unhandled chunk error:", errorMsg);
+      
+      const syntheticEvent = new ErrorEvent('error', { 
+        message: errorMsg,
+        error: event.reason 
+      });
+      handleError(syntheticEvent);
     };
 
     window.addEventListener("error", handleError);
@@ -94,20 +130,20 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
     return () => {
       window.removeEventListener("error", handleError);
       window.removeEventListener("unhandledrejection", handleUnhandledRejection);
-      if (reloadTimeout) {
-        clearTimeout(reloadTimeout);
-      }
+      if (reloadTimeout) clearTimeout(reloadTimeout);
     };
-  }, [pathname, retryCount, MAX_RETRIES]);
+  }, [pathname, retryCount]);
 
   useEffect(() => {
     setRetryCount(0);
+    isReloading.current = false;
+    lastErrorTime.current = 0;
   }, [pathname]);
 
   useEffect(() => {
     if (!user || !token || !socket || !isConnected) return;
 
-    console.log("🔌 Initializing socket connection for user:", user.username);
+    console.log("🔌 Socket connection for:", user.username);
 
     socket.emit("user_online");
     
@@ -122,33 +158,33 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
           status: "heartbeat",
           device: navigator.userAgent,
         })
-        .catch((err) => console.error("❌ HTTP heartbeat error:", err));
+        .catch((err) => console.error("❌ Heartbeat error:", err));
     }, 120000);
 
     const handleOnline = () => {
-      console.log("User is online");
+      console.log("User online");
       socket.emit("user_online");
       api
         .post("/auth/online-status", {
           status: "online",
           device: navigator.userAgent,
         })
-        .catch((err) => console.error("❌ HTTP online error:", err));
+        .catch((err) => console.error("❌ Online error:", err));
       dispatch(updateUserOnlineStatus(true));
-      toast.success("You are now connected", { duration: 2000 });
+      toast.success("Connected", { duration: 2000 });
     };
 
     const handleOffline = () => {
-      console.log("User is offline");
+      console.log("User offline");
       socket.emit("user_offline");
       api
         .post("/auth/online-status", {
           status: "offline",
           device: navigator.userAgent,
         })
-        .catch((err: any) => console.error("❌ HTTP offline error:", err));
+        .catch((err: any) => console.error("❌ Offline error:", err));
       dispatch(updateUserOnlineStatus(false));
-      toast.error("You are not connected to the internet", { duration: 5000 });
+      toast.error("No internet connection", { duration: 5000 });
     };
 
     const handleBeforeUnload = () => {
@@ -182,7 +218,7 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
     });
 
     return () => {
-      console.log("🧹 Cleaning up socket listeners");
+      console.log("🧹 Cleanup socket");
       clearInterval(heartbeatInterval);
       socket.off("online_success");
       socket.off("offline_success");
@@ -229,45 +265,45 @@ export default function MainLayout({
       </head>
       <body>
         <ChunkErrorBoundary>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
-            <ThemeProvider defaultTheme="light" storageKey="chathub-theme">
-              <ReactQueryProvider>
-                <SocketProvider>
-                  <NotificationWrapper>
-                    <Toaster
-                      position="top-right"
-                      toastOptions={{
-                        className: "",
-                        style: {
-                          background: "var(--toast-bg)",
-                          color: "var(--toast-color)",
-                          border: "1px solid var(--toast-border)",
-                        },
-                        success: {
-                          iconTheme: {
-                            primary: "#10b981",
-                            secondary: "#fff",
+          <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <ThemeProvider defaultTheme="light" storageKey="chathub-theme">
+                <ReactQueryProvider>
+                  <SocketProvider>
+                    <NotificationWrapper>
+                      <Toaster
+                        position="top-right"
+                        toastOptions={{
+                          className: "",
+                          style: {
+                            background: "var(--toast-bg)",
+                            color: "var(--toast-color)",
+                            border: "1px solid var(--toast-border)",
                           },
-                        },
-                        error: {
-                          iconTheme: {
-                            primary: "#ef4444",
-                            secondary: "#fff",
+                          success: {
+                            iconTheme: {
+                              primary: "#10b981",
+                              secondary: "#fff",
+                            },
                           },
-                        },
-                      }}
-                    />
-                    <Analytics />
-                    <div className="min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-                      <main>{children}</main>
-                    </div>
-                  </NotificationWrapper>
-                </SocketProvider>
-              </ReactQueryProvider>
-            </ThemeProvider>
-          </PersistGate>
-        </Provider>
+                          error: {
+                            iconTheme: {
+                              primary: "#ef4444",
+                              secondary: "#fff",
+                            },
+                          },
+                        }}
+                      />
+                      <Analytics />
+                      <div className="min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+                        <main>{children}</main>
+                      </div>
+                    </NotificationWrapper>
+                  </SocketProvider>
+                </ReactQueryProvider>
+              </ThemeProvider>
+            </PersistGate>
+          </Provider>
         </ChunkErrorBoundary>
       </body>
     </html>

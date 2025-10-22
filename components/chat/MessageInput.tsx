@@ -506,10 +506,10 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   const shouldShowRecorders = !isVerySmallScreen || !shouldHideUploaders;
 
   return (
-    <div 
-      ref={containerRef}
-      className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 w-full"
-    >
+   <div 
+    ref={containerRef}
+    className="bg-white border-t border-gray-200 z-50 w-full"
+  >
       <div className="px-0.5 xs:px-2 py-2 max-w-full">
         <PermissionStatus />
         

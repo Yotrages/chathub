@@ -22,7 +22,7 @@ import StoryViewers from "@/components/story/ViewersModal";
 
 const StoriesPage: React.FC = () => {
   const router = useRouter();
-  const [showDropdown, setShowDropdown] = useState(false)
+  const [showDropdown, setShowDropdown] = useState(false);
   const params = useParams();
   const { id } = params || {};
   const dispatch: AppDispatch = useDispatch();
@@ -39,7 +39,23 @@ const StoriesPage: React.FC = () => {
   const hasNext = currentIndex < stories.length - 1;
   const hasPrevious = currentIndex > 0;
 
-  
+  // Set CSS variable for actual viewport height
+  useEffect(() => {
+    const setVH = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+
+    setVH();
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+
+    return () => {
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
+    };
+  }, []);
+
   useEffect(() => {
     if (stories.length === 0) {
       dispatch(fetchStory({ page: 1, limit: 50 }));
@@ -99,10 +115,11 @@ const StoriesPage: React.FC = () => {
   }, [hasNext, hasPrevious, currentIndex]);
 
   if (!reelId) {
-    toast.error("story not found")
-    router.back()
+    toast.error("story not found");
+    router.back();
     return;
   }
+
   const handleLike = (reelId: string) => {
     dispatch(likeStory(reelId));
   };
@@ -125,10 +142,12 @@ const StoriesPage: React.FC = () => {
     }
   };
 
-  
   if (loading && stories.length === 0) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div 
+        className="bg-black flex items-center justify-center"
+        style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+      >
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
           <p className="mt-4 text-white">Loading stories...</p>
@@ -139,7 +158,10 @@ const StoriesPage: React.FC = () => {
   
   if (!currentStory) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div 
+        className="bg-black flex items-center justify-center"
+        style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}
+      >
         <div className="text-center">
           <p className="text-white mb-4">{error || "Story not found"}</p>
           <Link href="/" className="text-blue-400 hover:text-blue-300">
@@ -158,7 +180,10 @@ const StoriesPage: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-full bg-black flex flex-col items-center justify-center relative overflow-hidden">
+    <div 
+      className="w-full bg-black flex flex-col items-center justify-center relative overflow-hidden"
+      style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+    >
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-20 flex justify-between items-center p-4">
         <div className="flex items-center gap-3 backdrop-blur-sm rounded-lg p-2">
@@ -185,14 +210,20 @@ const StoriesPage: React.FC = () => {
             </span>
           </div>
           <div className="flex flex-col items-center justify-center relative">
-          <button
-          onClick={() => setShowDropdown((prev) => !prev)}
-          className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <MoreHorizontal size={20} className="text-gray-500"/>
-          </button>
-          {showDropdown && (
-            <StoriesContextMenu showDropdown={showDropdown} setShowDropdown={setShowDropdown} authorId={currentStory.authorId} storyId={currentStory._id}/>
-          )}
+            <button
+              onClick={() => setShowDropdown((prev) => !prev)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <MoreHorizontal size={20} className="text-gray-500"/>
+            </button>
+            {showDropdown && (
+              <StoriesContextMenu 
+                showDropdown={showDropdown} 
+                setShowDropdown={setShowDropdown} 
+                authorId={currentStory.authorId} 
+                storyId={currentStory._id}
+              />
+            )}
           </div>
           <button onClick={() => router.back()} className="text-white hover:text-gray-300">
             <XMarkIcon className="h-6 w-6" />

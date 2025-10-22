@@ -221,264 +221,445 @@ const VideoCallDisplay = ({
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
   const [localStreamInfo, setLocalStreamInfo] = React.useState<string>("");
   const [debugInfo, setDebugInfo] = React.useState<any>({});
+  const retryCountRef = React.useRef(0);
+  const localRetryCountRef = React.useRef(0);
+  const maxRetries = 50; // Increased for Itel A16
+  const forcePlayIntervalRef = React.useRef<any>(null);
+  const forceLocalPlayIntervalRef = React.useRef<any>(null);
 
-  // Monitor REMOTE video
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
     if (!remoteVideo) return;
 
+    console.log("🎬 Setting up ULTRA-AGGRESSIVE remote video monitoring for Itel A16");
+
     const checkRemoteStream = () => {
       const srcObject = remoteVideo.srcObject as MediaStream;
-
+      
       if (!srcObject) {
         setHasRemoteVideo(false);
         setRemoteStreamInfo("No stream");
+        setDebugInfo((prev: any)=> ({ ...prev, remoteError: "No srcObject" }));
         return;
       }
 
       const videoTracks = srcObject.getVideoTracks();
       const audioTracks = srcObject.getAudioTracks();
+      
       const videoTrack = videoTracks[0];
-      const hasVideo =
-        videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
+      const hasVideo = videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
 
       setHasRemoteVideo(hasVideo);
       setRemoteStreamInfo(
         `Video: ${videoTracks.length}(${videoTrack?.readyState || "none"}) ` +
-          `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || "none"})`
+        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || "none"})`
       );
+      
+      setDebugInfo((prev: any) => ({
+        ...prev,
+        hasRemoteVideo: hasVideo,
+        remoteVideoTracks: videoTracks.length,
+        remoteAudioTracks: audioTracks.length,
+        remoteTrackReadyState: videoTrack?.readyState,
+        remoteTrackEnabled: videoTrack?.enabled,
+        remoteVideoPaused: remoteVideo.paused,
+        remoteVideoMuted: remoteVideo.muted,
+        remoteVideoVolume: remoteVideo.volume,
+        remoteReadyState: remoteVideo.readyState,
+        remoteNetworkState: remoteVideo.networkState,
+        remoteVideoWidth: remoteVideo.videoWidth,
+        remoteVideoHeight: remoteVideo.videoHeight,
+        remoteCurrentTime: remoteVideo.currentTime?.toFixed(2),
+      }));
 
-      setDebugInfo({
-        hasVideo,
-        videoTracks: videoTracks.length,
-        audioTracks: audioTracks.length,
-        videoPaused: remoteVideo.paused,
-        videoMuted: remoteVideo.muted,
-        videoVolume: remoteVideo.volume,
-        readyState: remoteVideo.readyState,
-        videoWidth: remoteVideo.videoWidth,
-        videoHeight: remoteVideo.videoHeight,
-        currentTime: remoteVideo.currentTime,
-      });
-
-      // Auto-play if paused
-      if (hasVideo && remoteVideo.paused) {
-        remoteVideo.play().catch(() => {});
+      if (hasVideo && remoteVideo.paused && retryCountRef.current < maxRetries) {
+        console.warn(`⚠️ REMOTE video paused, FORCE PLAY attempt ${retryCountRef.current}`);
+        retryCountRef.current++;
+        
+        remoteVideo.play()
+          .then(() => {
+            console.log(`✅ REMOTE video FORCE PLAY successful (retry ${retryCountRef.current})`);
+            retryCountRef.current = 0;
+          })
+          .catch(err => {
+            console.error(`❌ REMOTE FORCE PLAY retry ${retryCountRef.current} failed:`, err);
+          });
+      }
+      
+      // 🔴 CRITICAL: If dimensions exist but paused, force complete reset
+      if (hasVideo && remoteVideo.videoWidth > 0 && remoteVideo.videoHeight > 0 && remoteVideo.paused) {
+        console.error("❌ REMOTE video has dimensions but PAUSED - FORCING COMPLETE RESET");
+        const stream = remoteVideo.srcObject;
+        remoteVideo.srcObject = null;
+        remoteVideo.load();
+        setTimeout(() => {
+          remoteVideo.srcObject = stream;
+          remoteVideo.play()
+            .then(() => console.log("✅ REMOTE video reset successful"))
+            .catch(e => console.error("❌ REMOTE reset failed:", e));
+        }, 100);
       }
     };
 
+    // Initial check
     checkRemoteStream();
-    const interval = setInterval(checkRemoteStream, 1000);
 
-    // Aggressive auto-play
-    const playInterval = setInterval(() => {
+    // Check every 500ms (more aggressive)
+    const checkInterval = setInterval(checkRemoteStream, 500);
+    
+    // 🔴 ULTRA-CRITICAL: FORCE PLAY every 1 second
+    forcePlayIntervalRef.current = setInterval(() => {
       if (remoteVideo.srcObject && remoteVideo.paused) {
+        console.log("🔄 REMOTE: Continuous FORCE PLAY...");
         remoteVideo.play().catch(() => {});
       }
-    }, 2000);
+    }, 1000);
 
-    // Event listeners for remote video
+    // 🔴 CRITICAL: All video events
+    const handleLoadedMetadata = () => {
+      console.log("📥 REMOTE: Video metadata loaded", {
+        width: remoteVideo.videoWidth,
+        height: remoteVideo.videoHeight,
+      });
+      checkRemoteStream();
+      remoteVideo.play()
+        .then(() => console.log("✅ REMOTE: Playing after metadata"))
+        .catch(err => console.error("❌ REMOTE: Play after metadata failed:", err));
+    };
+
+    const handleLoadedData = () => {
+      console.log("📥 REMOTE: Video data loaded");
+      checkRemoteStream();
+      remoteVideo.play().catch(err => console.error("❌ REMOTE: Play after data failed:", err));
+    };
+
     const handleCanPlay = () => {
-      remoteVideo.play().catch(() => {});
+      console.log("✅ REMOTE: Video CAN PLAY");
+      
+      remoteVideo.play()
+        .then(() => {
+          console.log("✅✅ REMOTE: Video PLAYING after canplay");
+          checkRemoteStream();
+        })
+        .catch((err) => {
+          console.error("❌ REMOTE: canplay event play failed:", err);
+          
+          // Rapid retries
+          [100, 300, 500, 1000, 2000, 3000].forEach((delay, index) => {
+            setTimeout(() => {
+              if (remoteVideo.paused) {
+                console.log(`🔄 REMOTE: Rapid retry ${index + 1} (${delay}ms)`);
+                remoteVideo.play().catch(e => console.error(`❌ REMOTE: Retry ${index + 1} failed:`, e));
+              }
+            }, delay);
+          });
+        });
+    };
+
+    const handleCanPlayThrough = () => {
+      console.log("✅ REMOTE: Video can play through");
+      remoteVideo.play().catch(err => console.error("❌ REMOTE: Play through failed:", err));
     };
 
     const handlePlaying = () => {
+      console.log("✅✅✅ REMOTE: Video is ACTUALLY PLAYING NOW");
       setHasRemoteVideo(true);
+      retryCountRef.current = 0;
+      checkRemoteStream();
     };
 
+    const handlePause = () => {
+      console.warn("⚠️ REMOTE: Video PAUSED unexpectedly - AUTO-RESUMING");
+      setTimeout(() => {
+        if (remoteVideo.srcObject && remoteVideo.paused) {
+          console.log("🔄 REMOTE: AUTO-RESUME from pause");
+          remoteVideo.play().catch(err => console.error("❌ REMOTE: Auto-resume failed:", err));
+        }
+      }, 50);
+    };
+
+    const handleWaiting = () => {
+      console.log("⏳ REMOTE: Video waiting/buffering");
+    };
+
+    const handleStalled = () => {
+      console.error("❌ REMOTE: Video STALLED - FORCING RELOAD");
+      const src = remoteVideo.srcObject;
+      remoteVideo.srcObject = null;
+      remoteVideo.load();
+      setTimeout(() => {
+        remoteVideo.srcObject = src;
+        remoteVideo.play().catch(err => console.error("❌ REMOTE: Stall recovery failed:", err));
+      }, 200);
+    };
+
+    const handleSuspend = () => {
+      console.warn("⚠️ REMOTE: Video SUSPENDED - FORCE RESUME");
+      remoteVideo.play().catch(err => console.error("❌ REMOTE: Suspend resume failed:", err));
+    };
+
+    const handleError = (e: Event) => {
+      console.error("❌ REMOTE: Video ERROR:", e);
+      const error = (e.target as HTMLVideoElement).error;
+      if (error) {
+        console.error("❌ REMOTE: Error code:", error.code, "Message:", error.message);
+      }
+    };
+
+    // Configure remote video
+    remoteVideo.muted = true; // MUST be true (audio from separate element)
+    remoteVideo.volume = 0;
+    remoteVideo.autoplay = true;
+    remoteVideo.playsInline = true;
+    
+    // Mobile attributes
+    remoteVideo.setAttribute('playsinline', 'true');
+    remoteVideo.setAttribute('webkit-playsinline', 'true');
+    remoteVideo.setAttribute('x5-playsinline', 'true');
+    remoteVideo.setAttribute('x5-video-player-type', 'h5');
+    remoteVideo.setAttribute('x5-video-player-fullscreen', 'false');
+    remoteVideo.setAttribute('x-webkit-airplay', 'allow');
+
+    // Add event listeners
+    remoteVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
+    remoteVideo.addEventListener("loadeddata", handleLoadedData);
     remoteVideo.addEventListener("canplay", handleCanPlay);
+    remoteVideo.addEventListener("canplaythrough", handleCanPlayThrough);
     remoteVideo.addEventListener("playing", handlePlaying);
+    remoteVideo.addEventListener("pause", handlePause);
+    remoteVideo.addEventListener("waiting", handleWaiting);
+    remoteVideo.addEventListener("stalled", handleStalled);
+    remoteVideo.addEventListener("suspend", handleSuspend);
+    remoteVideo.addEventListener("error", handleError);
 
     return () => {
-      clearInterval(interval);
-      clearInterval(playInterval);
+      clearInterval(checkInterval);
+      if (forcePlayIntervalRef.current) {
+        clearInterval(forcePlayIntervalRef.current);
+      }
+      remoteVideo.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      remoteVideo.removeEventListener("loadeddata", handleLoadedData);
       remoteVideo.removeEventListener("canplay", handleCanPlay);
+      remoteVideo.removeEventListener("canplaythrough", handleCanPlayThrough);
       remoteVideo.removeEventListener("playing", handlePlaying);
+      remoteVideo.removeEventListener("pause", handlePause);
+      remoteVideo.removeEventListener("waiting", handleWaiting);
+      remoteVideo.removeEventListener("stalled", handleStalled);
+      remoteVideo.removeEventListener("suspend", handleSuspend);
+      remoteVideo.removeEventListener("error", handleError);
     };
   }, [remoteVideoRef]);
 
-  // CRITICAL: Monitor LOCAL video separately for Itel A16
+  // 🔴 CRITICAL: ULTRA-AGGRESSIVE Local Video Monitoring
   React.useEffect(() => {
     const localVideo = localVideoRef.current;
     if (!localVideo) return;
 
+    console.log("🎬 Setting up ULTRA-AGGRESSIVE local video monitoring for Itel A16");
+
     const checkLocalStream = () => {
       const srcObject = localVideo.srcObject as MediaStream;
-
+      
       if (!srcObject) {
         setHasLocalVideo(false);
-        setLocalStreamInfo("No local stream");
+        setLocalStreamInfo("No stream");
         return;
       }
 
       const videoTracks = srcObject.getVideoTracks();
+      const audioTracks = srcObject.getAudioTracks();
+      
       const videoTrack = videoTracks[0];
-      const hasVideo =
-        videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
+      const hasVideo = videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
 
       setHasLocalVideo(hasVideo);
       setLocalStreamInfo(
-        `Local: ${videoTracks.length}(${videoTrack?.readyState || "none"})`
+        `Video: ${videoTracks.length}(${videoTrack?.readyState || "none"}) ` +
+        `Audio: ${audioTracks.length}(${audioTracks[0]?.readyState || "none"})`
       );
+      
+      setDebugInfo((prev: any) => ({
+        ...prev,
+        hasLocalVideo: hasVideo,
+        localVideoTracks: videoTracks.length,
+        localAudioTracks: audioTracks.length,
+        localVideoPaused: localVideo.paused,
+        localVideoMuted: localVideo.muted,
+        localVideoVolume: localVideo.volume,
+        localReadyState: localVideo.readyState,
+        localVideoWidth: localVideo.videoWidth,
+        localVideoHeight: localVideo.videoHeight,
+      }));
 
-      // CRITICAL: Force play if paused (for Itel A16)
-      if (hasVideo && localVideo.paused) {
-        console.warn("⚠️ Local video paused! Force playing...");
-        localVideo.play().catch((err) => {
-          console.error("❌ Local video play failed:", err);
-        });
+      // 🔴 CRITICAL: Local video MUST be muted to prevent echo
+      if (localVideo.muted !== true || localVideo.volume !== 0) {
+        console.warn("⚠️ LOCAL: Fixing audio settings to prevent echo");
+        localVideo.muted = true;
+        localVideo.volume = 0;
+      }
+
+      // 🔴 CRITICAL: If has video but paused, FORCE PLAY
+      if (hasVideo && localVideo.paused && localRetryCountRef.current < maxRetries) {
+        console.warn(`⚠️ LOCAL video paused, FORCE PLAY attempt ${localRetryCountRef.current}`);
+        localRetryCountRef.current++;
+        
+        localVideo.play()
+          .then(() => {
+            console.log(`✅ LOCAL video FORCE PLAY successful (retry ${localRetryCountRef.current})`);
+            localRetryCountRef.current = 0;
+          })
+          .catch((err: any) => {
+            console.error(`❌ LOCAL FORCE PLAY retry ${localRetryCountRef.current} failed:`, err);
+          });
       }
     };
 
-    // Check immediately
+    // Initial check
     checkLocalStream();
-    
-    // Check every second
-    const interval = setInterval(checkLocalStream, 1000);
 
-    // CRITICAL: Aggressive auto-play for local video (Itel A16)
-    const playInterval = setInterval(() => {
+    // Check every 500ms
+    const checkInterval = setInterval(checkLocalStream, 500);
+    
+    // 🔴 ULTRA-CRITICAL: FORCE PLAY every 1 second
+    forceLocalPlayIntervalRef.current = setInterval(() => {
       if (localVideo.srcObject && localVideo.paused) {
-        console.log("🔄 Auto-playing paused local video");
+        console.log("🔄 LOCAL: Continuous FORCE PLAY...");
         localVideo.play().catch(() => {});
       }
-    }, 1500);
+    }, 1000);
 
+    // Configure local video
+    localVideo.muted = true; // CRITICAL - prevents echo
+    localVideo.volume = 0;
+    localVideo.autoplay = true;
+    localVideo.playsInline = true;
+    
     // Event listeners
-    const handleLoadedMetadata = () => {
-      console.log("📹 Local video metadata loaded");
-      localVideo.play().catch((err: any) => {
-        console.error("Local play after metadata failed:", err);
-      });
-    };
-
-    const handleCanPlay = () => {
-      console.log("✅ Local video can play");
-      localVideo.play().catch((err) => {
-        console.error("Local play after canplay failed:", err);
-      });
-    };
-
-    const handlePlaying = () => {
-      console.log("✅✅ Local video IS PLAYING");
+    const handleLocalPlaying = () => {
+      console.log("✅✅✅ LOCAL: Video is PLAYING");
       setHasLocalVideo(true);
+      localRetryCountRef.current = 0;
     };
 
-    const handlePause = () => {
-      console.warn("⚠️ Local video paused unexpectedly!");
+    const handleLocalPause = () => {
+      console.warn("⚠️ LOCAL: Video PAUSED - AUTO-RESUMING");
       setTimeout(() => {
         if (localVideo.srcObject && localVideo.paused) {
-          localVideo.play().catch(() => {});
+          localVideo.play().catch(err => console.error("❌ LOCAL: Auto-resume failed:", err));
         }
-      }, 100);
+      }, 50);
     };
 
-    localVideo.addEventListener("loadedmetadata", handleLoadedMetadata);
-    localVideo.addEventListener("canplay", handleCanPlay);
-    localVideo.addEventListener("playing", handlePlaying);
-    localVideo.addEventListener("pause", handlePause);
+    localVideo.addEventListener("playing", handleLocalPlaying);
+    localVideo.addEventListener("pause", handleLocalPause);
 
     return () => {
-      clearInterval(interval);
-      clearInterval(playInterval);
-      localVideo.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      localVideo.removeEventListener("canplay", handleCanPlay);
-      localVideo.removeEventListener("playing", handlePlaying);
-      localVideo.removeEventListener("pause", handlePause);
+      clearInterval(checkInterval);
+      if (forceLocalPlayIntervalRef.current) {
+        clearInterval(forceLocalPlayIntervalRef.current);
+      }
+      localVideo.removeEventListener("playing", handleLocalPlaying);
+      localVideo.removeEventListener("pause", handleLocalPause);
     };
   }, [localVideoRef]);
 
-  // CRITICAL: Tap handler to force BOTH videos to play
-  const handleUserInteraction = React.useCallback(
-    (e: React.MouseEvent | React.TouchEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      console.log("👆 User tapped - forcing BOTH videos to play");
-
-      // Force remote video
-      if (remoteVideoRef.current) {
-        const remote = remoteVideoRef.current;
-        console.log("▶️ Forcing remote video play");
-        remote.play()
-          .then(() => console.log("✅ Remote playing"))
-          .catch((err: any) => console.error("❌ Remote failed:", err));
-      }
-
-      // Force local video (CRITICAL for Itel A16)
-      if (localVideoRef.current) {
-        const local = localVideoRef.current;
-        console.log("▶️ Forcing LOCAL video play");
-        local.play()
+  // 🔴 CRITICAL: User interaction handler (tap anywhere to force play)
+  const handleUserInteraction = React.useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    console.log("👆 USER INTERACTION DETECTED - FORCING ALL VIDEOS TO PLAY");
+    e.stopPropagation();
+    
+    // Force remote video
+    if (remoteVideoRef.current) {
+      const video = remoteVideoRef.current;
+      console.log("👆 REMOTE: Force play on interaction", {
+        paused: video.paused,
+        srcObject: !!video.srcObject,
+        readyState: video.readyState,
+      });
+      
+      if (video.srcObject) {
+        video.muted = true; // Keep muted!
+        video.play()
           .then(() => {
-            console.log("✅✅ LOCAL video playing");
+            console.log("✅✅ REMOTE: Playing after user interaction");
+            setHasRemoteVideo(true);
+          })
+          .catch(err => {
+            console.error("❌ REMOTE: Play on interaction failed:", err);
+          });
+      }
+    }
+
+    // Force local video
+    if (localVideoRef.current) {
+      const video = localVideoRef.current;
+      console.log("👆 LOCAL: Force play on interaction");
+      
+      if (video.srcObject) {
+        video.muted = true; // Keep muted!
+        video.volume = 0;
+        video.play()
+          .then(() => {
+            console.log("✅✅ LOCAL: Playing after user interaction");
             setHasLocalVideo(true);
           })
-          .catch((err) => console.error("❌ LOCAL failed:", err));
+          .catch(err => {
+            console.error("❌ LOCAL: Play on interaction failed:", err);
+          });
       }
-
-      // Multiple retries
-      [200, 500, 1000, 2000].forEach((delay) => {
-        setTimeout(() => {
-          if (remoteVideoRef.current?.paused) {
-            remoteVideoRef.current.play().catch(() => {});
-          }
-          if (localVideoRef.current?.paused) {
-            localVideoRef.current.play().catch(() => {});
-          }
-        }, delay);
-      });
-    },
-    [remoteVideoRef, localVideoRef]
-  );
+    }
+  }, [remoteVideoRef, localVideoRef]);
 
   return (
-    <div
+    <div 
       className="relative w-full h-full bg-black"
       onClick={handleUserInteraction}
       onTouchStart={handleUserInteraction}
       onTouchEnd={handleUserInteraction}
       style={{
-        touchAction: "manipulation",
+        touchAction: 'manipulation',
+        WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {/* Remote video - full screen */}
       <video
         ref={remoteVideoRef}
         autoPlay
         playsInline
+        muted={true}
         controls={false}
-        onClick={handleUserInteraction}
-        onTouchStart={handleUserInteraction}
-        className="w-full h-full object-cover bg-black"
+        className="w-full h-full object-cover"
         style={{
+          display: "block",
+          visibility: "visible",
+          opacity: 1,
+          backgroundColor: "#000",
+          position: "absolute",
+          top: 0,
+          left: 0,
           width: "100%",
           height: "100%",
           objectFit: "cover",
+          transform: "translate3d(0, 0, 0)",
+          WebkitTransform: "translate3d(0, 0, 0)",
+          backfaceVisibility: "hidden",
+          WebkitBackfaceVisibility: "hidden",
+          willChange: "transform",
+          zIndex: 1,
         }}
       />
 
       {/* Local video - picture in picture */}
       {!isCallMinimized && (
-        <div 
-          className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10"
-          onClick={handleUserInteraction}
-          onTouchStart={handleUserInteraction}
-        >
+        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10">
           <video
             ref={localVideoRef}
             autoPlay
-            muted
+            muted={true}
             playsInline
             controls={false}
-            onClick={handleUserInteraction}
-            onTouchStart={handleUserInteraction}
             className="w-full h-full object-cover"
             style={{
               transform: "scaleX(-1)",
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
             }}
           />
           {isVideoMuted && (
@@ -486,60 +667,72 @@ const VideoCallDisplay = ({
               <VideoOff size={20} className="text-gray-400" />
             </div>
           )}
-          {!hasLocalVideo && !isVideoMuted && (
-            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-              <div className="text-center text-xs">
-                <Video size={16} className="mx-auto mb-1 text-gray-500" />
-                <div className="text-yellow-400 font-bold">TAP ME</div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Debug info */}
-      <div className="absolute bottom-20 left-4 bg-black bg-opacity-90 text-white text-xs p-3 rounded z-20 max-w-xs font-mono">
-        <div className="font-bold mb-2 text-yellow-400">🔍 Remote:</div>
-        <div className="space-y-1 mb-3">
+      {/* 🔴 ENHANCED Debug Panel */}
+      <div className="absolute bottom-20 left-2 right-2 bg-black bg-opacity-90 text-white text-xs p-3 rounded z-20 max-h-48 overflow-y-auto">
+        <div className="font-bold mb-2 text-yellow-400">🔍 Stream Debug</div>
+        
+        <div className="mb-2 border-b border-gray-700 pb-2">
+          <div className="font-semibold text-green-400">Remote Video:</div>
           <div>{remoteStreamInfo}</div>
-          <div>Playing: {debugInfo.videoPaused ? "❌ No" : "✅ Yes"}</div>
-          <div className={debugInfo.videoMuted ? "text-red-400" : "text-green-400"}>
-            Muted: {debugInfo.videoMuted ? "Yes (No Audio!)" : "No (Audio OK)"}
-          </div>
-          <div className={debugInfo.videoVolume === 0 ? "text-red-400" : "text-green-400"}>
-            Volume: {debugInfo.videoVolume} {debugInfo.videoVolume === 0 && "(No Audio!)"}
-          </div>
-          <div className="text-blue-400">
-            Size: {debugInfo.videoWidth}x{debugInfo.videoHeight}
-          </div>
+          <div>Has Video: {hasRemoteVideo ? "✅" : "❌"}</div>
+          <div>Paused: {debugInfo.remoteVideoPaused ? "❌ Yes" : "✅ No"}</div>
+          <div>Muted: {debugInfo.remoteVideoMuted ? "✅ Yes" : "❌ No"}</div>
+          <div>Volume: {debugInfo.remoteVideoVolume}</div>
+          <div>Ready: {debugInfo.remoteReadyState}</div>
+          <div>Network: {debugInfo.remoteNetworkState}</div>
+          <div>Dimension: {debugInfo.remoteVideoWidth}x{debugInfo.remoteVideoHeight}</div>
+          <div>Time: {debugInfo.remoteCurrentTime}s</div>
         </div>
-        <div className="font-bold mb-1 text-green-400">📹 Local:</div>
-        <div className="space-y-1">
+
+        <div className="mb-2 border-b border-gray-700 pb-2">
+          <div className="font-semibold text-blue-400">Local Video:</div>
           <div>{localStreamInfo}</div>
-          <div>Visible: {hasLocalVideo ? "✅ Yes" : "❌ No"}</div>
+          <div>Has Video: {hasLocalVideo ? "✅" : "❌"}</div>
+          <div>Paused: {debugInfo.localVideoPaused ? "❌ Yes" : "✅ No"}</div>
+          <div>Muted: {debugInfo.localVideoMuted ? "✅ Yes (Good)" : "❌ No (BAD - Echo!)"}</div>
+          <div>Volume: {debugInfo.localVideoVolume}</div>
+          <div>Dimension: {debugInfo.localVideoWidth}x{debugInfo.localVideoHeight}</div>
         </div>
-        {(!hasRemoteVideo || !hasLocalVideo) && (
-          <div className="text-yellow-400 mt-3 font-bold animate-pulse text-center">
-            👆 TAP SCREEN 👆
-          </div>
-        )}
+        
+        <div className="text-yellow-400 font-bold animate-pulse text-center mt-2">
+          👆 TAP SCREEN ANYWHERE 👆
+        </div>
       </div>
 
       {/* Video status overlay */}
       {!hasRemoteVideo && (
-        <div className="absolute inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center z-50">
-          <div
-            className="text-center p-6"
-            onClick={handleUserInteraction}
-            onTouchStart={handleUserInteraction}
-          >
-            <Video size={64} className="mx-auto mb-4 text-blue-400 animate-pulse" />
-            <p className="text-xl font-bold mb-3">Waiting for video...</p>
-            <div className="bg-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-xl mb-4 animate-bounce">
-              👆 TAP HERE 👆
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400 z-5">
+          <div className="text-center p-4">
+            <Video size={48} className="mx-auto mb-4 opacity-50" />
+            <p className="mb-2 font-semibold">Waiting for remote video...</p>
+            <p className="text-xs text-gray-500 mb-2">{remoteStreamInfo}</p>
+            <p className="text-lg text-yellow-400 mb-3 animate-pulse font-bold">
+              👆 TAP SCREEN NOW 👆
+            </p>
+            <p className="text-xs text-gray-400">
+              Keep tapping if video doesn&apos;t appear
+            </p>
+            <div className="mt-4 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+              <div
+                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.1s" }}
+              ></div>
+              <div
+                className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                style={{ animationDelay: "0.2s" }}
+              ></div>
             </div>
-            <p className="text-sm text-gray-400">Keep tapping until video shows</p>
           </div>
+        </div>
+      )}
+
+      {!hasLocalVideo && !isCallMinimized && (
+        <div className="absolute top-24 right-4 w-32 bg-red-600 bg-opacity-90 text-white text-xs p-2 rounded z-20">
+          ⚠️ Local camera not showing
         </div>
       )}
     </div>

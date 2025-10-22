@@ -528,7 +528,7 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                            backdrop-blur-sm rounded-sm p-1
                            hover:bg-opacity-80 transition-all duration-200
                            border border-white border-opacity-20 disabled:opacity-50
-                           min-w-[44px] sm:min-w-[48px] md:min-w-[52px]
+                           min-w-[44px] sm:min-w-[48px] md:min-w-[44px]
                            min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
                 >
                   <Download
@@ -549,7 +549,7 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
                              hover:bg-opacity-80 transition-all duration-200
                              border border-white border-opacity-20
                              min-w-[44px] sm:min-w-[48px] md:min-w-[52px]
-                             min-h-[44px] sm:min-h-[48px] md:min-h-[52px]"
+                             min-h-[44px]"
                   >
                     <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white" />
                   </button>

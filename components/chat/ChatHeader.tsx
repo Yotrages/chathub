@@ -88,11 +88,11 @@ export const ChatHeader = ({
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
       <div className="flex items-center justify-between min-w-0">
 
-          <button onClick={() => router.push('/chat')} className={`${window.location.pathname.includes('message') ? 'flex' : 'hidden'} items-center w-5 h-5 rounded-full bg-blue-300 justify-center p-1 mr-3`}>
-            <ArrowLeft size={16}/>
+          <button onClick={() => router.push('/chat')} className={`${window.location.pathname.includes('message') ? 'flex' : 'hidden'} p-2 bg-black dark:bg-white items-center justify-center rounded-full transition-all duration-200 mr-3`}>
+            <ArrowLeft size={18}/>
           </button>
         {/* Left side - Avatar and info */}
         <div className="flex items-center min-w-0 flex-1 mr-2">
@@ -105,7 +105,7 @@ export const ChatHeader = ({
           <div className="min-w-0 flex-1">
             <h2 
               onClick={() => currentChat.type !== 'group' && router.push(`/profile/${otherUserId?._id}`)} 
-              className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600 truncate leading-tight"
+              className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 truncate leading-tight"
               title={currentChat.name || 'Unknown Chat'}
             >
               {currentChat.name || 'Unknown Chat'}

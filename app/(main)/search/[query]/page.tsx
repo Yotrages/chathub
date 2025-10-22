@@ -61,11 +61,43 @@ interface FrequentSearch {
   lastSearched: string;
 }
 
+// 🔥 NEW: Helper function to clean URL query
+const cleanSearchQuery = (rawQuery: string | string[] | undefined): string => {
+  if (!rawQuery) return '';
+  
+  // Handle if query is an array
+  const queryString = Array.isArray(rawQuery) ? rawQuery[0] : rawQuery;
+  
+  if (!queryString) return '';
+  
+  try {
+    // Decode the URL-encoded string
+    let decoded = decodeURIComponent(queryString);
+    
+    // Remove common URL artifacts and special characters
+    decoded = decoded
+      .replace(/\$/g, '')           // Remove dollar signs
+      .replace(/%20/g, ' ')         // Replace %20 with spaces
+      .replace(/%24/g, '')          // Remove encoded dollar signs
+      .replace(/\+/g, ' ')          // Replace + with spaces
+      .replace(/[^\w\s#@.-]/gi, '') // Keep only alphanumeric, spaces, and basic symbols
+      .trim();                       // Remove leading/trailing whitespace
+    
+    return decoded;
+  } catch (error) {
+    console.error('Error decoding query:', error);
+    return queryString;
+  }
+};
+
 const SearchPage: React.FC = () => {
   const params = useParams();
-  const { query } = params;
+  const rawQuery = params?.query; // 🔥 CHANGED: Get raw query from params
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
+
+  // 🔥 NEW: Clean the query immediately
+  const query = cleanSearchQuery(rawQuery);
 
   const [searchResults, setSearchResults] = useState<SearchResult>({
     posts: [],
@@ -87,9 +119,9 @@ const SearchPage: React.FC = () => {
   );
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-const [frequentSearches, setFrequentSearches] = useState<FrequentSearch[]>([]);
-const [loadingHistory, setLoadingHistory] = useState(false);
-  const { user } = useSelector((state: RootState) => state.auth)
+  const [frequentSearches, setFrequentSearches] = useState<FrequentSearch[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const tabs = [
     {
@@ -178,20 +210,21 @@ const [loadingHistory, setLoadingHistory] = useState(false);
     }
   };
 
-
   const fetchSearchResults = async (
     page: number = 1,
     append: boolean = false
   ) => {
-    if (!query || typeof query !== "string") return;
+    // 🔥 CHANGED: Use cleaned query
+    if (!query || query.trim().length === 0) return;
 
     try {
       if (!append) setLoading(true);
       else setIsLoadingMore(true);
 
+      // 🔥 CHANGED: Use cleaned query directly (axios will encode it)
       const response = await api.get(`/search`, {
         params: {
-          query: encodeURIComponent(query),
+          query: query.trim(), // Don't encode again
           page,
           limit: 20,
           type: activeTab === "all" ? undefined : activeTab,
@@ -226,14 +259,15 @@ const [loadingHistory, setLoadingHistory] = useState(false);
   };
 
   useEffect(() => {
-    if (query && typeof query === "string") {
+    // 🔥 CHANGED: Use cleaned query
+    if (query && query.trim().length > 0) {
       setSearchResults({ posts: [], reels: [], users: [], stories: [] });
       setPagination(null);
       fetchSearchResults(1, false);
     }
   }, [query, activeTab, sortBy]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (user && showHistory) {
       fetchFrequentSearches();
     }
@@ -496,6 +530,7 @@ const [loadingHistory, setLoadingHistory] = useState(false);
               </button>
             )}
           </div>
+          {/* 🔥 CHANGED: Display cleaned query */}
           <p className="text-lg text-gray-600">
             Showing results for{" "}
             <span className="font-semibold text-blue-600">
@@ -572,7 +607,6 @@ const [loadingHistory, setLoadingHistory] = useState(false);
             </div>
           </div>
         )}
-
 
         {loading && (
           <div className="flex justify-center items-center py-12">

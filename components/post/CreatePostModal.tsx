@@ -193,7 +193,7 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
 
     return (
       <div key={`new-${index}`} className="relative group">
-        <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+        <div className=" bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden transition-all duration-300">
           <button
             type="button"
             onClick={() => removeNewFile(index)}
@@ -272,7 +272,7 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
           </div>
 
           {/* File info */}
-          <div className="p-2 bg-white bg-opacity-90 backdrop-blur-sm">
+          <div className="p-2 bg-white bg-opacity-90">
             <p className="text-xs font-medium text-gray-800 truncate">
               {file.name}
             </p>
@@ -297,7 +297,7 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 p-6 rounded-t-2xl">
+        <div className="sticky top-0 z-20 bg-white border-b border-gray-100 p-6 rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -488,7 +488,7 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-6 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-6 py-2 text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-300 rounded-lg transition-colors"
               >
                 Cancel
               </button>

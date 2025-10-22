@@ -451,7 +451,9 @@ export const useLogin = (from?: string, options?: Partial<Omit<UseApiControllerO
     isAuthEndpoint: true,
     successMessage: "Login successful!",
         onSuccess: (data) => {
-      console.log('Login onSuccess called with:', data);
+          if (process.env.NODE_ENV === 'development') { 
+            console.log('Login onSuccess called with:', data);
+          }
     },
     onError: (error) => {
       console.error('Login onError called with:', error);

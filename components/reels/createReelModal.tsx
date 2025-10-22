@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { XCircleIcon, PhotoIcon, TrashIcon, PlayIcon, PauseIcon, LockClosedIcon, UserGroupIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
+import { PhotoIcon, TrashIcon, PlayIcon, PauseIcon, LockClosedIcon, UserGroupIcon, GlobeAltIcon } from '@heroicons/react/24/outline';
 import { FilmIcon, SparklesIcon } from '@heroicons/react/24/solid';
 import toast from 'react-hot-toast';
 import { useCreateReel } from '@/hooks/useReels';
 import Input from '../ui/Input';
-import { EyeIcon } from 'lucide-react';
+import { EyeIcon, X } from 'lucide-react';
 
 interface CreateReelModalProps {
   isOpen: boolean;
@@ -167,7 +167,7 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[95vh] overflow-hidden animate-slideUp">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[95vh] animate-slideUp">
         {/* Header */}
         <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div className="flex items-center justify-between">
@@ -182,10 +182,10 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
             </div>
             <button 
               onClick={onClose} 
-              className="p-2 hover:bg-white/20 rounded-full transition-all duration-200 hover:scale-110"
+              className="p-2 bg-white hover:bg-white/20 flex items-center justify-center rounded-full transition-all duration-200 hover:scale-110"
               disabled={isPending}
             >
-              <XCircleIcon className='text-black' fontSize={24} />
+              <X className='text-black' size={18} />
             </button>
           </div>
           
