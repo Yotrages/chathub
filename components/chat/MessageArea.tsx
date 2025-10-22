@@ -46,6 +46,12 @@ export const MessagesArea = ({
   isLoading,
 }: MessagesAreaProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  const lastMessageCountRef = useRef(0);
+  const isUserScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>(undefined);
+  
   const { activeChat, messages } = useSelector((state: RootState) => state.chat);
   const [likesModal, setLikesModal] = useState<LikesModalState>({ 
     isOpen: false, 
@@ -67,10 +73,80 @@ export const MessagesArea = ({
   const chatMessages = activeChat ? messages[activeChat] || [] : [];
 
   useEffect(() => {
-    if (chatMessages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+
+      const { scrollHeight, scrollTop, clientHeight } = container;
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      const isNearBottom = distanceFromBottom < 150;
+      
+      isUserScrollingRef.current = !isNearBottom;
+
+      scrollTimeoutRef.current = setTimeout(() => {
+        if (isNearBottom) {
+          isUserScrollingRef.current = false;
+        }
+      }, 150);
+    };
+
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const messageCount = chatMessages.length;
+    
+    if (lastMessageCountRef.current === 0 && messageCount > 0) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ 
+          behavior: 'auto',
+          block: 'end',
+          inline: 'nearest'
+        });
+      }, 100);
+      lastMessageCountRef.current = messageCount;
+      return;
+    }
+
+    if (messageCount > lastMessageCountRef.current) {
+      if (!isUserScrollingRef.current) {
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'end',
+            inline: 'nearest'
+          });
+        }, 100);
+      } else {
+        console.log('New message arrived, but user is reading history');
+      }
+      lastMessageCountRef.current = messageCount;
     }
   }, [chatMessages.length]);
+
+  useEffect(() => {
+    lastMessageCountRef.current = 0;
+    isUserScrollingRef.current = false;
+    
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ 
+        behavior: 'auto',
+        block: 'end',
+        inline: 'nearest'
+      });
+    }, 100);
+  }, [activeChat]);
 
   const handleOpenLikesModal = (reactions: Message['reactions'], type: string = 'message') => {
     setLikesModal({ isOpen: true, reactions, type });
@@ -92,7 +168,11 @@ export const MessagesArea = ({
 
   return (
     <>
-      <div className="flex-1 w-full overflow-y-auto overflow-x-hidden py-4 px-0.5 xs:p-4 space-y-4 bg-gray-50">
+      <div 
+        ref={messagesContainerRef}
+        className="h-full w-full overflow-y-auto overflow-x-hidden py-4 px-0.5 xs:p-4 space-y-4 bg-gray-50"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         {!isUserOnline && (
           <div className="text-center w-full text-red-500 mb-4">
             <div className="bg-red-50 border border-red-200 rounded-lg p-3">
@@ -150,7 +230,8 @@ export const MessagesArea = ({
             );
           })
         )}
-        <div ref={messagesEndRef} />
+        {/* 🔥 CHANGED: Scroll anchor at the end */}
+        <div ref={messagesEndRef} className="h-1" />
       </div>
       
       <ReactionsModal

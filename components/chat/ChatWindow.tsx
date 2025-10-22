@@ -104,6 +104,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
       {(callState === "idle" || isCallMinimized) && (
         <>
+          {/* Chat Header - Fixed at top */}
           <div className="flex-shrink-0 z-40">
             <ChatHeader
               currentChat={currentChat}
@@ -115,18 +116,17 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
             />
           </div>
 
-          <div className="flex-1 overflow-hidden relative min-h-0">
-            <div className="h-full overflow-y-auto">
-              <MessagesArea
-                currentChat={currentChat}
-                isUserOnline={currentUserOnline}
-                isLoading={isLoading}
-              />
-              {/* <div className="h-20"></div> */}
-            </div>
+          {/* Messages Area - Flexible middle section */}
+          <div className="flex-1 min-h-0 overflow-hidden relative">
+            <MessagesArea
+              currentChat={currentChat}
+              isUserOnline={currentUserOnline}
+              isLoading={isLoading}
+            />
           </div>
 
-          <div className="flex-shrink-0">
+          {/* Message Input - Fixed at bottom */}
+          <div className="flex-shrink-0 z-50">
             <MessageInput
               currentChat={currentChat}
               onShowFileUpload={() => setShowFileUpload(true)}

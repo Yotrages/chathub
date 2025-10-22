@@ -159,26 +159,12 @@ const Header: React.FC = () => {
     const cleanQuery = query.trim();
 
     router.push(`/search/${encodeURIComponent(cleanQuery)}`);
-
-    setTimeout(() => {
-      setSearchQuery(cleanQuery);
-      setIsFocused(false);
-      setShowSearch(false);
-      setAutocompleteSuggestions(null);
-    }, 100);
   };
 
   const handleSuggestionClick = (query: string) => {
     const cleanQuery = query.trim();
 
     router.push(`/search/${encodeURIComponent(cleanQuery)}`);
-
-    setTimeout(() => {
-      setSearchQuery(cleanQuery);
-      setIsFocused(false);
-      setShowSearch(false);
-      setAutocompleteSuggestions(null);
-    }, 100);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -723,6 +709,7 @@ const Header: React.FC = () => {
                           <div
                             key={`mobile-frequent-${index}`}
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
                               handleFrequentSearchClick(q);
                             }}
