@@ -508,7 +508,12 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   return (
    <div 
     ref={containerRef}
-    className="bg-white border-t border-gray-200 z-50 w-full"
+    className="surface-primary border-t z-50 w-full"
+    style={{
+    position: 'relative',
+    marginBottom: 'env(safe-area-inset-bottom, 0)',
+    paddingBottom: 0
+  }}
   >
       <div className="px-0.5 xs:px-2 py-2 max-w-full">
         <PermissionStatus />
@@ -648,7 +653,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                className="absolute right-2 bottom-2 p-1 text-gray-500 hover:text-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
+                className="absolute right-2 bottom-2 p-1 text-gray-500 dark:text-white hover:text-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
                 title="Add emoji"
               >
                 <Smile size={isVerySmallScreen ? 14 : 16} />

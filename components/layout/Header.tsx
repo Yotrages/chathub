@@ -46,10 +46,20 @@ interface Reel {
   };
 }
 
+interface Story {
+  _id: string;
+  text: string;
+  authorId: {
+    username: string;
+    avatar?: string;
+  };
+}
+
 interface AutocompleteSuggestions {
   users: User[];
   posts: Post[];
   reels: Reel[];
+  stories: Story[];
   hashtags: string[];
   recent: string[];
 }
@@ -111,7 +121,7 @@ const Header: React.FC = () => {
 
     try {
       setIsLoadingSuggestions(true);
-
+      
       const [suggestionsRes, searchRes] = await Promise.all([
         api.get(`/search/suggestions?query=${encodeURIComponent(query)}`),
         api.get(`/search?query=${encodeURIComponent(query)}&type=all&limit=3`),
@@ -121,6 +131,7 @@ const Header: React.FC = () => {
         users: [],
         posts: [],
         reels: [],
+        stories: [],
         hashtags: [],
         recent: [],
       };
@@ -134,8 +145,9 @@ const Header: React.FC = () => {
       if (searchRes.status === 200 && searchRes.data.success) {
         suggestions.posts = searchRes.data.results.posts || [];
         suggestions.reels = searchRes.data.results.reels || [];
+        suggestions.stories = searchRes.data.results.stories || [];
       }
-
+      
       setAutocompleteSuggestions(suggestions);
     } catch (error) {
       console.error("Failed to fetch autocomplete suggestions:", error);
@@ -144,6 +156,30 @@ const Header: React.FC = () => {
       setIsLoadingSuggestions(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (window.innerWidth > 768) {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (isNavigating) return; // Don't close if navigating
+        
+        if (
+          inputSearchRef.current &&
+          !inputSearchRef.current.contains(event.target as Node)
+        ) {
+          setIsFocused(false);
+        }
+        if (
+          mobileSearchRef.current &&
+          !mobileSearchRef.current.contains(event.target as Node)
+        ) {
+          setShowSearch(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isNavigating]);
+
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +194,7 @@ const Header: React.FC = () => {
 
 const handleFrequentSearchClick = (query: string) => {
   const cleanQuery = query.trim();
-  setIsNavigating(true); // Prevent click-outside from interfering
+  setIsNavigating(true); 
   router.push(`/search/${encodeURIComponent(cleanQuery)}`);
   setShowSearch(false);
   setIsFocused(false);
@@ -246,27 +282,6 @@ const handleSuggestionClick = (query: string) => {
     };
   }, [showSearch]);
   
-useEffect(() => {
-  const handleClickOutside = (event: MouseEvent) => {
-    if (isNavigating) return; // Don't close if navigating
-    
-    if (
-      inputSearchRef.current &&
-      !inputSearchRef.current.contains(event.target as Node)
-    ) {
-      setIsFocused(false);
-    }
-    if (
-      mobileSearchRef.current &&
-      !mobileSearchRef.current.contains(event.target as Node)
-    ) {
-      setShowSearch(false);
-    }
-  };
-
-  document.addEventListener("mousedown", handleClickOutside);
-  return () => document.removeEventListener("mousedown", handleClickOutside);
-}, [isNavigating]);
 
   useEffect(() => {
     return () => {
@@ -531,6 +546,39 @@ useEffect(() => {
                               </>
                             )}
 
+                             {autocompleteSuggestions.stories.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                            Stories
+                          </p>
+                          {autocompleteSuggestions.stories.map((story) => (
+                            <div
+                              key={`mobile-reel-${story._id}`}
+                              onClick={() => {
+                                handleSuggestionClick(
+                                  story.text.substring(0, 50)
+                                );
+                              }}
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <Video
+                                size={18}
+                                className="text-gray-400 mr-3 flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700 truncate font-medium">
+                                  {story.text}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  by @{story.authorId.username}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+
                             {/* Hashtags */}
                             {autocompleteSuggestions.hashtags.length > 0 && (
                               <>
@@ -722,9 +770,7 @@ useEffect(() => {
                         .map((q, index) => (
                           <div
                             key={`mobile-frequent-${index}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
+                            onClick={() => {
                               handleFrequentSearchClick(q);
                             }}
                             className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
@@ -751,9 +797,7 @@ useEffect(() => {
                           {autocompleteSuggestions.users.map((user) => (
                             <div
                               key={`mobile-${user._id}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                              onClick={() => {
                                 handleSuggestionClick(user.username);
                               }}
                               className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
@@ -795,9 +839,7 @@ useEffect(() => {
                           {autocompleteSuggestions.posts.map((post) => (
                             <div
                               key={`mobile-post-${post._id}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                              onClick={() => {
                                 handleSuggestionClick(
                                   post.content.substring(0, 50)
                                 );
@@ -830,9 +872,7 @@ useEffect(() => {
                           {autocompleteSuggestions.reels.map((reel) => (
                             <div
                               key={`mobile-reel-${reel._id}`}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
+                              onClick={() => {
                                 handleSuggestionClick(
                                   reel.title.substring(0, 50)
                                 );
@@ -856,6 +896,38 @@ useEffect(() => {
                         </>
                       )}
 
+                      {autocompleteSuggestions.stories.length > 0 && (
+                        <>
+                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                            Stories
+                          </p>
+                          {autocompleteSuggestions.stories.map((story) => (
+                            <div
+                              key={`mobile-reel-${story._id}`}
+                              onClick={() => {
+                                handleSuggestionClick(
+                                  story.text.substring(0, 50)
+                                );
+                              }}
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            >
+                              <Video
+                                size={18}
+                                className="text-gray-400 mr-3 flex-shrink-0"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700 truncate font-medium">
+                                  {story.text}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">
+                                  by @{story.authorId.username}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
                       {/* Hashtags */}
                       {autocompleteSuggestions.hashtags.length > 0 && (
                         <>
@@ -866,9 +938,7 @@ useEffect(() => {
                             (hashtag, index) => (
                               <div
                                 key={`mobile-hashtag-${index}`}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
+                                onClick={() => {
                                   handleSuggestionClick(hashtag);
                                 }}
                                 className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
@@ -897,9 +967,7 @@ useEffect(() => {
                   {/* Current search option */}
                   {searchQuery && (
                     <div
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+                      onClick={() => {
                         handleFrequentSearchClick(searchQuery);
                       }}
                       className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"

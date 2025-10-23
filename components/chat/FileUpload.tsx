@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { X, Upload, File } from 'lucide-react';
 
 interface FileUploadProps {
@@ -12,7 +12,25 @@ export const FileUpload = ({ onUpload, onClose }: FileUploadProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [caption, setCaption] = useState('');
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+  }, [])
+
+   const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120; 
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -68,15 +86,15 @@ export const FileUpload = ({ onUpload, onClose }: FileUploadProps) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex h-screen items-center justify-center z-50">
+      <div className="bg-white rounded-lg max-h-[85vh] w-full overflow-y-auto max-w-md mx-4">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold">Upload File</h2>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full">
             <X size={20} />
           </button>
         </div>
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto">
           {!selectedFile ? (
             <div
               className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
@@ -131,13 +149,15 @@ export const FileUpload = ({ onUpload, onClose }: FileUploadProps) => {
                 <label htmlFor="caption" className="text-sm font-medium text-gray-700">
                   Caption (optional)
                 </label>
-                <input
+                <textarea
+                  ref={textareaRef}
                   id="caption"
-                  type="text"
+                  rows={1}
+                  style={{ minHeight: '38px' }}
                   value={caption}
                   onChange={(e) => setCaption(e.target.value)}
                   placeholder="Add a caption..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 overflow-hidden rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div className="flex space-x-2">
@@ -147,13 +167,13 @@ export const FileUpload = ({ onUpload, onClose }: FileUploadProps) => {
                     setPreview(null);
                     setCaption('');
                   }}
-                  className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="flex-1 px-4 xs:text-base text-xs py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Choose Different File
                 </button>
                 <button
                   onClick={handleUpload}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  className="flex-1 px-4 xs:text-base text-xs xs:py-2 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   Send File
                 </button>

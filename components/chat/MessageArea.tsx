@@ -170,7 +170,7 @@ export const MessagesArea = ({
     <>
       <div 
         ref={messagesContainerRef}
-        className="h-full w-full overflow-y-auto overflow-x-hidden py-4 px-0.5 xs:p-4 space-y-4 bg-gray-50"
+        className="h-full w-full overflow-y-auto overflow-x-hidden py-4 px-0.5 xs:p-4 space-y-4 surface-secondary"
         style={{ scrollBehavior: 'smooth' }}
       >
         {!isUserOnline && (

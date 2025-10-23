@@ -6,26 +6,38 @@ import { useState, useEffect } from 'react';
 export default function Page() {
   const [showProfile, setShowProfile] = useState(false);
 
-  useEffect(() => {
-    // Set CSS variable for actual viewport height
-    const setVH = () => {
+useEffect(() => {
+  const setVH = () => {
+    if (window.visualViewport) {
+      const vh = window.visualViewport.height * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    } else {
+      // Fallback to innerHeight
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
+    }
+  };
 
-    // Set on mount
-    setVH();
+  setVH();
 
-    // Update on resize and orientation change
-    window.addEventListener('resize', setVH);
-    window.addEventListener('orientationchange', setVH);
+  // Listen to visual viewport changes
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setVH);
+    window.visualViewport.addEventListener('scroll', setVH);
+  }
 
-    // Cleanup
-    return () => {
-      window.removeEventListener('resize', setVH);
-      window.removeEventListener('orientationchange', setVH);
-    };
-  }, []);
+  window.addEventListener('resize', setVH);
+  window.addEventListener('orientationchange', setVH);
+
+  return () => {
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', setVH);
+      window.visualViewport.removeEventListener('scroll', setVH);
+    }
+    window.removeEventListener('resize', setVH);
+    window.removeEventListener('orientationchange', setVH);
+  };
+}, []);
 
   return (
     <div 

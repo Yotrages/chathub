@@ -35,8 +35,10 @@ export interface MessageInfo {
   messageId: string;
   content: string;
   sender: { _id: string; username: string; avatar?: string };
-  createdAt: string;
-  updatedAt: string;
+  timestamp: {
+    createdAt: string;
+    updatedAt: string;
+  }
   readBy: Array<{ userId: { _id: string; username: string; avatar?: string }; readAt: string }>;
 }
 
@@ -91,12 +93,10 @@ export const MessageContextMenu = forwardRef<
     const handleForward = async (chatId: string) => {
       try {
         await forwardMessage(message._id, chatId);
-        toast.success("Message forwarded successfully");
         setShowForwardModal(false);
         onClose();
       } catch (error) {
         console.log(error);
-        toast.error("Failed to forward message");
       }
     };
 
@@ -124,10 +124,8 @@ export const MessageContextMenu = forwardRef<
     const handleDelete = async () => {
       try {
         await deleteMessage(message._id);
-        toast.success("Message deleted successfully");
       } catch (error) {
         console.log(error);
-        toast.error("Failed to delete message");
       }
       onClose();
     };
@@ -136,10 +134,8 @@ export const MessageContextMenu = forwardRef<
       try {
         if (isStarred) {
           await unstarMessage(message._id);
-          toast.success("Message unstarred");
         } else {
           await starMessage(message._id);
-          toast.success("Message starred");
         }
       } catch (error) {
         console.log(error);
@@ -455,8 +451,8 @@ export const MessageContextMenu = forwardRef<
                           Sent
                         </p>
                         <p className="text-sm text-blue-900">
-                          {messageInfo?.createdAt
-                            ? new Date(messageInfo?.createdAt).toLocaleString()
+                          {messageInfo?.timestamp.createdAt
+                            ? new Date(messageInfo?.timestamp.createdAt).toLocaleString()
                             : "Unknown"}
                         </p>
                       </div>

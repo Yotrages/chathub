@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Search, Plus, Users, MessageSquare, Trash2 } from 'lucide-react';
 import { AppDispatch, RootState } from '@/libs/redux/store';
@@ -18,6 +18,10 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
 
   const { chats, isLoading } = useSelector((state: RootState) => state.chat);
   const { deleteChat } = useChat();
+
+    useEffect(() => {
+      document.body.style.overflow = 'hidden'
+    }, [showNewChat])
 
   const filteredChats = chats.filter(chat => {
     const matchesSearch = chat.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,7 +66,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-semibold">Chats</h1>
+            <h1 className="text-xl dark:text-white font-semibold">Chats</h1>
             <button
               onClick={() => setShowNewChat(true)}
               className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
@@ -164,7 +168,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900 truncate">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {chat.name || 'Unknown Chat'}
                     </h3>
                     {chat.lastMessageTime && (

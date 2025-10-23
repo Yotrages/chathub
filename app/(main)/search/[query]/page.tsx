@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { Post, Reel, Story, User } from "@/types";
@@ -61,27 +60,23 @@ interface FrequentSearch {
   lastSearched: string;
 }
 
-// 🔥 NEW: Helper function to clean URL query
 const cleanSearchQuery = (rawQuery: string | string[] | undefined): string => {
   if (!rawQuery) return '';
   
-  // Handle if query is an array
   const queryString = Array.isArray(rawQuery) ? rawQuery[0] : rawQuery;
   
   if (!queryString) return '';
   
   try {
-    // Decode the URL-encoded string
     let decoded = decodeURIComponent(queryString);
     
-    // Remove common URL artifacts and special characters
     decoded = decoded
-      .replace(/\$/g, '')           // Remove dollar signs
-      .replace(/%20/g, ' ')         // Replace %20 with spaces
-      .replace(/%24/g, '')          // Remove encoded dollar signs
-      .replace(/\+/g, ' ')          // Replace + with spaces
-      .replace(/[^\w\s#@.-]/gi, '') // Keep only alphanumeric, spaces, and basic symbols
-      .trim();                       // Remove leading/trailing whitespace
+      .replace(/\$/g, '')           
+      .replace(/%20/g, ' ')         
+      .replace(/%24/g, '')          
+      .replace(/\+/g, ' ')          
+      .replace(/[^\w\s#@.-]/gi, '') 
+      .trim();                      
     
     return decoded;
   } catch (error) {
@@ -96,7 +91,6 @@ const SearchPage: React.FC = () => {
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
 
-  // 🔥 NEW: Clean the query immediately
   const query = cleanSearchQuery(rawQuery);
 
   const [searchResults, setSearchResults] = useState<SearchResult>({
@@ -214,17 +208,15 @@ const SearchPage: React.FC = () => {
     page: number = 1,
     append: boolean = false
   ) => {
-    // 🔥 CHANGED: Use cleaned query
     if (!query || query.trim().length === 0) return;
 
     try {
       if (!append) setLoading(true);
       else setIsLoadingMore(true);
 
-      // 🔥 CHANGED: Use cleaned query directly (axios will encode it)
       const response = await api.get(`/search`, {
         params: {
-          query: query.trim(), // Don't encode again
+          query: query.trim(), 
           page,
           limit: 20,
           type: activeTab === "all" ? undefined : activeTab,
@@ -259,7 +251,6 @@ const SearchPage: React.FC = () => {
   };
 
   useEffect(() => {
-    // 🔥 CHANGED: Use cleaned query
     if (query && query.trim().length > 0) {
       setSearchResults({ posts: [], reels: [], users: [], stories: [] });
       setPagination(null);
@@ -403,12 +394,10 @@ const SearchPage: React.FC = () => {
                 href={`/profile/${user._id}`}
                 className="group flex items-center p-3 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100"
               >
-                <Image
+                <img
                   src={user.avatar || "/default-avatar.png"}
                   alt={user?.username || ""}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
+                  className="rounded-full w-10 h-10"
                 />
                 <div className="ml-3 flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">

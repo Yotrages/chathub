@@ -645,8 +645,8 @@ const MobileContextMenu = ({
                     Sent
                   </p>
                   <p className="text-sm text-blue-900">
-                    {messageInfo?.createdAt
-                      ? new Date(messageInfo?.createdAt).toLocaleString()
+                    {messageInfo?.timestamp.createdAt
+                      ? new Date(messageInfo?.timestamp.createdAt).toLocaleString()
                       : "Unknown"}
                   </p>
                 </div>

@@ -95,6 +95,9 @@
   @apply ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-2 ring-offset-white dark:ring-offset-gray-900;
 }
 
+.bg-primary {
+  @apply bg-white dark:bg-gray-900
+}
 /* Utility classes for common dark mode patterns */
 .surface-primary {
   @apply bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700;
