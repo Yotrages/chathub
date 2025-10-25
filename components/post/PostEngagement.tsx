@@ -113,11 +113,9 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
         undefined,
         post._id
       );
-      toast.success("Post shared to chat successfully!");
       setShowShareModal(false);
     } catch (error: any) {
       console.error("Error sharing post to chat:", error);
-      toast.error("Failed to share post to chat. Try again.");
     }
   };
 
@@ -177,26 +175,26 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
                   .slice(0, 3)
                   .map(([emoji]) => (
                     <span
-                      className="text-xs sm:text-base"
+                      className="text-base"
                       onClick={() => setShowLikes(true)}
                       key={emoji}
                     >
                       {emoji}
                     </span>
                   ))}
-              <span className="hover:text-gray-800 text-xs sm:text-base cursor-pointer transition-colors">
+              <span className="hover:text-gray-800 text-base cursor-pointer transition-colors">
                 {reactions.length}
               </span>
             </button>
-            <span className="hover:text-gray-800 cursor-pointer text-xs sm:text-base transition-colors">
+            <span className="hover:text-gray-800 cursor-pointer text-sm sm:text-base transition-colors">
               {comments.length} {comments.length === 1 ? "comment" : "comments"}
             </span>
-            <span className="hover:text-gray-800 text-xs sm:text-base cursor-pointer transition-colors">
+            <span className="hover:text-gray-800 text-sm sm:text-base cursor-pointer transition-colors">
               {post.shareCount || 0}{" "}
               {post.shareCount === 1 ? "share" : "shares"}
             </span>
           </div>
-          <div className="flex items-center space-x-1 text-xs sm:text-base text-gray-400">
+          <div className="flex items-center space-x-1 text-base text-gray-400">
             {images.length > 0 && <span>{images.length}</span>}
           </div>
         </div>
@@ -217,7 +215,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
                   onClick={() => handleLike(item.emoji, item.name)}
                   className="flex flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <span className="text-base sm:text-xl hover:scale-125 transition-transform duration-200">
+                  <span className="text-xl hover:scale-125 transition-transform duration-200">
                     {item.emoji}
                   </span>
                 </button>

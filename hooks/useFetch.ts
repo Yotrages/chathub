@@ -179,7 +179,6 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
           console.log(`Appended single file: ${key}`, value.name);
         } else if (Array.isArray(value) && value.length > 0) {
           if (value[0] instanceof File) {
-            // Multiple files with same key
             value.forEach((file) => {
               if (file instanceof File) {
                 formData.append(key, file); 

@@ -219,7 +219,7 @@ export const ReplyForm: React.FC<ReplyFormProps> = ({
           <button 
             type="button" 
             onClick={() => fileInputRef.current?.click()}
-            className="flex-shrink-0 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors self-end mb-1"
+            className="flex-shrink-0 p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors mb-1"
           >
             <Image size={18} className="sm:w-5 sm:h-5 text-gray-600" />
           </button>

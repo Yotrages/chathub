@@ -20,6 +20,140 @@ type ConnectionState =
   | "failed"
   | "closed";
 
+const isLowEndDevice = () => {
+  const memory = (navigator as any).deviceMemory; // GB
+  const hardwareConcurrency = navigator.hardwareConcurrency || 1;
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+
+  console.log("🔍 Device Detection:", {
+    memory: memory || "unknown",
+    cores: hardwareConcurrency,
+    isMobile,
+    userAgent: navigator.userAgent,
+  });
+
+  // Consider low-end if:
+  // - Less than 2GB RAM OR
+  // - Less than 4 CPU cores OR
+  // - Specific low-end device detected
+  const isLowRam = memory && memory < 2;
+  const isLowCpu = hardwareConcurrency < 4;
+  const isItelOrLowEnd = /Itel|Symphony|Infinix|Tecno/i.test(
+    navigator.userAgent
+  );
+
+  const isLowEnd = isMobile && (isLowRam || isLowCpu || isItelOrLowEnd);
+
+  console.log(`📱 Device classified as: ${isLowEnd ? "LOW-END" : "HIGH-END"}`);
+
+  return isLowEnd;
+};
+
+// ===== OPTIMIZED VIDEO CONSTRAINTS =====
+const getOptimizedVideoConstraints = (isVideo: boolean) => {
+  if (!isVideo) return false;
+
+  const lowEnd = isLowEndDevice();
+
+  if (lowEnd) {
+    console.log("📱 Using LOW-END device settings (optimized for 1GB RAM)");
+    return {
+      width: { min: 320, ideal: 480, max: 640 },
+      height: { min: 240, ideal: 360, max: 480 },
+      frameRate: { min: 10, ideal: 15, max: 20 },
+      facingMode: "user",
+      aspectRatio: 4 / 3,
+    };
+  } else {
+    console.log("💻 Using HIGH-END device settings");
+    return {
+      width: { min: 640, ideal: 1280, max: 1920 },
+      height: { min: 480, ideal: 720, max: 1080 },
+      frameRate: { ideal: 30, max: 30 },
+      facingMode: "user",
+    };
+  }
+};
+
+// ===== STORAGE CHECK =====
+const checkStorageSpace = async () => {
+  if ("storage" in navigator && "estimate" in navigator.storage) {
+    try {
+      const estimate = await navigator.storage.estimate();
+      const usedMB = (estimate.usage || 0) / (1024 * 1024);
+      const totalMB = (estimate.quota || 0) / (1024 * 1024);
+      const freeMB = totalMB - usedMB;
+
+      console.log("💾 Storage Info:", {
+        used: `${usedMB.toFixed(0)}MB`,
+        total: `${totalMB.toFixed(0)}MB`,
+        free: `${freeMB.toFixed(0)}MB`,
+      });
+
+      if (freeMB < 500) {
+        console.warn("⚠️ WARNING: Low storage space! Video calls may fail.");
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("Could not estimate storage:", error);
+      return true; // Assume OK if can't check
+    }
+  }
+
+  return true; // Assume OK if API not supported
+};
+
+// ===== MEMORY PRESSURE DETECTION =====
+const checkMemoryPressure = () => {
+  const memory = (performance as any).memory;
+
+  if (memory) {
+    const usedMB = memory.usedJSHeapSize / (1024 * 1024);
+    const limitMB = memory.jsHeapSizeLimit / (1024 * 1024);
+    const percentUsed = (usedMB / limitMB) * 100;
+
+    console.log("🧠 Memory Usage:", {
+      used: `${usedMB.toFixed(0)}MB`,
+      limit: `${limitMB.toFixed(0)}MB`,
+      percent: `${percentUsed.toFixed(1)}%`,
+    });
+
+    if (percentUsed > 80) {
+      console.warn(
+        "⚠️ WARNING: High memory pressure! Recommend closing other apps."
+      );
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// ===== OPTIMIZED AUDIO CONSTRAINTS (Lower bandwidth) =====
+const getOptimizedAudioConstraints = () => {
+  const lowEnd = isLowEndDevice();
+
+  if (lowEnd) {
+    console.log("🔊 Using LOW-END audio settings");
+    return {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      sampleRate: 16000, // Lower sample rate (was 48000)
+      channelCount: 1, // Mono (was default 2/stereo)
+    };
+  } else {
+    return {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+      sampleRate: 48000,
+    };
+  }
+};
+
 export const useCallManagement = (currentChat: any) => {
   const [callState, setCallState] = useState<CallState>("idle");
   const [connectionState, setConnectionState] =
@@ -233,7 +367,7 @@ export const useCallManagement = (currentChat: any) => {
 
         if (event.track.kind === "video" && remoteVideoRef.current) {
           console.log("📹 Setting remote video stream");
-          
+
           remoteVideoRef.current.srcObject = stream;
 
           // CRITICAL: Remote video UNMUTED so we can hear the other person!
@@ -248,7 +382,10 @@ export const useCallManagement = (currentChat: any) => {
           remoteVideoRef.current.setAttribute("webkit-playsinline", "true");
           remoteVideoRef.current.setAttribute("x5-playsinline", "true");
           remoteVideoRef.current.setAttribute("x5-video-player-type", "h5");
-          remoteVideoRef.current.setAttribute("x5-video-player-fullscreen", "false");
+          remoteVideoRef.current.setAttribute(
+            "x5-video-player-fullscreen",
+            "false"
+          );
 
           console.log("📹 Attempting video play...");
 
@@ -326,6 +463,7 @@ export const useCallManagement = (currentChat: any) => {
   const startCall = useCallback(
     async (isVideo: boolean = false) => {
       console.log("📞 ===== STARTING CALL =====");
+      console.log("📞 Video:", isVideo, "To:", otherUserId.current);
 
       if (!currentChat || !socket || !otherUserId.current) {
         toast.error("Cannot start call");
@@ -338,6 +476,27 @@ export const useCallManagement = (currentChat: any) => {
       }
 
       try {
+        // 🔴 CRITICAL: Check device capabilities
+        const hasStorage = await checkStorageSpace();
+        const hasMemory = checkMemoryPressure();
+
+        if (!hasStorage) {
+          toast.error(
+            "Low storage space! Free up at least 500MB and try again."
+          );
+          return;
+        }
+
+        if (!hasMemory) {
+          toast.error(
+            "High memory usage. Close other apps for better performance.",
+            {
+              icon: "⚠️",
+              duration: 5000,
+            }
+          );
+        }
+
         setCallError(null);
         setCallState("calling");
         setIsVideoCall(isVideo);
@@ -345,41 +504,44 @@ export const useCallManagement = (currentChat: any) => {
         const callId = `${user?._id}-${otherUserId.current}-${Date.now()}`;
         currentCallIdRef.current = callId;
 
-        console.log("🎤 Requesting user media...");
+        console.log("🎤 Requesting user media with optimized settings...");
 
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-            sampleRate: 48000,
-          },
-          video: isVideo
-            ? {
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                facingMode: "user",
-              }
-            : false,
+          audio: getOptimizedAudioConstraints(),
+          video: getOptimizedVideoConstraints(isVideo),
         });
 
-        console.log("✅ Got media stream");
+        console.log("✅ Got local media stream");
         console.log(
-          "📊 Local tracks:",
+          "📊 Local stream tracks:",
           stream.getTracks().map((t) => ({
             kind: t.kind,
             id: t.id,
+            label: t.label,
             enabled: t.enabled,
             readyState: t.readyState,
+            settings: t.getSettings ? t.getSettings() : "N/A",
           }))
         );
 
+        // Log actual video settings
+        const videoTrack = stream.getVideoTracks()[0];
+        if (videoTrack && videoTrack.getSettings) {
+          const settings = videoTrack.getSettings();
+          console.log("📹 Actual video settings:", {
+            width: settings.width,
+            height: settings.height,
+            frameRate: settings.frameRate,
+            aspectRatio: settings.aspectRatio,
+          });
+        }
+
         setLocalStream(stream);
 
-        // CRITICAL: Local video MUTED (prevents hearing yourself)
+        // Local video MUST be muted
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
-          localVideoRef.current.muted = true; // MUST be muted
+          localVideoRef.current.muted = true;
           localVideoRef.current.volume = 0;
           localVideoRef.current.playsInline = true;
           localVideoRef.current.autoplay = true;
@@ -387,19 +549,29 @@ export const useCallManagement = (currentChat: any) => {
           localVideoRef.current.play().catch((err) => {
             console.error("Local video play failed:", err);
           });
-          
-          console.log("🔇 Local video muted (prevents echo)");
+
+          console.log("✅ Local video configured (muted)");
         }
 
         console.log("🔌 Initializing peer connection...");
         const pc = initializePeerConnection();
 
-        // Add all tracks
         stream.getTracks().forEach((track) => {
           console.log("➕ Adding track to PC:", track.kind, track.id);
-          pc.addTrack(track, stream);
+          const sender = pc.addTrack(track, stream);
+          console.log("✅ Track added, sender:", sender);
         });
 
+        console.log(
+          "📊 Peer connection senders:",
+          pc.getSenders().map((s) => ({
+            kind: s.track?.kind,
+            id: s.track?.id,
+            enabled: s.track?.enabled,
+          }))
+        );
+
+        console.log("📤 Sending call_request");
         socket.emit("call_request", {
           to: otherUserId.current,
           isVideo,
@@ -408,14 +580,17 @@ export const useCallManagement = (currentChat: any) => {
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
+        console.log("📝 Creating offer...");
         const offer = await pc.createOffer({
           offerToReceiveAudio: true,
           offerToReceiveVideo: isVideo,
         });
 
+        console.log("📝 Setting local description...");
         await pc.setLocalDescription(offer);
-        console.log("✅ Local description set");
+        console.log("✅ Local description set:", pc.localDescription?.type);
 
+        console.log("📤 Sending offer to", otherUserId.current);
         socket.emit("offer", {
           sdp: offer,
           to: otherUserId.current,
@@ -444,6 +619,9 @@ export const useCallManagement = (currentChat: any) => {
           message = "No camera or microphone found";
         } else if (error.name === "NotReadableError") {
           message = "Camera/microphone already in use";
+        } else if (error.name === "OverconstrainedError") {
+          message = "Camera doesn't support requested resolution";
+          console.error("OverconstrainedError details:", error.constraint);
         }
 
         setCallError(message);
@@ -462,110 +640,205 @@ export const useCallManagement = (currentChat: any) => {
     ]
   );
 
-  const acceptCall = useCallback(async () => {
-    console.log("✅ ===== ACCEPTING CALL =====");
+const acceptCall = useCallback(async () => {
+  console.log("✅ ===== ACCEPTING CALL =====");
 
-    if (!incomingCall || !socket) {
-      console.error("❌ Cannot accept - invalid state");
-      return;
+  if (!incomingCall || !socket) {
+    console.error("❌ Cannot accept - invalid state");
+    return;
+  }
+
+  try {
+    // Set a longer timeout state while waiting for permissions
+    setCallState("connecting");
+    setCallError("Requesting camera/microphone permission...");
+    
+    const callData = { ...incomingCall };
+    setIncomingCall(null);
+    setIsVideoCall(callData.isVideo);
+
+    if (callTimeoutRef.current) {
+      clearTimeout(callTimeoutRef.current);
+      callTimeoutRef.current = null;
     }
 
-    try {
-      setCallState("connecting");
-      const callData = { ...incomingCall };
-      setIncomingCall(null);
-      setIsVideoCall(callData.isVideo);
+    // Check device capabilities
+    const hasStorage = await checkStorageSpace();
+    const hasMemory = checkMemoryPressure();
 
-      if (callTimeoutRef.current) {
-        clearTimeout(callTimeoutRef.current);
-        callTimeoutRef.current = null;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 48000,
-        },
-        video: callData.isVideo
-          ? {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              facingMode: "user",
-            }
-          : false,
-      });
-
-      console.log("✅ Got media stream");
-
-      setLocalStream(stream);
-
-      // CRITICAL: Local video MUTED
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-        localVideoRef.current.muted = true; // MUST be muted
-        localVideoRef.current.volume = 0;
-        localVideoRef.current.playsInline = true;
-        localVideoRef.current.autoplay = true;
-
-        localVideoRef.current.play().catch((err) => {
-          console.error("Local video play failed:", err);
-        });
-        
-        console.log("🔇 Local video muted (prevents echo)");
-      }
-
-      let pc = peerConnectionRef.current;
-      if (!pc) {
-        pc = initializePeerConnection();
-      }
-
-      stream.getTracks().forEach((track) => {
-        console.log("➕ Adding track to PC:", track.kind, track.id);
-        pc.addTrack(track, stream);
-      });
-
-      if (!pc.remoteDescription) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-
-      if (!pc.remoteDescription) {
-        console.error("❌ Still no remote description!");
-        socket.emit("call_accept", {
-          to: callData.from,
-          callId: callData.callId,
-        });
-        return;
-      }
-
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-
-      while (iceCandidateQueue.current.length > 0) {
-        const candidate = iceCandidateQueue.current.shift();
-        if (candidate) {
-          await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        }
-      }
-
-      socket.emit("answer", {
-        sdp: answer,
+    if (!hasStorage) {
+      toast.error("Low storage space! Free up at least 200MB.");
+      socket.emit("call_decline", {
         to: callData.from,
         callId: callData.callId,
       });
+      cleanup();
+      return;
+    }
 
+    if (!hasMemory) {
+      toast("High memory usage. Close other apps for better performance.", {
+        icon: "⚠️",
+        duration: 5000,
+      });
+    }
+
+    console.log("🎤 Requesting user media with optimized settings...");
+    
+    // Give user up to 30 seconds to grant permissions
+    const permissionTimeout = setTimeout(() => {
+      if (callStateRef.current === "connecting") {
+        console.log("⏰ Permission timeout");
+        toast.error("Permission timeout - Please allow camera/microphone access");
+        socket.emit("call_failed", {
+          to: callData.from,
+          callId: callData.callId,
+        });
+        cleanup();
+      }
+    }, 30000);
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: getOptimizedAudioConstraints(),
+      video: getOptimizedVideoConstraints(callData.isVideo),
+    });
+
+    // Clear permission timeout if we got the stream
+    clearTimeout(permissionTimeout);
+    
+    setCallError(null); // Clear the "requesting permission" message
+
+    console.log("✅ Got local media stream");
+    console.log(
+      "📊 Local stream tracks:",
+      stream.getTracks().map((t) => ({
+        kind: t.kind,
+        id: t.id,
+        label: t.label,
+        enabled: t.enabled,
+        readyState: t.readyState,
+        settings: t.getSettings ? t.getSettings() : "N/A",
+      }))
+    );
+
+    const videoTrack = stream.getVideoTracks()[0];
+    if (videoTrack && videoTrack.getSettings) {
+      const settings = videoTrack.getSettings();
+      console.log("📹 Actual video settings:", {
+        width: settings.width,
+        height: settings.height,
+        frameRate: settings.frameRate,
+        aspectRatio: settings.aspectRatio,
+      });
+    }
+
+    setLocalStream(stream);
+
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = stream;
+      localVideoRef.current.muted = true;
+      localVideoRef.current.volume = 0;
+      localVideoRef.current.playsInline = true;
+      localVideoRef.current.autoplay = true;
+
+      localVideoRef.current.play().catch((err) => {
+        console.error("Local video play failed:", err);
+      });
+
+      console.log("✅ Local video configured (muted)");
+    }
+
+    let pc = peerConnectionRef.current;
+    if (!pc) {
+      console.log("⚠️ No PC, creating new one");
+      pc = initializePeerConnection();
+    }
+
+    stream.getTracks().forEach((track) => {
+      console.log("➕ Adding track to PC:", track.kind, track.id);
+      const sender = pc.addTrack(track, stream);
+      console.log("✅ Track added, sender:", sender);
+    });
+
+    console.log(
+      "📊 Peer connection senders:",
+      pc.getSenders().map((s) => ({
+        kind: s.track?.kind,
+        id: s.track?.id,
+        enabled: s.track?.enabled,
+      }))
+    );
+
+    if (!pc.remoteDescription) {
+      console.log("⏳ Waiting for offer...");
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    if (!pc.remoteDescription) {
+      console.error("❌ Still no remote description!");
       socket.emit("call_accept", {
         to: callData.from,
         callId: callData.callId,
       });
-    } catch (error) {
-      console.error("❌ Error accepting call:", error);
-      setCallError("Failed to accept call");
-      toast.error("Failed to accept call");
-      cleanup();
+      return;
     }
-  }, [incomingCall, socket, initializePeerConnection, cleanup]);
+
+    console.log("📝 Creating answer...");
+    const answer = await pc.createAnswer();
+
+    console.log("📝 Setting local description...");
+    await pc.setLocalDescription(answer);
+    console.log("✅ Local description set:", pc.localDescription?.type);
+
+    while (iceCandidateQueue.current.length > 0) {
+      const candidate = iceCandidateQueue.current.shift();
+      if (candidate) {
+        console.log("🧊 Adding queued ICE candidate");
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    }
+
+    console.log("📤 Sending answer");
+    socket.emit("answer", {
+      sdp: answer,
+      to: callData.from,
+      callId: callData.callId,
+    });
+
+    console.log("📤 Sending call_accept");
+    socket.emit("call_accept", {
+      to: callData.from,
+      callId: callData.callId,
+    });
+  } catch (error: any) {
+    console.error("❌ Error accepting call:", error);
+    let message = "Failed to accept call";
+
+    if (error.name === "NotAllowedError") {
+      message = "Camera/microphone permission denied";
+    } else if (error.name === "NotFoundError") {
+      message = "No camera or microphone found";
+    } else if (error.name === "NotReadableError") {
+      message = "Camera/microphone already in use";
+    } else if (error.name === "OverconstrainedError") {
+      message = "Camera doesn't support requested resolution";
+      console.error("OverconstrainedError details:", error.constraint);
+    }
+
+    setCallError(message);
+    toast.error(message);
+    
+    // Notify the caller that we failed
+    if (incomingCall) {
+      socket.emit("call_failed", {
+        to: incomingCall.from,
+        callId: incomingCall.callId,
+      });
+    }
+    
+    cleanup();
+  }
+}, [incomingCall, socket, initializePeerConnection, cleanup]);
 
   const declineCall = useCallback(() => {
     if (incomingCall && socket) {
@@ -627,7 +900,10 @@ export const useCallManagement = (currentChat: any) => {
     if (remoteVideoRef.current) {
       remoteVideoRef.current.muted = !remoteVideoRef.current.muted;
       setIsRemoteAudioMuted(remoteVideoRef.current.muted);
-      console.log("🔊 Remote audio:", remoteVideoRef.current.muted ? "MUTED" : "UNMUTED");
+      console.log(
+        "🔊 Remote audio:",
+        remoteVideoRef.current.muted ? "MUTED" : "UNMUTED"
+      );
     }
   }, []);
 
@@ -728,6 +1004,29 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
+      const handleCallDisconnected = (data: {
+  from: string;
+  callId: string;
+  reason: string;
+  status: string;
+  duration: number;
+}) => {
+  console.log("🔌 Call disconnected:", data);
+  
+  // Show appropriate message based on status
+  if (data.status === "failed") {
+    toast.error("Call failed - Connection lost");
+    setCallError("Call failed - Connection lost");
+  } else {
+    toast.error(`Call ended - Connection lost (${formatDuration(data.duration)})`);
+    setCallError(`Connection lost after ${formatDuration(data.duration)}`);
+  }
+  
+  // Clean up after a short delay
+  setTimeout(() => {
+    cleanup();
+  }, 2000);
+};
     const handleAnswer = async (data: {
       sdp: RTCSessionDescriptionInit;
       from: string;
@@ -828,6 +1127,8 @@ export const useCallManagement = (currentChat: any) => {
     socket.on("call_error", handleCallError);
     socket.on("call_timeout", handleCallTimeout);
     socket.on("call_waiting", handleCallWaiting);
+    socket.on("call_disconnected", handleCallDisconnected);
+
 
     return () => {
       socket.off("offer", handleOffer);
@@ -840,6 +1141,7 @@ export const useCallManagement = (currentChat: any) => {
       socket.off("call_error", handleCallError);
       socket.off("call_timeout", handleCallTimeout);
       socket.off("call_waiting", handleCallWaiting);
+      socket.off("call_disconnected", handleCallDisconnected);
     };
   }, [
     socket,

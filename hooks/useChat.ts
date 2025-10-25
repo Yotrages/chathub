@@ -19,6 +19,7 @@ import {
   addStarredMessage,
   removeStarredMessage,
   setActiveChat,
+  clearUnreadCount,
 } from "@/libs/redux/chatSlice";
 import { useFetch, useMutate } from "@/hooks/useFetch";
 import { api } from "@/libs/axios/config";
@@ -124,7 +125,7 @@ export const useChat = () => {
             }
           : undefined,
         lastMessageTime: conversation.lastMessage?.createdAt,
-        unreadCount: 0,
+        unreadCount: conversation.unreadCount,
         admins: conversation?.admins,
         avatar:
           conversation.avatar ||
@@ -180,7 +181,7 @@ export const useChat = () => {
               }
             : undefined,
           lastMessageTime: conversation.lastMessage?.createdAt,
-          unreadCount: 0,
+          unreadCount: conversation.unreadCount,
           avatar: conversation.avatar,
           isPinned: conversation.isPinned,
           isMuted: conversation.isMuted,
@@ -268,7 +269,7 @@ export const useChat = () => {
             }
           : undefined,
         lastMessageTime: conv.lastMessage?.createdAt,
-        unreadCount: 0,
+        unreadCount: conv.unreadCount || 0,
         avatar:
           conv.avatar ||
           conv.participants.find((p: any) => p._id !== user?._id)?.avatar,
@@ -332,6 +333,11 @@ export const useChat = () => {
         })
       );
     });
+    socket.on('unread_count_update', ({ conversationId, increment }) => {
+    if (increment) {
+      dispatch(incrementUnreadCount(conversationId));
+    }
+  });
     socket.on("message_deleted", (data: { messageId: string }) => {
       dispatch(removeMessage(data.messageId));
     });
@@ -538,6 +544,7 @@ export const useChat = () => {
           updatedAt: messageData.updatedAt,
           replyTo: messageData.replyTo,
           postId: messageData.postId,
+          callStatus: messageData?.callStatus,
         })
       );
       return response;
@@ -846,8 +853,9 @@ export const useChat = () => {
     }
     try {
       const res = await api.post(`/chat/conversations/${chatId}/read`);
-      console.log("✅ Messages marked as read via HTTP");
+      console.log("Messages marked as read via HTTP");
       const read = res.data;
+      dispatch(clearUnreadCount(read.conversationId));
       dispatch(
         markMessageAsRead({
           conversationId: read.conversationId,

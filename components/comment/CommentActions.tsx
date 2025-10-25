@@ -120,7 +120,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
                 onClick={() => handleReaction(item.emoji, item.name)}
                 className="flex select-none flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 transition-colors"
               >
-                <span className="text-base sm:text-xl hover:scale-125 transition-transform duration-200">
+                <span className="text-xl hover:scale-125 transition-transform duration-200">
                   {item.emoji}
                 </span>
               </button>
@@ -169,7 +169,7 @@ export const CommentActions: React.FC<CommentActionsProps> = ({
             comment.reactions.length > 0 &&
             Object.entries(groupedReactions).slice(0, 2).map(([emoji]) => (
               <span
-                className="text-xs sm:text-sm"
+                className="text-sm"
                 key={emoji}
               >
                 {emoji}

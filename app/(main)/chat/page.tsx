@@ -14,7 +14,7 @@ export default function ChatPage() {
   const { activeChat } = useSelector((state: RootState) => state.chat);
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-700 overflow-hidden min-h-0">
+    <div className="flex h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-700 overflow-hidden">
       <div className="w-full flex-shrink-0 sm:w-80 bg-white/80 dark:bg-gray-900/15 backdrop-blur-sm border-r border-gray-200/50 flex flex-col shadow-xl">
         <ChatSidebar />
       </div>

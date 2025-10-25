@@ -19,6 +19,7 @@ import NotificationIcon from "@/components/notification/NotificationIcon";
 import NotificationDropdown from "@/components/notification/NotificationDropDown";
 import { api } from "@/libs/axios/config";
 import { useNotifications } from "@/context/NotificationContext";
+import { useGetPendingRequests } from "@/hooks/useUser";
 
 interface User {
   _id: string;
@@ -81,8 +82,14 @@ const Header: React.FC = () => {
   const mobileSearchRef = useRef<HTMLDivElement | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { fetchNotifications } = useNotifications();
-
+  const { chatsWithUnreadCount } = useSelector(
+    (state: RootState) => state.chat
+  );
   const { user } = useSelector((state: RootState) => state.auth);
+  const { data: pendingRequestsData } = useGetPendingRequests(
+    user?._id as string,
+    { enabled: navigator.onLine }
+  );
 
   useEffect(() => {
     const fetchFrequentSearches = async () => {
@@ -121,7 +128,7 @@ const Header: React.FC = () => {
 
     try {
       setIsLoadingSuggestions(true);
-      
+
       const [suggestionsRes, searchRes] = await Promise.all([
         api.get(`/search/suggestions?query=${encodeURIComponent(query)}`),
         api.get(`/search?query=${encodeURIComponent(query)}&type=all&limit=3`),
@@ -147,7 +154,7 @@ const Header: React.FC = () => {
         suggestions.reels = searchRes.data.results.reels || [];
         suggestions.stories = searchRes.data.results.stories || [];
       }
-      
+
       setAutocompleteSuggestions(suggestions);
     } catch (error) {
       console.error("Failed to fetch autocomplete suggestions:", error);
@@ -160,8 +167,8 @@ const Header: React.FC = () => {
   useEffect(() => {
     if (window.innerWidth > 768) {
       const handleClickOutside = (event: MouseEvent) => {
-        if (isNavigating) return; // Don't close if navigating
-        
+        if (isNavigating) return;
+
         if (
           inputSearchRef.current &&
           !inputSearchRef.current.contains(event.target as Node)
@@ -176,10 +183,10 @@ const Header: React.FC = () => {
         }
       };
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isNavigating]);
-
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,32 +199,32 @@ const Header: React.FC = () => {
     }
   };
 
-const handleFrequentSearchClick = (query: string) => {
-  const cleanQuery = query.trim();
-  setIsNavigating(true); 
-  router.push(`/search/${encodeURIComponent(cleanQuery)}`);
-  setShowSearch(false);
-  setIsFocused(false);
-  setAutocompleteSuggestions(null);
-  setSearchQuery("");
-  setTimeout(() => setIsNavigating(false), 100); // Reset flag
-};
+  const handleFrequentSearchClick = (query: string) => {
+    const cleanQuery = query.trim();
+    setIsNavigating(true);
+    router.push(`/search/${encodeURIComponent(cleanQuery)}`);
+    setShowSearch(false);
+    setIsFocused(false);
+    setAutocompleteSuggestions(null);
+    setSearchQuery("");
+    setTimeout(() => setIsNavigating(false), 100); // Reset flag
+  };
 
-const handleSuggestionClick = (query: string) => {
-  const cleanQuery = query.trim();
-  setIsNavigating(true); 
-  router.push(`/search/${encodeURIComponent(cleanQuery)}`);
-  setShowSearch(false);
-  setIsFocused(false);
-  setAutocompleteSuggestions(null);
-  setSearchQuery("");
-  setTimeout(() => setIsNavigating(false), 100); // Reset flag
-};
+  const handleSuggestionClick = (query: string) => {
+    const cleanQuery = query.trim();
+    setIsNavigating(true);
+    router.push(`/search/${encodeURIComponent(cleanQuery)}`);
+    setShowSearch(false);
+    setIsFocused(false);
+    setAutocompleteSuggestions(null);
+    setSearchQuery("");
+    setTimeout(() => setIsNavigating(false), 100); // Reset flag
+  };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    
+
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -227,7 +234,7 @@ const handleSuggestionClick = (query: string) => {
       setIsLoadingSuggestions(false);
       return;
     }
-    
+
     const matchesFrequentSearch = frequentSearches.some(
       (q) => q.toLowerCase() === value.toLowerCase()
     );
@@ -237,13 +244,13 @@ const handleSuggestionClick = (query: string) => {
       setIsLoadingSuggestions(false);
       return;
     }
-    
+
     if (value.length > MAX_QUERY_LENGTH) {
       setAutocompleteSuggestions(null);
       setIsLoadingSuggestions(false);
       return;
     }
-    
+
     debounceTimerRef.current = setTimeout(() => {
       fetchAutocompleteSuggestions(value);
     }, 300);
@@ -254,7 +261,7 @@ const handleSuggestionClick = (query: string) => {
       handleSearchSubmit(e as any);
     }
   };
-  
+
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + "...";
@@ -275,13 +282,12 @@ const handleSuggestionClick = (query: string) => {
     } else {
       document.body.style.overflow = "unset";
     }
-    
+
     return () => {
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "unset";
     };
   }, [showSearch]);
-  
 
   useEffect(() => {
     return () => {
@@ -298,7 +304,18 @@ const handleSuggestionClick = (query: string) => {
       route: "/",
     },
     {
-      icon: <Users size={18} />,
+      icon: (
+        <span className="relative flex">
+          <Users size={18} className="text-gray-600" />
+          {pendingRequestsData && pendingRequestsData?.length > 0 && (
+            <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+              {pendingRequestsData?.length > 99
+                ? "99+"
+                : pendingRequestsData?.length}
+            </span>
+          )}
+        </span>
+      ),
       name: "Network",
       route: `/profile/${user?._id}/connections`,
     },
@@ -308,12 +325,20 @@ const handleSuggestionClick = (query: string) => {
       route: "/reels",
     },
     {
-      icon: <MessageCircleMore size={18} />,
+      icon: (
+        <span className="relative flex">
+          <MessageCircleMore size={18} className="text-gray-600" />
+          {chatsWithUnreadCount > 0 && (
+            <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+              {chatsWithUnreadCount > 99 ? "99+" : chatsWithUnreadCount}
+            </span>
+          )}
+        </span>
+      ),
       name: "Messages",
       route: "/chat",
     },
   ];
-
 
   const handleNotificationNavigate = () => {
     router.push("/notification");
@@ -359,7 +384,7 @@ const handleSuggestionClick = (query: string) => {
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 flex-shrink-0"
                   onClick={() => {
                     setShowSearch(true);
-                    setIsFocused(true); // Add this line
+                    setIsFocused(true);
                   }}
                   aria-label="Open search"
                 >
@@ -546,38 +571,39 @@ const handleSuggestionClick = (query: string) => {
                               </>
                             )}
 
-                             {autocompleteSuggestions.stories.length > 0 && (
-                        <>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
-                            Stories
-                          </p>
-                          {autocompleteSuggestions.stories.map((story) => (
-                            <div
-                              key={`mobile-reel-${story._id}`}
-                              onClick={() => {
-                                handleSuggestionClick(
-                                  story.text.substring(0, 50)
-                                );
-                              }}
-                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                            >
-                              <Video
-                                size={18}
-                                className="text-gray-400 mr-3 flex-shrink-0"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 truncate font-medium">
-                                  {story.text}
+                            {autocompleteSuggestions.stories.length > 0 && (
+                              <>
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                  Stories
                                 </p>
-                                <p className="text-xs text-gray-500 truncate">
-                                  by @{story.authorId.username}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
+                                {autocompleteSuggestions.stories.map(
+                                  (story) => (
+                                    <div
+                                      key={`mobile-reel-${story._id}`}
+                                      onClick={() => {
+                                        handleSuggestionClick(
+                                          story.text.substring(0, 50)
+                                        );
+                                      }}
+                                      className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                                    >
+                                      <Video
+                                        size={18}
+                                        className="text-gray-400 mr-3 flex-shrink-0"
+                                      />
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-700 truncate font-medium">
+                                          {story.text}
+                                        </p>
+                                        <p className="text-xs text-gray-500 truncate">
+                                          by @{story.authorId.username}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )
+                                )}
+                              </>
+                            )}
 
                             {/* Hashtags */}
                             {autocompleteSuggestions.hashtags.length > 0 && (

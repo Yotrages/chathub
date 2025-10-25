@@ -509,10 +509,9 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
    <div 
     ref={containerRef}
     className="surface-primary border-t z-50 w-full"
-    style={{
-    position: 'relative',
-    marginBottom: 'env(safe-area-inset-bottom, 0)',
-    paddingBottom: 0
+     style={{
+    paddingBottom: 'env(safe-area-inset-bottom, 0)',
+    marginBottom: 0
   }}
   >
       <div className="px-0.5 xs:px-2 py-2 max-w-full">

@@ -374,7 +374,7 @@ const SearchPage: React.FC = () => {
   );
 
   const renderAllResults = () => (
-    <div className="space-y-8">
+    <div className="mt-8 mb-3">
       {searchResults.users.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-4">
@@ -519,7 +519,6 @@ const SearchPage: React.FC = () => {
               </button>
             )}
           </div>
-          {/* 🔥 CHANGED: Display cleaned query */}
           <p className="text-lg text-gray-600">
             Showing results for{" "}
             <span className="font-semibold text-blue-600">
