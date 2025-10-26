@@ -18,7 +18,7 @@ const ConnectionsPage = () => {
 
   const { data: followersData, isLoading: followersLoading } = useGetFollowers(id as string);
   const { data: followingData, isLoading: followingLoading } = useGetFollowing(id as string);
-  const { data: pendingRequestsData, isLoading: pendingLoading } = useGetPendingRequests(id as string, { enabled: isOwnProfile && activeTab === 'pending' });
+  const { data: pendingRequestsData, isLoading: pendingLoading } = useGetPendingRequests(id as string,  isOwnProfile && activeTab === 'pending');
   const { mutate: acceptRequest } = useAcceptFollowRequest();
   const { mutate: rejectRequest } = useRejectFollowRequest();
 

@@ -88,7 +88,7 @@ const Header: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const { data: pendingRequestsData } = useGetPendingRequests(
     user?._id as string,
-    { enabled: navigator.onLine }
+    !!user?._id
   );
 
   useEffect(() => {
@@ -296,6 +296,17 @@ const Header: React.FC = () => {
       }
     };
   }, []);
+
+//   const NetworkIcon = ({ count }: { count?: number }) => (
+//   <span className="relative flex">
+//     <Users size={18} className="text-gray-600" />
+//     {count && count > 0 && (
+//       <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+//         {count > 99 ? "99+" : count}
+//       </span>
+//     )}
+//   </span>
+// );
 
   const NavLinks = [
     {

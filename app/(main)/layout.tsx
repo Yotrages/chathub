@@ -26,7 +26,7 @@ export default function MainLayout({
   return (
     <div 
       className="flex flex-col bg-gray-50 overflow-hidden"
-      style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
+      // style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
     >
       <div className="flex-shrink-0 z-50">
         <Header />

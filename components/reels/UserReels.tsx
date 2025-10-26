@@ -65,12 +65,14 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({ userId }) => {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-4">
-      {userReels?.map((reel) => (
-        <Link href={`/reels/${reel._id}`} key={reel._id}>
-          <ReelCard reel={reel} isCompact={false} />
-        </Link>
-      ))}
+    <div className="w-full flex justify-center flex-col space-y-4">
+      <div className="flex flex-wrap gap-3">
+        {userReels?.map((reel) => (
+          <Link href={`/reels/${reel._id}`} key={reel._id}>
+            <ReelCard reel={reel} isCompact={true} />
+          </Link>
+        ))}
+      </div>
       {hasMore && (
         <div
           ref={ref}

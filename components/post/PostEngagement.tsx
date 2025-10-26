@@ -182,7 +182,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
                       {emoji}
                     </span>
                   ))}
-              <span className="hover:text-gray-800 text-base cursor-pointer transition-colors">
+              <span className="hover:text-gray-800 text-sm sm:text-base cursor-pointer transition-colors">
                 {reactions.length}
               </span>
             </button>

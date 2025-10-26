@@ -25,7 +25,7 @@ const OAuthSuccess = () => {
 
     console.log("Received:", { token, name, email });
 
-    if (token && name && email && id && avatar) {
+    if (token && name && email && id) {
       setCookie("auth-token", token);
       dispatch(
         setUserCredentials({
@@ -34,7 +34,7 @@ const OAuthSuccess = () => {
             email: email,
             username: name,
             online: true,
-            avatar: avatar,
+            avatar: avatar ? avatar : undefined,
           },
         })
       );

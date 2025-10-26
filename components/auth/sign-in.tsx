@@ -13,15 +13,21 @@ const SignIn = ({from}: {from?: string}) => {
   const handleOAuthLogin = (provider: string, intent = 'login') => {
     setLoading(provider);
     
-    const state = btoa(JSON.stringify({ 
+    const stateObj: any = { 
       intent: intent, 
       redirectUrl: intent === 'register' ? 'login' : 'oauth-success',
-      from: from,
       timestamp: Date.now()
-    }));
+    };
+    
+    if (from) {
+      stateObj.from = from;
+    }
+    
+    const state = btoa(JSON.stringify(stateObj));
     
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/${provider}?state=${state}`;
-  };
+};
+
   return (
     <div className="qy:w-[500px] w-full px-7 flex flex-col items-center justify-center">
       <form

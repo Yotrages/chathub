@@ -236,7 +236,7 @@ export const useChat = () => {
   });
   useEffect(() => {
     if (conversations) {
-      const transformedChats: Chat[] = conversations?.map((conv: any) => ({
+      const transformedChats: Chat[] = conversations?.conversations.map((conv: any) => ({
         _id: conv._id,
         name:
           conv.type === "direct"
@@ -430,6 +430,7 @@ export const useChat = () => {
       socket.off("messages_read");
       socket.off("message_pinned");
       socket.off("message_unpinned");
+      socket.off("unread_count_update")
     };
   }, [socket, dispatch, activeChat, user?._id, messages]);
   const sendMessage = async (
@@ -502,18 +503,18 @@ export const useChat = () => {
             postId,
           });
         });
-        console.log("✅ Message sent successfully via socket");
+        console.log("Message sent successfully via socket");
         dispatch(removeMessage(optimisticMessage._id));
         return socketResult;
       } catch (socketError: any) {
         console.log(
-          "❌ Socket sending failed, falling back to HTTP:",
+          "Socket sending failed, falling back to HTTP:",
           socketError.message
         );
       }
     }
     try {
-      console.log("🌐 Sending message via HTTP API...");
+      console.log("Sending message via HTTP API...");
       const response = await api.post(
         `/chat/conversations/${conversationId}/messages`,
         {
@@ -547,6 +548,7 @@ export const useChat = () => {
           callStatus: messageData?.callStatus,
         })
       );
+      
       return response;
     } catch (error: any) {
       dispatch(removeMessage(optimisticMessage._id));

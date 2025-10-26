@@ -130,7 +130,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     const [showReactions, setShowReactions] = useState(false);
     const [showComments, setShowComments] = useState(false);
     const [commentContent, setCommentContent] = useState("");
-    // const [longPressActive, setLongPressActive] = useState(false);
     const longPressTimeout = useRef<NodeJS.Timeout | null>(null);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
@@ -343,7 +342,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     const handleLongPressStart = () => {
       if (window.screen.availWidth < 768) {
         longPressTimeout.current = setTimeout(() => {
-          // setLongPressActive(true);
           setShowEmojiPicker(true);
         }, 500);
       }
@@ -393,7 +391,7 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     const containerClasses = isFullscreen
       ? "w-full h-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-3xl mx-auto bg-black rounded-lg overflow-hidden relative aspect-[9/16]"
       : isCompact
-      ? "w-24 xs:w-28 sm:w-32 aspect-[9/16] bg-gray-900 rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-200"
+      ? "w-32 sm:w-32 aspect-[9/16] bg-gray-900 rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-200"
       : "w-full h-full bg-gray-900 rounded-lg shadow-lg overflow-hidden aspect-[9/16]";
 
     return (

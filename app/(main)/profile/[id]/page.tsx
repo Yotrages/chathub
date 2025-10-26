@@ -160,7 +160,7 @@ const UserProfilePage = () => {
         {isOwnProfile && (
           <button 
             onClick={handleEditProfile}
-            className="absolute top-2 right-2 sm:bottom-4 sm:right-4 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+            className="absolute top-2 right-2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
           >
             <Camera size={14} className="sm:w-4 sm:h-4" />
             <span>Edit Cover</span>

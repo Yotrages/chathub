@@ -85,13 +85,15 @@ export const useGetFollowing = (userId: string) => {
   });
 };
 
-export const useGetPendingRequests = (userId: string, options: { enabled: boolean }) => {
+export const useGetPendingRequests = (userId: string, enabled = true) => {
   return useApiController({
     method: 'GET',
     url: `/follows/requests/pending`,
     queryOptions: {
-      enabled: options.enabled && !!userId,
+      enabled: enabled && !!userId,
       staleTime: 2 * 60 * 1000,
+      networkMode: 'online',
+      retry: 2
     },
   });
 };
