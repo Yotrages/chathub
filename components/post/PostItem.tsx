@@ -258,8 +258,8 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
       {/* Desktop Modal */}
       {showPostModal && (
         <PostModal
-          isOpen={showPostModal}
-          onClose={() => setShowPostModal(false)}
+          isModalOpen={showPostModal}
+          onModalClose={() => setShowPostModal(false)}
           post={post}
         />
       )}

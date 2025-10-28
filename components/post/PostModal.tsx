@@ -6,14 +6,14 @@ import { PostItem } from "./PostItem";
 import { createPortal } from "react-dom";
 
 interface PostModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isModalOpen: boolean;
+  onModalClose: () => void;
   post: Post;
 }
 
 export const PostModal: React.FC<PostModalProps> = ({
-  isOpen,
-  onClose,
+  isModalOpen,
+  onModalClose,
   post,
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -22,17 +22,17 @@ export const PostModal: React.FC<PostModalProps> = ({
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        onClose();
+        onModalClose();
       }
     };
 
     const handleEscapeKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onModalClose();
       }
     };
 
-    if (isOpen) {
+    if (isModalOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       document.addEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "hidden";
@@ -43,13 +43,14 @@ export const PostModal: React.FC<PostModalProps> = ({
       document.removeEventListener("keydown", handleEscapeKey);
       document.body.style.overflow = "auto";
     };
-  }, [isOpen, onClose]);
+  }, [isModalOpen, onModalClose]);
 
   useEffect(() => {
       setMounted(true);
     }, []);
 
-if (!mounted || !isOpen) return null;
+if (!mounted || !isModalOpen) return null;
+
   const postContent = (
     <div tabIndex={-1} role="dialog" aria-labelledby="post-modal" aria-modal="true" className="fixed inset-0 z-[150] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 h-full">
       <div
@@ -62,7 +63,7 @@ if (!mounted || !isOpen) return null;
             Post and Comments
           </h2>
           <button
-            onClick={onClose}
+            onClick={onModalClose}
             className="p-2 rounded-full hover:bg-gray-100 transition-colors"
             aria-label="Close modal"
           >
@@ -70,9 +71,7 @@ if (!mounted || !isOpen) return null;
           </button>
         </div>
         
-        {/* Modal Content - Scrollable */}
         <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-          {/* Pass isModal=true to show comments by default */}
           <PostItem key={post._id} post={post} isModal={true} />
         </div>
       </div>

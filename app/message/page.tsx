@@ -41,7 +41,7 @@ export default function Page() {
 
   return (
     <div
-      className="flex flex-col bg-gradient-to-br from-gray-50 to-gray-100 w-full max-w-full overflow-hidden"
+      className="flex min-h-screen flex-col bg-gradient-to-br from-gray-50 to-gray-100 w-full max-w-full overflow-hidden"
       style={{ height: "calc(var(--vh, 1vh) * 100)" }}
     >
       <div

@@ -2,124 +2,88 @@
 import { useState } from "react";
 import {
   Image,
-  Paperclip,
+  Video,
+  Smile,
+  MapPin,
+  TrendingUp,
 } from "lucide-react";
 import CreatePostModal from "./CreatePostModal";
 import { useRouter } from "next/navigation";
-
+import { useSelector } from "react-redux";
+import { RootState } from "@/libs/redux/store";
+import { UserAvatar } from "../constant/UserAvatar";
 
 export const CreatePost = () => {
-  const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false)
-  const router = useRouter()
-
-
-  // const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const selectedFiles = Array.from(e.target.files || []);
-  //   const validFiles: File[] = [];
-  //   const newPreviews: FilePreview[] = [];
-
-  //   console.log(
-  //     "📁 Selected files:",
-  //     selectedFiles.map((f) => ({ name: f.name, size: f.size, type: f.type }))
-  //   );
-
-  //   for (const file of selectedFiles) {
-  //     const validation = fileUploadService.validateFile(file);
-  //     if (validation.isValid) {
-  //       validFiles.push(file);
-  //       const fileType = fileUploadService.getFileType(file);
-
-  //       const filePreview: FilePreview = {
-  //         file,
-  //         type: fileType,
-  //       };
-
-  //       try {
-  //         if (fileType === "image") {
-  //           filePreview.preview = await fileUploadService.createImagePreview(
-  //             file
-  //           );
-  //           console.log("🖼️ Created image preview for:", file.name);
-  //         } else if (fileType === "video") {
-  //           filePreview.preview = await fileUploadService.createVideoPreview(
-  //             file
-  //           );
-  //           console.log("🎥 Created video thumbnail for:", file.name);
-  //         } else if (fileType === "audio") {
-  //           filePreview.preview = await fileUploadService.createAudioPreview(
-  //             file
-  //           );
-  //         }
-  //       } catch (error) {
-  //         console.error(`❌ Error creating preview for ${file.name}:`, error);
-  //       }
-
-  //       newPreviews.push(filePreview);
-  //     } else {
-  //       console.error(`❌ File ${file.name} is invalid:`, validation.error);
-  //       alert(`File ${file.name} is invalid: ${validation.error}`);
-  //     }
-  //   }
-
-  //   setFiles((prev) => {
-  //     const newFiles = [...prev, ...validFiles];
-  //     console.log(
-  //       "📦 Updated files array:",
-  //       newFiles.map((f) => f.name)
-  //     );
-  //     return newFiles;
-  //   });
-  //   setFilePreviews((prev) => [...prev, ...newPreviews]);
-  // };
+  const [showCreatePostModal, setShowCreatePostModal] = useState<boolean>(false);
+  const router = useRouter();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const handleShow = () => {
     if (window.innerWidth < 768) {
-      router.push('/post/create')
+      router.push('/post/create');
     } else {
-      setShowCreatePostModal(true)
+      setShowCreatePostModal(true);
     }
-  }
-  
+  };
+
+  const quickActions = [
+    { icon: Image, label: "Photo", color: "text-green-600", bgColor: "bg-green-50 hover:bg-green-100" },
+    { icon: Video, label: "Video", color: "text-red-600", bgColor: "bg-red-50 hover:bg-red-100" },
+    { icon: Smile, label: "Feeling", color: "text-yellow-600", bgColor: "bg-yellow-50 hover:bg-yellow-100" },
+    { icon: MapPin, label: "Location", color: "text-blue-600", bgColor: "bg-blue-50 hover:bg-blue-100" },
+  ];
 
   return (
     <>
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
-      <form>
-        <input
-        onFocus={handleShow}
-        onClick={handleShow}
-        disabled={true}
-          placeholder="Share your thoughts..."
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-        />       
-
-        <div className="flex justify-between items-center mt-4">
-          <div className="flex space-x-2">
+      <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        {/* Header with gradient accent */}
+        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
+        
+        <div className="py-4 sm:px-4 px-2 w-full max-w-full">
+          <div className="flex items-center max-w-full gap-3 mb-4">
+            <div className="relative">
+              <UserAvatar username={user?.username} avatar={user?.avatar} className="w-10 h-10"/>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+            </div>
+            
             <button
-              type="button"
-              onClick={() => setShowCreatePostModal(true)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-              title="Add files"
+              onClick={handleShow}
+              className="flex-1 text-left max-w-full px-5 py-3 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-all duration-200 hover:shadow-md group"
             >
-              <Image size={20} />
-            </button>
-            <button
-              type="button"
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-              title="Add documents (supported)"
-              onClick={() => setShowCreatePostModal(true)}
-            >
-              <Paperclip size={20} />
+              <span className="group-hover:text-gray-700 text-sm select-none w-full truncate">Share your thoughts, {user?.username?.split(' ')[0] || 'there'}?</span>
             </button>
           </div>
 
-        </div>
+          {/* Divider */}
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-3"></div>
 
-      </form>
-    </div>
-    {showCreatePostModal && (
-      <CreatePostModal onClose={() => setShowCreatePostModal(false)}/>
-    )}
+          {/* Quick Actions Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {quickActions.map((action, index) => (
+              <button
+                key={index}
+                onClick={handleShow}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg transition-all duration-200 ${action.bgColor} group`}
+              >
+                <action.icon size={20} className={`${action.color} group-hover:scale-110 transition-transform`} />
+                <span className={`text-sm font-medium ${action.color} hidden sm:inline`}>
+                  {action.label}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Optional: Trending Topics Hint */}
+          <div className="mt-3 flex items-center gap-2 text-xs text-gray-500 bg-blue-50 px-3 py-2 rounded-lg">
+            <TrendingUp size={14} className="text-blue-500" />
+            <span>Trending: #TechNews, #MondayMotivation, #Photography</span>
+          </div>
+        </div>
+      </div>
+
+      {showCreatePostModal && (
+        <CreatePostModal onClose={() => setShowCreatePostModal(false)} />
+      )}
     </>
   );
 };

@@ -376,7 +376,7 @@ const SearchPage: React.FC = () => {
   const renderAllResults = () => (
     <div className="mt-8 mb-3">
       {searchResults.users.length > 0 && (
-        <div>
+        <div className="mb-3">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">People</h3>
             <Link
@@ -412,7 +412,7 @@ const SearchPage: React.FC = () => {
       )}
 
       {searchResults.posts.length > 0 && (
-        <div>
+        <div className="mb-3">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Posts</h3>
             <Link
@@ -432,7 +432,7 @@ const SearchPage: React.FC = () => {
       )}
 
       {searchResults.reels.length > 0 && (
-        <div>
+        <div className="mb-3">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Reels</h3>
             <Link
@@ -443,7 +443,7 @@ const SearchPage: React.FC = () => {
               View all
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="flex flex-wrap gap-3">
             {searchResults.reels.slice(0, 6).map((reel) => (
               <div
                 key={reel._id}
@@ -468,7 +468,7 @@ const SearchPage: React.FC = () => {
               View all
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="flex flex-wrap gap-3">
             {searchResults.stories.slice(0, 6).map((story) => (
               <div
                 key={story._id}
@@ -612,7 +612,7 @@ const SearchPage: React.FC = () => {
           <>
             {/* Tabs */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
-              <div className="flex overflow-x-auto">
+              <div className="flex overflow-x-auto snap-start snap-x snap-mandatory scrollbar-hide">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
                   return (

@@ -136,20 +136,27 @@ const getOptimizedAudioConstraints = () => {
   const lowEnd = isLowEndDevice();
 
   if (lowEnd) {
-    console.log("🔊 Using LOW-END audio settings");
+    console.log("🔊 Using LOW-END audio settings with aggressive echo cancellation");
     return {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-      sampleRate: 16000, // Lower sample rate (was 48000)
-      channelCount: 1, // Mono (was default 2/stereo)
+      echoCancellation: true,         
+      noiseSuppression: true,          
+      autoGainControl: true,           
+      sampleRate: 16000,
+      channelCount: 1,
+      echoCancellationType: "system",  
+      latency: 0.01,                   
+      volume: 1.0,
     };
   } else {
+    console.log("🔊 Using HIGH-END audio settings with echo cancellation");
     return {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
+      echoCancellation: true,          
+      noiseSuppression: true,          
+      autoGainControl: true,          
       sampleRate: 48000,
+      echoCancellationType: "system",
+      latency: 0.01,
+      volume: 1.0,
     };
   }
 };
@@ -313,152 +320,154 @@ export const useCallManagement = (currentChat: any) => {
     setIncomingCall(null);
   }, [localStream, remoteStream, stopCallTimer]);
 
-  const initializePeerConnection = useCallback(() => {
-    if (peerConnectionRef.current) {
-      console.log("🔌 Closing existing peer connection");
-      peerConnectionRef.current.close();
+const initializePeerConnection = useCallback(() => {
+  if (peerConnectionRef.current) {
+    console.log("🔌 Closing existing peer connection");
+    peerConnectionRef.current.close();
+  }
+
+  console.log("🔌 Creating new RTCPeerConnection");
+  const pc = new RTCPeerConnection(configuration);
+  peerConnectionRef.current = pc;
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log(
+        "📤 ICE candidate:",
+        event.candidate.type,
+        event.candidate.protocol
+      );
+      if (socket && otherUserId.current && currentCallIdRef.current) {
+        socket.emit("ice-candidate", {
+          candidate: event.candidate,
+          to: otherUserId.current,
+          callId: currentCallIdRef.current,
+        });
+      }
+    } else {
+      console.log("✅ ICE gathering complete");
     }
+  };
 
-    console.log("🔌 Creating new RTCPeerConnection");
-    const pc = new RTCPeerConnection(configuration);
-    peerConnectionRef.current = pc;
+  // 🔴 CRITICAL FIX: Remote video MUST be muted, audio handled separately
+  pc.ontrack = (event) => {
+    console.log("📥 ===== ONTRACK FIRED =====");
+    console.log("📥 Track kind:", event.track.kind);
+    console.log("📥 Track ID:", event.track.id);
+    console.log("📥 Track enabled:", event.track.enabled);
+    console.log("📥 Track readyState:", event.track.readyState);
 
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        console.log(
-          "📤 ICE candidate:",
-          event.candidate.type,
-          event.candidate.protocol
-        );
-        if (socket && otherUserId.current && currentCallIdRef.current) {
-          socket.emit("ice-candidate", {
-            candidate: event.candidate,
-            to: otherUserId.current,
-            callId: currentCallIdRef.current,
-          });
-        }
-      } else {
-        console.log("✅ ICE gathering complete");
+    if (event.streams && event.streams[0]) {
+      const stream = event.streams[0];
+      console.log("📥 Stream ID:", stream.id);
+      console.log(
+        "📥 Stream tracks:",
+        stream.getTracks().map((t) => ({
+          kind: t.kind,
+          id: t.id,
+          enabled: t.enabled,
+          readyState: t.readyState,
+        }))
+      );
+
+      setRemoteStream(stream);
+
+      if (remoteVideoRef.current) {
+        console.log("📹 Setting remote video stream");
+        remoteVideoRef.current.srcObject = stream;
+
+        remoteVideoRef.current.muted = true;    
+        remoteVideoRef.current.volume = 0;      
+        remoteVideoRef.current.playsInline = true;
+        remoteVideoRef.current.autoplay = true;
+        remoteVideoRef.current.controls = false;
+
+        // Mobile attributes
+        remoteVideoRef.current.setAttribute("playsinline", "true");
+        remoteVideoRef.current.setAttribute("webkit-playsinline", "true");
+        remoteVideoRef.current.setAttribute("x5-playsinline", "true");
+        remoteVideoRef.current.setAttribute("x5-video-player-type", "h5");
+        remoteVideoRef.current.setAttribute("x5-video-player-fullscreen", "false");
+
+        console.log("📹 Attempting video play...");
+
+        const attemptPlay = () => {
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current
+              .play()
+              .then(() => {
+                if (remoteVideoRef.current) {
+                  remoteVideoRef.current.volume = 0;
+                  remoteVideoRef.current.muted = true
+                }
+                console.log("✅ Remote video playing (MUTED - no echo)");
+                console.log("🔊 Muted:", remoteVideoRef.current?.muted); // Should be true
+                console.log("🔊 Volume:", remoteVideoRef.current?.volume); // Should be 0
+              })
+              .catch((err) => {
+                console.error("❌ Remote video play failed:", err);
+              });
+          }
+        };
+
+        attemptPlay();
+        [100, 300, 500, 1000, 2000, 3000, 5000].forEach((delay) => {
+          setTimeout(attemptPlay, delay);
+        });
       }
-    };
 
-    // CRITICAL FIX: Remote video UNMUTED, local video MUTED
-    pc.ontrack = (event) => {
-      console.log("📥 ===== ONTRACK FIRED =====");
-      console.log("📥 Track kind:", event.track.kind);
-      console.log("📥 Track ID:", event.track.id);
-      console.log("📥 Track enabled:", event.track.enabled);
-      console.log("📥 Track readyState:", event.track.readyState);
+      // 🔴 AUDIO IS HEARD THROUGH WebRTC's AUDIO CONTEXT, NOT VIDEO ELEMENT
+      // The browser automatically plays audio tracks through speakers/headphones
+      // with built-in echo cancellation when echoCancellation is enabled
+    }
+  };
 
-      if (event.streams && event.streams[0]) {
-        const stream = event.streams[0];
-        console.log("📥 Stream ID:", stream.id);
-        console.log(
-          "📥 Stream tracks:",
-          stream.getTracks().map((t) => ({
-            kind: t.kind,
-            id: t.id,
-            enabled: t.enabled,
-            readyState: t.readyState,
-          }))
-        );
+  pc.oniceconnectionstatechange = () => {
+    console.log("🧊 ICE connection state:", pc.iceConnectionState);
+  };
 
-        setRemoteStream(stream);
+  pc.onicegatheringstatechange = () => {
+    console.log("🧊 ICE gathering state:", pc.iceGatheringState);
+  };
 
-        if (event.track.kind === "video" && remoteVideoRef.current) {
-          console.log("📹 Setting remote video stream");
+  pc.onsignalingstatechange = () => {
+    console.log("📡 Signaling state:", pc.signalingState);
+  };
 
-          remoteVideoRef.current.srcObject = stream;
+  pc.onconnectionstatechange = () => {
+    const state = pc.connectionState;
+    console.log("🔗 Connection state:", state);
+    setConnectionState(state as ConnectionState);
 
-          // CRITICAL: Remote video UNMUTED so we can hear the other person!
-          remoteVideoRef.current.muted = false;
-          remoteVideoRef.current.volume = 1.0;
-          remoteVideoRef.current.playsInline = true;
-          remoteVideoRef.current.autoplay = true;
-          remoteVideoRef.current.controls = false;
-
-          // Mobile attributes
-          remoteVideoRef.current.setAttribute("playsinline", "true");
-          remoteVideoRef.current.setAttribute("webkit-playsinline", "true");
-          remoteVideoRef.current.setAttribute("x5-playsinline", "true");
-          remoteVideoRef.current.setAttribute("x5-video-player-type", "h5");
-          remoteVideoRef.current.setAttribute(
-            "x5-video-player-fullscreen",
-            "false"
-          );
-
-          console.log("📹 Attempting video play...");
-
-          const attemptPlay = () => {
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current
-                .play()
-                .then(() => {
-                  console.log("✅ Remote video playing WITH AUDIO");
-                  console.log("🔊 Muted:", remoteVideoRef.current?.muted);
-                  console.log("🔊 Volume:", remoteVideoRef.current?.volume);
-                })
-                .catch((err) => {
-                  console.error("❌ Remote video play failed:", err);
-                });
-            }
-          };
-
-          // Immediate + delayed attempts
-          attemptPlay();
-          [100, 300, 500, 1000, 2000, 3000, 5000].forEach((delay) => {
-            setTimeout(attemptPlay, delay);
-          });
-        }
+    if (state === "connected") {
+      console.log("✅ PEER CONNECTION CONNECTED");
+      setCallState("connected");
+      setCallError(null);
+      reconnectAttemptsRef.current = 0;
+      if (callStartTimeRef.current === null) {
+        startCallTimer();
       }
-    };
-
-    pc.oniceconnectionstatechange = () => {
-      console.log("🧊 ICE connection state:", pc.iceConnectionState);
-    };
-
-    pc.onicegatheringstatechange = () => {
-      console.log("🧊 ICE gathering state:", pc.iceGatheringState);
-    };
-
-    pc.onsignalingstatechange = () => {
-      console.log("📡 Signaling state:", pc.signalingState);
-    };
-
-    pc.onconnectionstatechange = () => {
-      const state = pc.connectionState;
-      console.log("🔗 Connection state:", state);
-      setConnectionState(state as ConnectionState);
-
-      if (state === "connected") {
-        console.log("✅ PEER CONNECTION CONNECTED");
-        setCallState("connected");
-        setCallError(null);
-        reconnectAttemptsRef.current = 0;
-        if (callStartTimeRef.current === null) {
-          startCallTimer();
-        }
-        toast.success("Call connected");
-      } else if (state === "disconnected") {
-        setCallError("Connection interrupted. Reconnecting...");
-        if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          reconnectAttemptsRef.current++;
-          reconnectTimeoutRef.current = setTimeout(() => {
-            if (pc.connectionState === "disconnected") {
-              console.log("🔄 Attempting ICE restart...");
-              pc.restartIce();
-            }
-          }, 2000);
-        }
-      } else if (state === "failed") {
-        console.error("❌ Connection failed");
-        setCallError("Connection failed");
-        endCall();
+      toast.success("Call connected");
+    } else if (state === "disconnected") {
+      setCallError("Connection interrupted. Reconnecting...");
+      if (reconnectAttemptsRef.current < maxReconnectAttempts) {
+        reconnectAttemptsRef.current++;
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (pc.connectionState === "disconnected") {
+            console.log("🔄 Attempting ICE restart...");
+            pc.restartIce();
+          }
+        }, 2000);
       }
-    };
+    } else if (state === "failed") {
+      console.error("❌ Connection failed");
+      setCallError("Connection failed");
+      endCall();
+    }
+  };
 
-    return pc;
-  }, [socket, startCallTimer]);
+  return pc;
+}, [socket, startCallTimer]);
 
   const startCall = useCallback(
     async (isVideo: boolean = false) => {
@@ -897,15 +906,10 @@ const acceptCall = useCallback(async () => {
   }, [localStream]);
 
   const toggleRemoteAudio = useCallback(() => {
-    if (remoteVideoRef.current) {
-      remoteVideoRef.current.muted = !remoteVideoRef.current.muted;
-      setIsRemoteAudioMuted(remoteVideoRef.current.muted);
-      console.log(
-        "🔊 Remote audio:",
-        remoteVideoRef.current.muted ? "MUTED" : "UNMUTED"
-      );
-    }
-  }, []);
+  console.warn("⚠️ Remote audio control is handled by WebRTC echo cancellation");
+  toast.error("Remote audio is automatically managed for echo prevention");
+}, []);
+
 
   const switchCallType = useCallback(async () => {
     if (!peerConnectionRef.current || callState !== "connected") return;

@@ -55,12 +55,10 @@ const PostMediaGallery: React.FC<PostMediaGalleryProps> = ({
     });
 
     const handleOpenMediaModal = (src: string, type: 'image' | 'video', fileName?: string) => {
-    console.log('Opening media modal:', { src, type, fileName });
     setMediaModal({ isOpen: true, src, type, fileName });
   };
 
   const handleCloseMediaModal = () => {
-    console.log('Closing media modal');
     setMediaModal({ isOpen: false, src: '', type: 'image', fileName: '' });
   };
 

@@ -43,8 +43,8 @@ const ConnectionsPage = () => {
   }
 
   return (
-    <div className="max-w-4xl min-h-screen mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+    <div className="max-w-4xl min-h-screen bg-white mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <div className="rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
         <div className="border-b border-gray-200 bg-gray-50">
           <div className="flex overflow-x-auto scrollbar-hide">
             <button
@@ -94,7 +94,7 @@ const ConnectionsPage = () => {
           )}
           {activeTab === 'pending' && isOwnProfile && (
             <PendingRequestsList
-              requests={pendingRequestsData?.data.pendingRequests || pendingRequestsData || []}
+              requests={pendingRequestsData?.data || pendingRequestsData || []}
               onAccept={handleAcceptRequest}
               onReject={handleRejectRequest}
             />

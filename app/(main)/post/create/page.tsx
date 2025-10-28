@@ -307,7 +307,7 @@ const CreatePostPage: React.FC = () => {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto">
         <div className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Content Input */}

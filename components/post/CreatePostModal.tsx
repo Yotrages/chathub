@@ -46,6 +46,7 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
       fileInputRef.current.value = "";
     }
     dispatch(addPost(data.post));
+    onClose?.()
   };
 
   const { mutate, isPending, register, handleSubmit, errors } =
@@ -202,7 +203,6 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
             <X size={14} />
           </button>
 
-          {/* File content */}
           <div className="aspect-square">
             {type === "image" && preview && (
               <img

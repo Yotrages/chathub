@@ -62,7 +62,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
 
   return (
     <>
-      <div className="flex flex-col w-full h-full">
+      <div className="flex dark:bg-gray-900 flex-col w-full h-full">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
@@ -168,7 +168,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white hover:text-gray-900 truncate">
                       {chat.name || 'Unknown Chat'}
                     </h3>
                     {chat.lastMessageTime && (

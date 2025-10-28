@@ -318,11 +318,11 @@ const Header: React.FC = () => {
       icon: (
         <span className="relative flex">
           <Users size={18} className="text-gray-600" />
-          {pendingRequestsData && pendingRequestsData?.length > 0 && (
+          {pendingRequestsData && pendingRequestsData?.data.length > 0 && (
             <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-              {pendingRequestsData?.length > 99
+              {pendingRequestsData?.data.length > 99
                 ? "99+"
-                : pendingRequestsData?.length}
+                : pendingRequestsData?.data.length}
             </span>
           )}
         </span>
@@ -379,7 +379,6 @@ const Header: React.FC = () => {
       <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-3 xs:px-4 py-3 xs:py-4">
           <div className="sm:flex items-center justify-between gap-2 xs:gap-4">
-            {/* Logo Section */}
             <div className="flex items-center justify-between">
               <Link
                 href="/"
@@ -389,7 +388,6 @@ const Header: React.FC = () => {
                   ChatHub
                 </h1>
               </Link>
-              {/* Mobile Controls - Search & Settings */}
               <div className="flex sm:hidden items-center gap-2">
                 <button
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 flex-shrink-0"

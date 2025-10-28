@@ -77,7 +77,7 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black m-0 bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-lg w-full max-w-md flex flex-col" style={{ maxHeight: '85vh' }}>
+      <div className="bg-white rounded-lg w-full max-w-md flex flex-col" style={{ maxHeight: '70vh' }}>
         {/* Header - Fixed */}
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
           <h2 className="text-base sm:text-lg font-semibold truncate">New Chat</h2>
