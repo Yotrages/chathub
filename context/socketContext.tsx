@@ -132,14 +132,13 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       },
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000,
       autoConnect: true,
     });
 
-    // 🔥 FIXED: Event handlers use refs and batched state updates
     newSocket.on("connect", () => {
       console.log("✅ Socket connected");
       

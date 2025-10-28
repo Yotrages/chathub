@@ -37,6 +37,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
     isCallMinimized,
     localVideoRef,
     remoteVideoRef,
+    remoteAudioRef,
     incomingCall,
     startCall,
     acceptCall,
@@ -83,6 +84,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
         isCallMinimized={isCallMinimized}
         localVideoRef={localVideoRef}
         remoteVideoRef={remoteVideoRef}
+        remoteAudioRef={remoteAudioRef}
         currentChat={currentChat}
         onToggleAudioMute={toggleAudioMute}
         onToggleVideoMute={toggleVideoMute}
