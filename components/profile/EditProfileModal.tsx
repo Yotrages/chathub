@@ -4,7 +4,7 @@ import { Camera, X } from 'lucide-react';
 import { useApiController } from '@/hooks/useFetch';
 import { setUserCredentials } from '@/libs/redux/authSlice';
 import { User } from '@/types';
-import { errorMessageHandler } from '@/libs/feedback/error-handler';
+import { errorNotification } from '@/libs/feedback/notification';
 
 interface EditProfileModalProps {
   user: User;
@@ -14,14 +14,12 @@ interface EditProfileModalProps {
 
 const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
   const [formData, setFormData] = useState({
-    name: user.username || '',
-    bio: user.bio || '',
-    location: user.location || '',
-    website: user.website || '',
-    isPrivate: user.isPrivate || false,
-    avatar: user.avatar || '',
-    coverImage: user.coverImage || ''
-  });
+  name: user.username || '',
+  bio: user.bio || '',
+  location: user.location || '',
+  website: user.website || '',
+  isPrivate: user.isPrivate || false,
+});
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -32,11 +30,11 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
     successMessage: 'Profile updated successfully',
       onSuccess: (data) => {
         onSave({ ...user, ...formData, ...data });
-        setUserCredentials(data.updatedUser)
+        setUserCredentials(data.user)
         onClose();
       },
       onError: (err) => {
-        errorMessageHandler(err)
+        errorNotification(err)
       }
   });
 
@@ -58,27 +56,26 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!validateForm()) return;
 
-  const formDataToSend = new FormData();
-  
-  if (formData.name) formDataToSend.append('name', formData.name);
-  if (formData.bio) formDataToSend.append('bio', formData.bio);
-  if (formData.location) formDataToSend.append('location', formData.location);
-  if (formData.website) formDataToSend.append('website', formData.website);
-  
-  formDataToSend.append('isPrivate', formData.isPrivate.toString());
+  const dataToSend: any = {
+    name: formData.name,
+    bio: formData.bio,
+    location: formData.location,
+    website: formData.website,
+    isPrivate: formData.isPrivate,
+  };
   
   if (avatarFile) {
-    formDataToSend.append('avatar', avatarFile);
+    dataToSend.avatar = avatarFile;
   }
   if (coverFile) {
-    formDataToSend.append('coverImage', coverFile);
+    dataToSend.coverImage = coverFile;
   }
 
-  mutate(formDataToSend);
+  mutate(dataToSend);
 };
 
   return (
@@ -103,9 +100,9 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
             </label>
             <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
               <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                {formData.avatar || avatarFile ? (
+                {user?.avatar || avatarFile ? (
                   <img 
-                    src={avatarFile ? URL.createObjectURL(avatarFile) : formData.avatar} 
+                    src={avatarFile ? URL.createObjectURL(avatarFile) : user?.avatar} 
                     alt="Avatar" 
                     className="w-full h-full object-cover" 
                   />
@@ -136,9 +133,9 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
             </label>
             <div className="space-y-3">
               <div className="w-full h-24 sm:h-32 rounded-lg overflow-hidden bg-gray-100">
-                {formData.coverImage || coverFile ? (
+                {user?.coverImage || coverFile ? (
                   <img 
-                    src={coverFile ? URL.createObjectURL(coverFile) : formData.coverImage} 
+                    src={coverFile ? URL.createObjectURL(coverFile) : user?.coverImage} 
                     alt="Cover" 
                     className="w-full h-full object-cover" 
                   />
