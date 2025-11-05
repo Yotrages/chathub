@@ -41,6 +41,8 @@ interface EnhancedReelCardProps {
 
 export interface ReelCardRef {
   getVideoElement: () => HTMLVideoElement | null;
+  play: () => void;
+  pause: () => void;
 }
 
 const useOnlineStatus = () => {
@@ -148,9 +150,21 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
       }
     );
 
-    useImperativeHandle(ref, () => ({
-      getVideoElement: () => videoRef.current
-    }), []);
+   useImperativeHandle(ref, () => ({
+  getVideoElement: () => videoRef.current,
+  play: () => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  },
+  pause: () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  }
+}), []);
 
     useEffect(() => {
       if (videoRef.current) {

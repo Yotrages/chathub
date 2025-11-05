@@ -151,6 +151,7 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
           <div className={`p-2 absolute bottom-2 left-2 ${isCompact ? "space-y-1" : "space-y-2"}`}>
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-1">
+                {story.authorId.avatar && (
                 <img
                   src={story.authorId.avatar}
                   alt={story.authorId.username}
@@ -158,6 +159,7 @@ const StoryCard: React.FC<EnhancedReelCardProps> = ({
                     isCompact ? "w-5 h-5" : "w-8 h-8"
                   }`}
                 />
+                )}
                 <p
                   className={`font-semibold truncate text-gray-500 ${
                     isCompact ? "text-xs" : "text-sm"

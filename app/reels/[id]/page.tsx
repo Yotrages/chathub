@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useGetReels, useReactReel } from "@/hooks/useReels";
 import { debounce } from "lodash";
 
-const ReelsPage: React.FC = () => {
+const SingleReelPage: React.FC = () => {
   const router = useRouter();
   const params = useParams();
   const { id } = params || {};
@@ -20,7 +20,6 @@ const ReelsPage: React.FC = () => {
     isLoading: reelsLoading,
   } = useSelector((state: RootState) => state.reels);
   const [currentIndex, setCurrentIndex] = useState(-1); 
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const { trigger } = useGetReels(pagination.reels?.currentPage || 1);
   const { mutate: reactToReel } = useReactReel(
     reels[currentIndex >= 0 ? currentIndex : 0]?._id || ""
@@ -119,14 +118,16 @@ const ReelsPage: React.FC = () => {
   }, [currentIndex, reels.length]);
 
   useEffect(() => {
-    videoRefs.current.forEach((video, index) => {
-      if (video && index === currentIndex && currentIndex !== -1) {
-        video.play().catch(() => {});
-      } else if (video) {
-        video.pause();
+  reelRefs.current.forEach((reelRef, index) => {
+    if (reelRef) {
+      if (index === currentIndex && currentIndex !== -1) {
+        reelRef.play();
+      } else {
+        reelRef.pause();
       }
-    });
-  }, [currentIndex]);
+    }
+  });
+}, [currentIndex]);
 
   const handleReaction = (reelId: string, emoji: string, name: string) => {
     reactToReel({ emoji, name });
@@ -192,4 +193,4 @@ const ReelsPage: React.FC = () => {
   );
 };
 
-export default ReelsPage;
+export default SingleReelPage;

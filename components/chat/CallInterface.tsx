@@ -11,7 +11,7 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import React from "react";
+import React, { useState } from "react";
 import { UserAvatar } from "../constant/UserAvatar";
 
 interface CallInterfaceProps {
@@ -225,6 +225,7 @@ const VideoCallDisplay = ({
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
   const [audioPlaying, setAudioPlaying] = React.useState(false);
+  const [bigScreen, setBigScreen] = useState<'remote' | 'local'>('remote'); // Fixed: 'remote' by default
   const retryCountRef = React.useRef(0);
   const maxRetries = 20;
 
@@ -354,7 +355,14 @@ const VideoCallDisplay = ({
     }
   }, [remoteAudioRef, remoteVideoRef]);
 
-  return (
+  const toggleBigScreen = () => {
+    setBigScreen(prev => prev === 'remote' ? 'local' : 'remote');
+  };
+
+  const bigScreenRef = bigScreen === 'remote' ? remoteVideoRef : localVideoRef;
+  const smallScreenRef = bigScreen === 'remote' ? localVideoRef : remoteVideoRef;
+
+ return (
     <div 
       className="relative w-full h-full bg-black"
       onClick={handleUserInteraction}
@@ -365,12 +373,11 @@ const VideoCallDisplay = ({
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {/* Remote video - MUTED (video only) */}
       <video
-        ref={remoteVideoRef}
+        ref={bigScreenRef}
         autoPlay
         playsInline
-        muted // ✅ CRITICAL: Must be muted
+        muted 
         controls={false}
         className="w-full h-full object-cover"
         style={{
@@ -382,48 +389,58 @@ const VideoCallDisplay = ({
           height: "100%",
           objectFit: "cover",
           backgroundColor: "#000",
+          transform: bigScreen === 'local' ? 'scaleX(-1)' : 'none',
         }}
       />
 
-      {/* Local video - picture in picture */}
       {!isCallMinimized && (
-        <div className="absolute top-4 right-4 w-32 h-24 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10">
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleBigScreen();
+          }}
+          className="absolute top-4 right-4 w-36 h-full max-h-[30vh] bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10 cursor-pointer hover:border-blue-500 transition-colors"
+        >
           <video
-            ref={localVideoRef}
+            ref={smallScreenRef}
             autoPlay
             muted
             playsInline
             controls={false}
             className="w-full h-full object-cover"
             style={{
-              transform: "scaleX(-1)",
+              transform: bigScreen === 'remote' ? 'scaleX(-1)' : 'none',
             }}
           />
-          {isVideoMuted && (
+          {bigScreen === 'remote' && isVideoMuted && (
             <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
               <VideoOff size={20} className="text-gray-400" />
             </div>
           )}
+          <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+            👆 Tap to swap
+          </div>
         </div>
       )}
 
-      {/* Audio status indicator */}
       <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white text-xs px-3 py-2 rounded z-20">
         <div className="flex items-center">
           <div className={`w-2 h-2 rounded-full mr-2 ${audioPlaying ? 'bg-green-400' : 'bg-red-400'}`}></div>
           Audio: {audioPlaying ? "Playing ✅" : "Waiting ⏳"}
         </div>
         <div className="mt-1">{remoteStreamInfo}</div>
+        <div className="mt-1 text-yellow-400">
+          Big: {bigScreen === 'remote' ? 'Remote' : 'You'}
+        </div>
         {!audioPlaying && (
           <div className="text-yellow-400 mt-1">👆 Tap to start</div>
         )}
       </div>
 
-      {/* Video status overlay */}
-      {!hasRemoteVideo && (
+      {!hasRemoteVideo && bigScreen === 'remote' && (
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
           <div className="text-center p-4">
-            <Video size={48} className="mx-auto mb-4 opacity-50" />
+            <VideoOff size={48} className="mx-auto mb-4 opacity-50" />
             <p className="mb-2 font-semibold">Waiting for video...</p>
             <p className="text-sm text-yellow-400 animate-pulse">
               👆 TAP SCREEN 👆
@@ -435,16 +452,16 @@ const VideoCallDisplay = ({
   );
 };
 
+
 const AudioCallDisplay = ({
   currentChat,
   callState,
   callDuration,
   formatDuration,
-  remoteAudioRef, // ✅ NEW
+  remoteAudioRef, 
 }: any) => {
   const [audioPlaying, setAudioPlaying] = React.useState(false);
 
-  // Monitor audio element for voice calls
   React.useEffect(() => {
     const audioElement = remoteAudioRef.current;
     if (!audioElement) return;

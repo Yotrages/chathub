@@ -81,6 +81,8 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
   const allFileInputRef = useRef<HTMLInputElement>(null);
   const textElementRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement | null>(null)
+  const {closeForm, resetForm} = useSelector((state: RootState) => state.stories)
+  
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -91,18 +93,32 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
       y: e.clientY - rect.top,
     });
   };
-
-   useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-          setShowEmojiPicker(false);
-        }
-      };
   
-      if (showEmojiPicker) document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [showEmojiPicker]);
-
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    
+    if (showEmojiPicker) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
+  
+  const resetFormField = () => {
+    setText('');
+    setFile(null);
+    setFileType('image');
+    setPreviewUrl(null);
+    setBackground(backgrounds[0]);
+    setTextStyle(textStyles[0]);
+    setTextPosition({ x: 50, y: 50 });
+    setShowEmojiPicker(false);
+    setShowBackgrounds(false);
+    setShowTextStyles(false);
+    setIsDragging(false);
+    setStep('type');
+  };
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
       setShowEmojiPicker(false)
@@ -132,7 +148,6 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
     setIsDragging(false);
   };
 
-  const {closeForm, resetForm} = useSelector((state: RootState) => state.stories)
 
   useEffect(() => {
     if (isDragging) {
@@ -195,20 +210,6 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
     }
   };
 
-  const resetFormField = () => {
-    setText('');
-    setFile(null);
-    setFileType('image');
-    setPreviewUrl(null);
-    setBackground(backgrounds[0]);
-    setTextStyle(textStyles[0]);
-    setTextPosition({ x: 50, y: 50 });
-    setShowEmojiPicker(false);
-    setShowBackgrounds(false);
-    setShowTextStyles(false);
-    setIsDragging(false);
-    setStep('type');
-  };
 
   return (
     <div tabIndex={-1} role='dialog' aria-labelledby='emoji-picker' aria-modal="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">

@@ -4,6 +4,7 @@ import { Camera, X } from 'lucide-react';
 import { useApiController } from '@/hooks/useFetch';
 import { setUserCredentials } from '@/libs/redux/authSlice';
 import { User } from '@/types';
+import { errorMessageHandler } from '@/libs/feedback/error-handler';
 
 interface EditProfileModalProps {
   user: User;
@@ -33,6 +34,9 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
         onSave({ ...user, ...formData, ...data });
         setUserCredentials(data.updatedUser)
         onClose();
+      },
+      onError: (err) => {
+        errorMessageHandler(err)
       }
   });
 

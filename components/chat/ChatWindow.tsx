@@ -3,15 +3,12 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/libs/redux/store";
 import { ChatHeader } from "./ChatHeader";
-import { CallInterface } from "./CallInterface";
 import { MessagesArea } from "./MessageArea";
 import { FileUpload } from "./FileUpload";
 import { MessageInput } from "./MessageInput";
-import { IncomingCallModal } from "./IncomingCallModal";
-import { useCallManagement } from "@/hooks/useCallManager";
 import { useMessageManagement } from "@/hooks/useMessageManager";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
-import MobileDebugPanel from "./MobileDebugPanel";
+import { useCall } from "@/context/CallProvider";
 
 interface ChatWindowProps {
   onShowProfile: () => void;
@@ -24,35 +21,8 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
   const currentChat = chats.find((chat) => chat._id === activeChat);
 
   const { isUserOnline: currentUserOnline } = useOnlineStatus();
+  const { startCall, callState, isCallMinimized } = useCall();
 
-  const {
-    callState,
-    connectionState,
-    isVideoCall,
-    callError,
-    callDuration,
-    isAudioMuted,
-    isVideoMuted,
-    isRemoteAudioMuted,
-    isCallMinimized,
-    localVideoRef,
-    remoteVideoRef,
-    remoteAudioRef,
-    incomingCall,
-    startCall,
-    acceptCall,
-    declineCall,
-    endCall,
-    toggleAudioMute,
-    toggleVideoMute,
-    toggleRemoteAudio,
-    switchCallType,
-    setIsCallMinimized,
-    formatDuration,
-    localStream,
-    remoteStream,
-    peerConnectionRef,
-  } = useCallManagement(currentChat);
 
   const { isLoading, typingUsers, userStatuses } =
     useMessageManagement(currentChat);
@@ -64,46 +34,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
       className="flex w-full max-w-full flex-col relative overflow-hidden"
       style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
     >
-      <IncomingCallModal
-        incomingCall={incomingCall}
-        callState={callState}
-        currentChat={currentChat}
-        onAccept={acceptCall}
-        onDecline={declineCall}
-      />
-
-      <CallInterface
-        callState={callState}
-        connectionState={connectionState}
-        isVideoCall={isVideoCall}
-        callError={callError}
-        callDuration={callDuration}
-        isAudioMuted={isAudioMuted}
-        isVideoMuted={isVideoMuted}
-        isRemoteAudioMuted={isRemoteAudioMuted}
-        isCallMinimized={isCallMinimized}
-        localVideoRef={localVideoRef}
-        remoteVideoRef={remoteVideoRef}
-        remoteAudioRef={remoteAudioRef}
-        currentChat={currentChat}
-        onToggleAudioMute={toggleAudioMute}
-        onToggleVideoMute={toggleVideoMute}
-        onToggleRemoteAudio={toggleRemoteAudio}
-        onSwitchCallType={switchCallType}
-        onEndCall={endCall}
-        onToggleMinimize={() => setIsCallMinimized(!isCallMinimized)}
-        formatDuration={formatDuration}
-      />
-
-      {callState !== "idle" && (
-        <MobileDebugPanel
-          localStream={localStream}
-          remoteStream={remoteStream}
-          peerConnection={peerConnectionRef.current}
-          callState={callState}
-        />
-      )}
-
+  
       {(callState === "idle" || isCallMinimized) && (
         <>
           {/* Chat Header - Fixed at top */}

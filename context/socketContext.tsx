@@ -132,7 +132,7 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       },
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: Infinity,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 20000,

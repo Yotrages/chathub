@@ -17,6 +17,7 @@ import { api } from "@/libs/axios/config";
 import { Analytics } from "@vercel/analytics/next";
 import { usePathname } from "next/navigation";
 import { ChunkErrorBoundary } from "@/components/layout/ChunckErrorBoundary";
+import { CallProvider } from "@/context/CallProvider";
 
 function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -197,8 +198,10 @@ function NotificationWrapper({ children }: { children: React.ReactNode }) {
 
   return (
     <NotificationProvider userId={user?._id || null} token={token || null}>
-      {children}
-      {user && token && <NotificationPopup />}
+      <CallProvider> 
+        {children}
+        {user && token && <NotificationPopup />}
+      </CallProvider>
     </NotificationProvider>
   );
 }

@@ -178,10 +178,10 @@ const storiesSlice = createSlice({
       })
       
       .addCase(createStory.fulfilled, (state, action: PayloadAction<Story>) => {
-        state.stories = [action.payload, ...state.stories];
-        state.total += 1;
         state.closeForm = true
         state.resetForm = true
+        state.stories = [action.payload, ...state.stories];
+        state.total += 1;
       })
       .addCase(createStory.rejected, (state, action) => {
         state.error = action.payload as string;
