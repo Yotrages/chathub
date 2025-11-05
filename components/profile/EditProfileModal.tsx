@@ -59,20 +59,27 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    const formDataToSend = new FormData();
-    formDataToSend.append('name', formData.name);
-    formDataToSend.append('bio', formData.bio);
-    formDataToSend.append('location', formData.location);
-    formDataToSend.append('website', formData.website);
-    formDataToSend.append('isPrivate', formData.isPrivate.toString());
-    if (avatarFile) formDataToSend.append('avatar', avatarFile);
-    if (coverFile) formDataToSend.append('coverImage', coverFile);
+  const formDataToSend = new FormData();
+  
+  if (formData.name) formDataToSend.append('name', formData.name);
+  if (formData.bio) formDataToSend.append('bio', formData.bio);
+  if (formData.location) formDataToSend.append('location', formData.location);
+  if (formData.website) formDataToSend.append('website', formData.website);
+  
+  formDataToSend.append('isPrivate', formData.isPrivate.toString());
+  
+  if (avatarFile) {
+    formDataToSend.append('avatar', avatarFile);
+  }
+  if (coverFile) {
+    formDataToSend.append('coverImage', coverFile);
+  }
 
-    mutate(formDataToSend);
-  };
+  mutate(formDataToSend);
+};
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
