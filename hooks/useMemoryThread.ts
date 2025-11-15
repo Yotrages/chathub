@@ -24,7 +24,7 @@ export const useMemoryThreads = () => {
     queryFn: async () => {
       if (!params) return [];
       
-      const response = await api.post('/api/memory-threads', params);
+      const response = await api.post('/memory-threads', params);
       
       if (!response.data) throw new Error('Failed to fetch memory threads');
       return response.data;
@@ -35,7 +35,7 @@ export const useMemoryThreads = () => {
 
   const processContentMutation = useMutation({
     mutationFn: async (data: ProcessContentParams) => {
-      const response = await api.post('/api/memory-threads/process', data);
+      const response = await api.post('/memory-threads/process', data);
       
       if (!response.data) throw new Error('Failed to process content');
       return response.data;

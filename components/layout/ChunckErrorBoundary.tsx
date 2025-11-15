@@ -16,7 +16,6 @@ interface WindowWithLocation extends Window {
   location: Location;
 }
 
-// 🔥 Check if we're in production
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 export class ChunkErrorBoundary extends Component<Props, State> {
@@ -34,11 +33,10 @@ export class ChunkErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> | null {
-    // 🔥 SKIP ERROR HANDLING IN DEVELOPMENT
     if (!IS_PRODUCTION) {
       console.log('🛑 ChunkErrorBoundary: Error ignored (Development Mode)');
       console.error('Dev error:', error);
-      return null; // Don't update state in dev
+      return null; 
     }
 
     const isChunkError = 
@@ -55,11 +53,10 @@ export class ChunkErrorBoundary extends Component<Props, State> {
     }
 
     console.error('❌ Non-chunk error:', error);
-    return null; // Don't handle non-chunk errors
+    return null; 
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    // 🔥 SKIP IN DEVELOPMENT
     if (!IS_PRODUCTION) {
       console.log('🛑 ChunkErrorBoundary: componentDidCatch skipped (Development)');
       return;
@@ -77,7 +74,6 @@ export class ChunkErrorBoundary extends Component<Props, State> {
       return;
     }
 
-    // Get error count from sessionStorage to persist across reloads
     const storedCount = parseInt(sessionStorage.getItem('chunkErrorCount') || '0');
     
     if (storedCount >= this.maxRetries) {
@@ -86,16 +82,13 @@ export class ChunkErrorBoundary extends Component<Props, State> {
       return;
     }
 
-    // Schedule reload
     this.reloadTimeout = setTimeout(() => {
       this.handleReload();
     }, 2000);
   }
 
   componentDidMount() {
-    // 🔥 Only in production
     if (IS_PRODUCTION) {
-      // Reset error count on successful mount
       const storedCount = parseInt(sessionStorage.getItem('chunkErrorCount') || '0');
       if (storedCount > 0 && !this.state.hasError) {
         console.log('✅ Page loaded successfully, resetting error count');
@@ -147,7 +140,6 @@ export class ChunkErrorBoundary extends Component<Props, State> {
 
     console.log('🔄 Manual reload initiated');
     
-    // Clear everything
     if ('caches' in window) {
       caches.keys().then(names => {
         Promise.all(names.map(name => caches.delete(name)));
@@ -164,12 +156,10 @@ export class ChunkErrorBoundary extends Component<Props, State> {
   };
 
   render() {
-    // 🔥 In development, always render children normally
     if (!IS_PRODUCTION) {
       return this.props.children;
     }
 
-    // In production, show error UI if there's an error
     if (this.state.hasError) {
       return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">

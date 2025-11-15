@@ -115,7 +115,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
         </div>
 
         {/* Chat List */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto h-full">
           {isLoading ? (
             <div className="p-4 text-center text-gray-500">Loading chats...</div>
           ) : filteredChats.length === 0 ? (

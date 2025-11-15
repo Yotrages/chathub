@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
   Phone,
   PhoneOff,
@@ -26,7 +26,7 @@ interface CallInterfaceProps {
   isCallMinimized: boolean;
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
-  remoteAudioRef: React.RefObject<HTMLAudioElement | null>; // ✅ NEW
+  remoteAudioRef: React.RefObject<HTMLAudioElement | null>; 
   currentChat: any;
   onToggleAudioMute: () => void;
   onToggleVideoMute: () => void;
@@ -41,7 +41,7 @@ interface VideoCallDisplay {
   isCallMinimized: boolean;
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
-  remoteAudioRef: React.RefObject<HTMLAudioElement | null>; // ✅ NEW
+  remoteAudioRef: React.RefObject<HTMLAudioElement | null>; 
   isVideoMuted: boolean;
 }
 
@@ -57,7 +57,7 @@ export const CallInterface = ({
   isCallMinimized,
   localVideoRef,
   remoteVideoRef,
-  remoteAudioRef, 
+  remoteAudioRef,
   currentChat,
   onToggleAudioMute,
   onToggleVideoMute,
@@ -101,7 +101,7 @@ export const CallInterface = ({
           <VideoCallDisplay
             localVideoRef={localVideoRef}
             remoteVideoRef={remoteVideoRef}
-            remoteAudioRef={remoteAudioRef} 
+            remoteAudioRef={remoteAudioRef}
             isVideoMuted={isVideoMuted}
             isCallMinimized={isCallMinimized}
           />
@@ -111,7 +111,7 @@ export const CallInterface = ({
             callState={callState}
             callDuration={callDuration}
             formatDuration={formatDuration}
-            remoteAudioRef={remoteAudioRef} 
+            remoteAudioRef={remoteAudioRef}
           />
         )}
       </div>
@@ -218,30 +218,28 @@ const CallHeader = ({
 const VideoCallDisplay = ({
   localVideoRef,
   remoteVideoRef,
-  remoteAudioRef, 
+  remoteAudioRef,
   isVideoMuted,
   isCallMinimized,
 }: VideoCallDisplay) => {
   const [hasRemoteVideo, setHasRemoteVideo] = React.useState(false);
   const [remoteStreamInfo, setRemoteStreamInfo] = React.useState<string>("");
-  const [audioPlaying, setAudioPlaying] = React.useState(false);
-  const [bigScreen, setBigScreen] = useState<'remote' | 'local'>('remote'); // Fixed: 'remote' by default
+  const [localStreamInfo, setLocalStreamInfo] = React.useState<string>("");
+  const [bigScreen, setBigScreen] = useState<"remote" | "local">("remote");
+  const [hasLocalStream, setHasLocalStream] = React.useState(false);
   const retryCountRef = React.useRef(0);
   const maxRetries = 20;
 
-  // 🔴 Monitor audio element
   React.useEffect(() => {
     const audioElement = remoteAudioRef.current;
     if (!audioElement) return;
 
     const handleAudioPlay = () => {
-      console.log("✅ Audio playing");
-      setAudioPlaying(true);
+      console.log("Audio playing");
     };
 
     const handleAudioPause = () => {
-      console.log("⚠️ Audio paused");
-      setAudioPlaying(false);
+      console.log("Audio paused");
     };
 
     audioElement.addEventListener("playing", handleAudioPlay);
@@ -253,14 +251,13 @@ const VideoCallDisplay = ({
     };
   }, [remoteAudioRef]);
 
-  // Video monitoring (unchanged, but ensure video is MUTED)
   React.useEffect(() => {
     const remoteVideo = remoteVideoRef.current;
     if (!remoteVideo) return;
 
     const checkStream = () => {
       const srcObject = remoteVideo.srcObject as MediaStream;
-      
+
       if (!srcObject) {
         setHasRemoteVideo(false);
         setRemoteStreamInfo("No stream");
@@ -269,48 +266,59 @@ const VideoCallDisplay = ({
 
       const videoTracks = srcObject.getVideoTracks();
       const videoTrack = videoTracks[0];
-      const hasVideo = videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
+      const hasVideo =
+        videoTrack && videoTrack.readyState === "live" && videoTrack.enabled;
 
       setHasRemoteVideo(hasVideo);
-      setRemoteStreamInfo(`Video: ${videoTracks.length}(${videoTrack?.readyState || "none"})`);
+      setRemoteStreamInfo(
+        `Video: ${videoTracks.length}(${videoTrack?.readyState || "none"})`
+      );
 
-      if (hasVideo && remoteVideo.paused && retryCountRef.current < maxRetries) {
+      if (
+        hasVideo &&
+        remoteVideo.paused &&
+        retryCountRef.current < maxRetries
+      ) {
         console.warn(`⚠️ Video paused (retry ${retryCountRef.current})`);
         retryCountRef.current++;
-        
-        remoteVideo.play()
+
+        remoteVideo
+          .play()
           .then(() => {
             console.log(`✅ Video played on retry ${retryCountRef.current}`);
             retryCountRef.current = 0;
           })
-          .catch(err => {
-            console.error(`❌ Play retry ${retryCountRef.current} failed:`, err);
+          .catch((err) => {
+            console.error(
+              `❌ Play retry ${retryCountRef.current} failed:`,
+              err
+            );
           });
       }
     };
 
     checkStream();
     const checkInterval = setInterval(checkStream, 1000);
-    
+
     const playInterval = setInterval(() => {
       if (remoteVideo.srcObject && remoteVideo.paused) {
         remoteVideo.play().catch(() => {});
       }
     }, 2000);
 
-    // 🔴 CRITICAL: Video element MUST be muted
     remoteVideo.muted = true;
     remoteVideo.volume = 0;
     remoteVideo.playsInline = true;
     remoteVideo.autoplay = true;
-    
-    remoteVideo.setAttribute('playsinline', 'true');
-    remoteVideo.setAttribute('webkit-playsinline', 'true');
+
+    remoteVideo.setAttribute("playsinline", "true");
+    remoteVideo.setAttribute("webkit-playsinline", "true");
 
     const handleCanPlay = () => {
-      remoteVideo.play()
-        .then(() => console.log("✅ Video playing"))
-        .catch((err) => console.error("❌ Play error:", err));
+      remoteVideo
+        .play()
+        .then(() => console.log("Remote video playing"))
+        .catch((err) => console.error("Remote play error:", err));
     };
 
     remoteVideo.addEventListener("canplay", handleCanPlay);
@@ -322,132 +330,281 @@ const VideoCallDisplay = ({
     };
   }, [remoteVideoRef]);
 
-  // Local video always muted
+  React.useEffect(() => {
+    const localVideo = localVideoRef.current;
+    if (!localVideo) return;
+
+    const checkLocalStream = () => {
+      const srcObject = localVideo.srcObject as MediaStream;
+
+      if (!srcObject) {
+        setHasLocalStream(false);
+        setLocalStreamInfo("No local stream");
+        console.log("⚠️ Local video has no srcObject");
+        return;
+      }
+
+      const videoTracks = srcObject.getVideoTracks();
+      const videoTrack = videoTracks[0];
+      
+      const hasStream = videoTrack && videoTrack.readyState === "live";
+
+      setHasLocalStream(hasStream);
+      setLocalStreamInfo(
+        `Local: ${videoTracks.length} tracks (${
+          videoTrack?.readyState || "none"
+        }) enabled: ${videoTrack?.enabled}`
+      );
+
+      console.log("📹 Local video check:", {
+        hasStream: !!srcObject,
+        tracks: videoTracks.length,
+        trackState: videoTrack?.readyState,
+        enabled: videoTrack?.enabled,
+        paused: localVideo.paused,
+      });
+
+      if (hasStream && localVideo.paused) {
+        localVideo
+          .play()
+          .then(() => console.log("✅ Local video playing"))
+          .catch((err) => console.error("❌ Local video play error:", err));
+      }
+    };
+
+    checkLocalStream();
+    const checkInterval = setInterval(checkLocalStream, 2000);
+
+    localVideo.muted = true;
+    localVideo.volume = 0;
+    localVideo.playsInline = true;
+    localVideo.autoplay = true;
+
+    return () => {
+      clearInterval(checkInterval);
+    };
+  }, [localVideoRef]);
+
   React.useEffect(() => {
     if (localVideoRef.current) {
       localVideoRef.current.muted = true;
       localVideoRef.current.volume = 0;
       localVideoRef.current.playsInline = true;
       localVideoRef.current.autoplay = true;
-      
-      localVideoRef.current.play().catch(err => {
+
+      localVideoRef.current.play().catch((err) => {
         console.error("Local video play error:", err);
       });
     }
   }, [localVideoRef]);
 
-  // User interaction to start audio
-  const handleUserInteraction = React.useCallback((e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    
-    // Try to play audio
-    if (remoteAudioRef.current) {
-      remoteAudioRef.current.play()
-        .then(() => console.log("✅ Audio playing after user interaction"))
-        .catch(err => console.error("❌ Audio play failed:", err));
-    }
-    
-    // Try to play video
-    if (remoteVideoRef.current && remoteVideoRef.current.paused) {
-      remoteVideoRef.current.play()
-        .then(() => console.log("✅ Video playing after user interaction"))
-        .catch(err => console.error("❌ Video play failed:", err));
-    }
-  }, [remoteAudioRef, remoteVideoRef]);
+  const handleUserInteraction = React.useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.stopPropagation();
 
-  const toggleBigScreen = () => {
-    setBigScreen(prev => prev === 'remote' ? 'local' : 'remote');
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current
+          .play()
+          .then(() => console.log("✅ Audio playing after user interaction"))
+          .catch((err) => console.error("❌ Audio play failed:", err));
+      }
+
+      if (remoteVideoRef.current && remoteVideoRef.current.paused) {
+        remoteVideoRef.current
+          .play()
+          .then(() =>
+            console.log("✅ Remote video playing after user interaction")
+          )
+          .catch((err) => console.error("❌ Remote video play failed:", err));
+      }
+
+      if (localVideoRef.current && localVideoRef.current.paused) {
+        localVideoRef.current
+          .play()
+          .then(() =>
+            console.log("✅ Local video playing after user interaction")
+          )
+          .catch((err) => console.error("❌ Local video play failed:", err));
+      }
+    },
+    [remoteAudioRef, remoteVideoRef, localVideoRef]
+  );
+
+  const toggleBigScreen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newView = bigScreen === "remote" ? "local" : "remote";
+    console.log("🔄 Switching view from", bigScreen, "to", newView);
+    console.log("📊 Stream status:", {
+      hasLocalStream,
+      hasRemote: hasRemoteVideo,
+      isVideoMuted,
+    });
+    setBigScreen(newView);
   };
 
-  const bigScreenRef = bigScreen === 'remote' ? remoteVideoRef : localVideoRef;
-  const smallScreenRef = bigScreen === 'remote' ? localVideoRef : remoteVideoRef;
+  const isRemoteBig = bigScreen === "remote";
+  const isLocalBig = bigScreen === "local";
 
- return (
-    <div 
+  return (
+    <div
       className="relative w-full h-full bg-black"
       onClick={handleUserInteraction}
       onTouchStart={handleUserInteraction}
       style={{
-        touchAction: 'manipulation',
-        userSelect: 'none',
-        WebkitTapHighlightColor: 'transparent',
+        touchAction: "manipulation",
+        userSelect: "none",
+        WebkitTapHighlightColor: "transparent",
       }}
     >
-      <video
-        ref={bigScreenRef}
-        autoPlay
-        playsInline
-        muted 
-        controls={false}
-        className="w-full h-full object-cover"
+      <div
+        className={`absolute transition-all duration-300 ease-in-out ${
+          isRemoteBig
+            ? "inset-0 z-0"
+            : isCallMinimized
+            ? "hidden"
+            : "top-4 right-4 w-36 h-full max-h-[30vh] z-10 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg"
+        }`}
+        onClick={!isRemoteBig && !isCallMinimized ? toggleBigScreen : undefined}
         style={{
-          display: "block",
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          backgroundColor: "#000",
-          transform: bigScreen === 'local' ? 'scaleX(-1)' : 'none',
+          cursor: !isRemoteBig && !isCallMinimized ? "pointer" : "default",
         }}
-      />
-
-      {!isCallMinimized && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleBigScreen();
+      >
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          muted
+          controls={false}
+          className="w-full h-full object-cover"
+          style={{
+            display: hasRemoteVideo ? "block" : "none",
           }}
-          className="absolute top-4 right-4 w-36 h-full max-h-[30vh] bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg z-10 cursor-pointer hover:border-blue-500 transition-colors"
-        >
-          <video
-            ref={smallScreenRef}
-            autoPlay
-            muted
-            playsInline
-            controls={false}
-            className="w-full h-full object-cover"
-            style={{
-              transform: bigScreen === 'remote' ? 'scaleX(-1)' : 'none',
-            }}
-          />
-          {bigScreen === 'remote' && isVideoMuted && (
-            <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-              <VideoOff size={20} className="text-gray-400" />
-            </div>
-          )}
-          <div className="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-            👆 Tap to swap
-          </div>
-        </div>
-      )}
+        />
 
-      <div className="absolute top-4 left-4 bg-black bg-opacity-75 text-white text-xs px-3 py-2 rounded z-20">
-        <div className="flex items-center">
-          <div className={`w-2 h-2 rounded-full mr-2 ${audioPlaying ? 'bg-green-400' : 'bg-red-400'}`}></div>
-          Audio: {audioPlaying ? "Playing ✅" : "Waiting ⏳"}
-        </div>
-        <div className="mt-1">{remoteStreamInfo}</div>
-        <div className="mt-1 text-yellow-400">
-          Big: {bigScreen === 'remote' ? 'Remote' : 'You'}
-        </div>
-        {!audioPlaying && (
-          <div className="text-yellow-400 mt-1">👆 Tap to start</div>
+        {!hasRemoteVideo && (
+          <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
+            <div className="text-center p-4">
+              <VideoOff size={isRemoteBig ? 48 : 20} className={`mx-auto ${isRemoteBig ? 'mb-4' : ''} opacity-50`} />
+              {isRemoteBig && (
+                <>
+                  <p className="mb-2 font-semibold">
+                    Waiting for remote video...
+                  </p>
+                  <p className="text-sm text-yellow-400 animate-pulse">
+                    👆 TAP SCREEN 👆
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {remoteStreamInfo}
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!isRemoteBig && !isCallMinimized && (
+          <div className="absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+            👆 Swap
+          </div>
         )}
       </div>
 
-      {!hasRemoteVideo && bigScreen === 'remote' && (
-        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
-          <div className="text-center p-4">
-            <VideoOff size={48} className="mx-auto mb-4 opacity-50" />
-            <p className="mb-2 font-semibold">Waiting for video...</p>
-            <p className="text-sm text-yellow-400 animate-pulse">
-              👆 TAP SCREEN 👆
-            </p>
+      <div
+        className={`absolute transition-all duration-300 ease-in-out ${
+          isLocalBig
+            ? "inset-0 z-0"
+            : "top-4 right-4 h-full w-36 max-h-[30vh] z-10 rounded-lg overflow-hidden border-2 border-gray-600 shadow-lg"
+        }`}
+        onClick={!isLocalBig ? toggleBigScreen : undefined}
+        style={{
+          cursor: !isLocalBig ? "pointer" : "default",
+        }}
+      >
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          controls={false}
+          className="w-full h-full object-cover"
+          style={{
+            display: hasLocalStream && !isVideoMuted ? "block" : "none",
+            transform: "scaleX(-1)",
+          }}
+        />
+
+        {(!hasLocalStream || isVideoMuted) && (
+          <div className="absolute inset-0 bg-gray-900 flex items-center justify-center text-gray-400">
+            <div className="text-center p-4">
+              <VideoOff size={isLocalBig ? 48 : 20} className={`mx-auto ${isLocalBig ? 'mb-4' : ''} opacity-50`} />
+              {isLocalBig && (
+                <>
+                  <p className="mb-2 font-semibold">
+                    {isVideoMuted ? "Camera is off" : "No local video"}
+                  </p>
+                  {!hasLocalStream && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      {localStreamInfo}
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
           </div>
+        )}
+
+        {!isLocalBig && !isCallMinimized && (
+          <div className="absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded">
+            👆 Swap
+          </div>
+        )}
+      </div>
+
+      {/* <div className="absolute top-4 left-4 bg-black bg-opacity-90 text-white text-xs px-3 py-2 rounded z-20 max-w-[200px]">
+        <div className="space-y-1">
+          <div className="flex items-center">
+            <div
+              className={`w-2 h-2 rounded-full mr-2 ${
+                audioPlaying ? "bg-green-400" : "bg-red-400"
+              }`}
+            ></div>
+            Audio: {audioPlaying ? "✅" : "⏳"}
+          </div>
+
+          <div className="flex items-center">
+            <div
+              className={`w-2 h-2 rounded-full mr-2 ${
+                hasLocalStream && !isVideoMuted ? "bg-green-400" : "bg-red-400"
+              }`}
+            ></div>
+            Local: {hasLocalStream && !isVideoMuted ? "✅" : "❌"}
+          </div>
+
+          <div className="flex items-center">
+            <div
+              className={`w-2 h-2 rounded-full mr-2 ${
+                hasRemoteVideo ? "bg-green-400" : "bg-red-400"
+              }`}
+            ></div>
+            Remote: {hasRemoteVideo ? "✅" : "❌"}
+          </div>
+
+          <div className="mt-2 pt-2 border-t border-gray-700">
+            <p className="text-yellow-400 font-semibold">
+              Big: {bigScreen === "remote" ? "Remote" : "Local"}
+            </p>
+            {isVideoMuted && (
+              <p className="text-red-400 text-[10px]">📹 Cam off</p>
+            )}
+          </div>
+
+          {!audioPlaying && (
+            <div className="text-yellow-400 mt-1 animate-pulse">
+              👆 Tap to start
+            </div>
+          )}
         </div>
-      )}
+      </div> */}
     </div>
   );
 };
@@ -458,7 +615,7 @@ const AudioCallDisplay = ({
   callState,
   callDuration,
   formatDuration,
-  remoteAudioRef, 
+  remoteAudioRef,
 }: any) => {
   const [audioPlaying, setAudioPlaying] = React.useState(false);
 
@@ -540,7 +697,13 @@ const AudioCallDisplay = ({
               </div>
               {/* Audio status */}
               <div className="flex items-center text-sm">
-                <div className={`w-2 h-2 rounded-full mr-2 ${audioPlaying ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`}></div>
+                <div
+                  className={`w-2 h-2 rounded-full mr-2 ${
+                    audioPlaying
+                      ? "bg-green-400"
+                      : "bg-yellow-400 animate-pulse"
+                  }`}
+                ></div>
                 <span className="text-gray-400">
                   {audioPlaying ? "Audio connected" : "Connecting audio..."}
                 </span>

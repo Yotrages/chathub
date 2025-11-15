@@ -23,7 +23,6 @@ const ExplorePeoplePage = () => {
   const { suggestedUsers, pagination } = useSelector((state: RootState) => state.auth);
   const { trigger, isPending } = useGetSuggestedUsers(1);
   const [searchQuery, setSearchQuery] = useState('');
-  // const [currentPage, setCurrentPage] = useState(1);
   const [followedUsers, setFollowedUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -32,8 +31,6 @@ const ExplorePeoplePage = () => {
 
   const loadMore = () => {
     if (pagination?.hasNextPage) {
-      // const nextPage = (pagination?.currentPage || 1) + 1;
-      // setCurrentPage(nextPage);
       trigger();
     }
   };
@@ -263,7 +260,6 @@ const ExplorePeoplePage = () => {
   );
 };
 
-// Follow Button Component
 const FollowButton: React.FC<{ 
   userId: string; 
   isFollowed?: boolean;

@@ -63,13 +63,10 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
   const userIdRef = useRef(userId);
   const hasHandledAuthError = useRef(false);
 
-  // 🔥 FIXED: Prevent unnecessary re-renders from Redux
-  // Only update ref, don't cause re-render
   useEffect(() => {
     userIdRef.current = userId;
   }, [userId]);
 
-  // 🔥 FIXED: Use useCallback with empty deps to prevent recreation
   const startHeartbeat = useCallback((sock: Socket) => {
     if (heartbeatInterval.current) {
       clearInterval(heartbeatInterval.current);
@@ -80,14 +77,14 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         sock.emit('heartbeat');
       }
     }, 25000);
-  }, []); // Empty deps - function never changes
+  }, []); 
 
   const stopHeartbeat = useCallback(() => {
     if (heartbeatInterval.current) {
       clearInterval(heartbeatInterval.current);
       heartbeatInterval.current = null;
     }
-  }, []); // Empty deps
+  }, []); 
 
   const forceReconnect = useCallback(() => {
     const sock = socketRef.current;
@@ -102,9 +99,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         }
       }, 500);
     }
-  }, []); // Empty deps - uses ref
+  }, []);
 
-  // 🔥 FIXED: Main socket initialization - only runs ONCE
   useEffect(() => {
     const token = getCookie("auth-token");
     const currentUserId = userIdRef.current;
@@ -142,7 +138,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     newSocket.on("connect", () => {
       console.log("✅ Socket connected");
       
-      // Batch state updates
       setIsConnected(true);
       setConnectionError(null);
       hasHandledAuthError.current = false;
@@ -159,8 +154,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     newSocket.on("connect_error", (error) => {
       console.error("❌ Socket error:", error.message);
       
-      // 🔥 FIXED: Don't update state on every error to prevent re-renders
-      // Only update if state actually changed
       setIsConnected(prev => {
         if (prev === true) {
           console.log("Updating isConnected to false");
@@ -179,7 +172,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
 
     newSocket.on("reconnect_attempt", (attemptNumber) => {
       console.log("🔄 Reconnect attempt", attemptNumber);
-      // Don't update state on every attempt to prevent re-renders
     });
 
     newSocket.on("reconnect_failed", () => {
@@ -269,9 +261,8 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
       setConnectionError(null);
       setOnlineUsers([]);
     };
-  }, []); // 🔥 EMPTY DEPS - only runs once!
+  }, []); 
 
-  // 🔥 FIXED: Handle user logout separately
   useEffect(() => {
     if (!userId && socketRef.current) {
       console.log("User logged out, disconnecting");
@@ -280,7 +271,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     }
   }, [userId]);
 
-  // 🔥 FIXED: Auth error handling with proper guards
   useEffect(() => {
     if (!socket) return;
 
@@ -348,7 +338,6 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
     };
   }, [socket, dispatch, router, stopHeartbeat]);
 
-  // 🔥 FIXED: Memoize context value properly
   const contextValue = useMemo(
     () => ({
       socket,

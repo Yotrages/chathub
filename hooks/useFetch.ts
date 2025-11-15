@@ -419,7 +419,6 @@ const makeApiCall = async (data?: TFormData): Promise<TResponse> => {
 // SPECIALIZED HOOKS FOR COMMON PATTERNS
 // ============================================================================
 
-// Auth types
 interface LoginData extends Record<string, any> {
   email: string;
   password: string;

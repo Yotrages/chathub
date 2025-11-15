@@ -27,7 +27,7 @@ export default function AccountSettings({
           </div>
           Account Status
         </h3>
-        {settings.account.isDeactivated ? (
+        {settings.account?.isDeactivated ? (
           <div className="p-5 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl shadow-inner">
             <p className="text-sm text-yellow-800 font-medium">
               Your account is currently deactivated.
@@ -65,7 +65,7 @@ export default function AccountSettings({
             </button>
           </div>
         )}
-        {settings.account.deleteScheduledAt && (
+        {settings.account?.deleteScheduledAt && (
           <div className="mt-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl shadow-inner">
             <p className="text-sm text-red-800 font-medium">
               Account deletion scheduled for: {new Date(settings.account.deleteScheduledAt).toLocaleDateString()}

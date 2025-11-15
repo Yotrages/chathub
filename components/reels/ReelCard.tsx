@@ -364,7 +364,6 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     const handleLongPressEnd = () => {
       if (window.screen.availWidth < 768) {
         if (longPressTimeout.current) clearTimeout(longPressTimeout.current);
-        // setLongPressActive(false);
         if (!showEmojiPicker) handleEmojiSelect("👍", "Like");
       }
     };

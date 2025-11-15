@@ -207,7 +207,7 @@ const Header: React.FC = () => {
     setIsFocused(false);
     setAutocompleteSuggestions(null);
     setSearchQuery("");
-    setTimeout(() => setIsNavigating(false), 100); // Reset flag
+    setTimeout(() => setIsNavigating(false), 100); 
   };
 
   const handleSuggestionClick = (query: string) => {
@@ -218,7 +218,7 @@ const Header: React.FC = () => {
     setIsFocused(false);
     setAutocompleteSuggestions(null);
     setSearchQuery("");
-    setTimeout(() => setIsNavigating(false), 100); // Reset flag
+    setTimeout(() => setIsNavigating(false), 100);
   };
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

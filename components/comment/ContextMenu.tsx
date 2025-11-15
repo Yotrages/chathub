@@ -40,7 +40,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({
       } else {
         deleteReelComment();
       }
-      toast.success("Comment deleted successfully");
       onClose();
     }
   };

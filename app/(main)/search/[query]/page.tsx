@@ -87,7 +87,7 @@ const cleanSearchQuery = (rawQuery: string | string[] | undefined): string => {
 
 const SearchPage: React.FC = () => {
   const params = useParams();
-  const rawQuery = params?.query; // 🔥 CHANGED: Get raw query from params
+  const rawQuery = params?.query; 
   const router = useRouter();
   const dispatch: AppDispatch = useDispatch();
 

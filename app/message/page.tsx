@@ -12,7 +12,6 @@ export default function Page() {
         const vh = window.visualViewport.height * 0.01;
         document.documentElement.style.setProperty("--vh", `${vh}px`);
       } else {
-        // Fallback to innerHeight
         const vh = window.innerHeight * 0.01;
         document.documentElement.style.setProperty("--vh", `${vh}px`);
       }
@@ -20,7 +19,6 @@ export default function Page() {
 
     setVH();
 
-    // Listen to visual viewport changes
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", setVH);
       window.visualViewport.addEventListener("scroll", setVH);

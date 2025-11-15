@@ -229,18 +229,6 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
                     <Video size={32} className="text-gray-400" />
                   </div>
                 )}
-                {/* <div
-              onClick={toggleVideoPlay}
-              className="absolute  flex items-center justify-center"
-            >
-              <div className="bg-black bg-opacity-60 rounded-full p-2">
-                {isVideoPlaying ? (
-                  <Pause size={24} />
-                ) : (
-                  <Play size={20} className="text-white ml-1" />
-                )}
-              </div>
-            </div> */}
               </div>
             )}
 

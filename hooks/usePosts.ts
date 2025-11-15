@@ -362,7 +362,7 @@ export const useAddComment = (
       successNotification(data.message);
     },
     onError: (error: any) => {
-      console.error(`Failed to add comment for postId ${postId}:`, error); // Debug log
+      console.error(`Failed to add comment for postId ${postId}:`, error); 
       errorMessageHandler(error);
     },
     ...options,
@@ -418,19 +418,6 @@ export const useLikeComment = (
     },
   });
 };
-
-// export const useSearchPosts = (
-//   query: string,
-// ) => {
-//   const dispatch: AppDispatch = useDispatch();
-//   return useApiController({
-//     method: "GET",
-//     url: `/posts/search/${query}`,
-//     onSuccess: (data) => {
-//       dispatch(setSearchResults({ posts: data.posts }));
-//     },
-//   });
-// };
 
 export const useGetTrendingPosts = (
 ) => {

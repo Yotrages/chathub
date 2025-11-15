@@ -44,7 +44,6 @@ const chatSlice = createSlice({
         const oldUnreadCount = state.chats[index].unreadCount;
         state.chats[index] = action.payload;
         
-        // Update chatsWithUnreadCount
         if (oldUnreadCount === 0 && action.payload.unreadCount > 0) {
           state.chatsWithUnreadCount += 1;
         } else if (oldUnreadCount > 0 && action.payload.unreadCount === 0) {

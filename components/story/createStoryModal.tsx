@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { createStory } from '@/libs/redux/storySlice';
 import { 
@@ -13,7 +13,7 @@ import {
   VideoCameraIcon,
   ArrowLeftIcon
 } from '@heroicons/react/24/outline';
-import { AppDispatch, RootState } from '@/libs/redux/store';
+import { AppDispatch } from '@/libs/redux/store';
 import toast from 'react-hot-toast';
 
 interface CreateStoryModalProps {
@@ -81,7 +81,6 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
   const allFileInputRef = useRef<HTMLInputElement>(null);
   const textElementRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement | null>(null)
-  const {closeForm, resetForm} = useSelector((state: RootState) => state.stories)
   
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -190,18 +189,19 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
     const payload = {
       text,
       file: file || undefined,
-      fileType,
+      fileType: file ? fileType : undefined,
       background: file ? undefined : background.gradient,
       textPosition,
       textStyle: textStyle.style
     };
 
     try {
-      await dispatch(createStory(payload));
-      if (closeForm && resetForm) {
-      resetFormField();
-      onClose();
-      }
+      await dispatch(createStory(payload)).then(() => {
+        resetFormField();
+        onClose();
+      }).catch((err) => {
+        toast.error(err)
+      });
     } catch (error) {
       console.log(error)
       toast.error('Failed to create story');
@@ -218,7 +218,7 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           {step === 'create' && (
             <button
-              onClick={() => setStep('type')}
+              onClick={resetFormField}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
@@ -236,7 +236,6 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
         </div>
 
         {step === 'type' ? (
-          /* Story Type Selection */
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               {/* Text Story */}
@@ -297,7 +296,6 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
             </div>
           </div>
         ) : (
-          /* Story Creation */
           <form onSubmit={handleSubmit} className="flex flex-col h-[calc(95vh-80px)]">
             {/* Preview Area */}
             <div className="relative flex-1 bg-gray-900 overflow-hidden">

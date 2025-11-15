@@ -33,6 +33,14 @@ const authSlice = createSlice({
         state.user.online = action.payload
       }
     },
+
+    updateUserCredentials: (state, action: PayloadAction<User>) => {
+      console.log("Redux get data", action.payload)
+      if (state.user) {
+        state.user = {...state.user, ...action.payload}
+        console.log("user updated", state.user)
+      }
+    },
     
     logout: (state) => {
       state.user = null;
@@ -85,6 +93,7 @@ export const {
   validateTokenSuccess,
   validateTokenFailure,
   setBackground,
+  updateUserCredentials,
   setSuggestedUsersWithPagination,
   addSuggestedUsers,
   updateUserOnlineStatus

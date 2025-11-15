@@ -40,7 +40,7 @@ class RateLimitManager {
   getTimeRemaining(): number {
     if (!this.rateLimitEndTime) return 0;
     const remaining = this.rateLimitEndTime - Date.now();
-    return Math.max(0, Math.ceil(remaining / 1000)); // Return seconds
+    return Math.max(0, Math.ceil(remaining / 1000)); 
   }
 }
 
@@ -93,12 +93,6 @@ const errorInterceptor = (error: any) => {
     
     if (typeof window !== 'undefined') {
       console.warn('Rate limit exceeded. All requests blocked for 2 minutes.');
-      
-      // You can dispatch a Redux action or show a toast notification here
-      // Example: store.dispatch(showNotification({ 
-      //   type: 'error', 
-      //   message: 'Too many requests. Please wait 2 minutes.' 
-      // }));
     }
   }
 

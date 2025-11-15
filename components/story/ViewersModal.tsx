@@ -4,7 +4,7 @@ import React from 'react';
 import { XMarkIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 interface StoryViewersProps {
-  reelId: string;
+  storyId: string;
   viewers: Array<{
     viewer: {
       _id: string;

@@ -20,19 +20,17 @@ const StorySection: React.FC = () => {
     dispatch(fetchStory({ page: 1, limit: 50 }));
   }, []);
 
-  // useEffect(() => {
-  //   if (error) {
-  //     setIsModalOpen(true);
-  //   }
-  // }, [error]);
-
   const handleReelClick = (reelId: string) => {
     dispatch(addViewToStory(reelId));
     router.push(`/stories/${reelId}`);
   };
 
   const handleCreateStory = () => {
-    setIsModalOpen(true);
+    if (window.innerWidth <= 768) {
+      router.push('/stories/create')
+    } else {
+            setIsModalOpen(true);
+    }
   };
 
   return (

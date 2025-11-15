@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import { Camera, X } from 'lucide-react';
 import { useApiController } from '@/hooks/useFetch';
-import { setUserCredentials } from '@/libs/redux/authSlice';
+import { updateUserCredentials } from '@/libs/redux/authSlice';
 import { User } from '@/types';
 import { errorNotification } from '@/libs/feedback/notification';
+import { AppDispatch } from '@/libs/redux/store';
+import { useDispatch } from 'react-redux';
 
 interface EditProfileModalProps {
   user: User;
@@ -14,12 +16,13 @@ interface EditProfileModalProps {
 
 const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
   const [formData, setFormData] = useState({
-  name: user.username || '',
-  bio: user.bio || '',
-  location: user.location || '',
-  website: user.website || '',
-  isPrivate: user.isPrivate || false,
-});
+    name: user.username || '',
+    bio: user.bio || '',
+    location: user.location || '',
+    website: user.website || '',
+    isPrivate: user.isPrivate || false,
+  });
+  const dispatch: AppDispatch = useDispatch()
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -28,14 +31,14 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
     method: 'PATCH',
     url: `/auth/users/${user._id}`,
     successMessage: 'Profile updated successfully',
-      onSuccess: (data) => {
-        onSave({ ...user, ...formData, ...data });
-        setUserCredentials(data.user)
-        onClose();
-      },
-      onError: (err) => {
-        errorNotification(err)
-      }
+    onSuccess: (data) => {
+      dispatch(updateUserCredentials(data.user))
+      onSave({ ...user, ...formData, ...data.user });
+      onClose();
+    },
+    onError: (err) => {
+      errorNotification(err)
+    }
   });
 
   const validateForm = () => {
@@ -56,50 +59,50 @@ const EditProfileModal = ({ user, onClose, onSave }: EditProfileModalProps) => {
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validateForm()) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-  const dataToSend: any = {
-    name: formData.name,
-    bio: formData.bio,
-    location: formData.location,
-    website: formData.website,
-    isPrivate: formData.isPrivate,
+    const dataToSend: any = {
+      name: formData.name,
+      bio: formData.bio,
+      location: formData.location,
+      website: formData.website,
+      isPrivate: formData.isPrivate,
+    };
+    
+    if (avatarFile) {
+      dataToSend.avatar = avatarFile;
+    }
+    if (coverFile) {
+      dataToSend.coverImage = coverFile;
+    }
+
+    mutate(dataToSend);
   };
-  
-  if (avatarFile) {
-    dataToSend.avatar = avatarFile;
-  }
-  if (coverFile) {
-    dataToSend.coverImage = coverFile;
-  }
-
-  mutate(dataToSend);
-};
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-[9999] backdrop-blur-sm p-0 sm:p-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         {/* Header - Sticky on mobile */}
-        <div className="sticky top-0 bg-white p-4 sm:p-6 border-b border-gray-100 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-white p-4 sm:p-6 border-b border-gray-200 flex items-center justify-between z-10">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Profile</h2>
           <button 
             onClick={onClose}
-            className="p-1 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <X size={20} className="sm:w-6 sm:h-6"/>
+            <X size={20} className="sm:w-6 sm:h-6 text-gray-600"/>
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           {/* Avatar Section */}
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-800">
               Profile Picture
             </label>
             <div className="flex flex-col sm:flex-row items-center space-y-3 sm:space-y-0 sm:space-x-4">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex-shrink-0 ring-4 ring-gray-100">
                 {user?.avatar || avatarFile ? (
                   <img 
                     src={avatarFile ? URL.createObjectURL(avatarFile) : user?.avatar} 
@@ -107,14 +110,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                     className="w-full h-full object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-lg sm:text-xl font-bold text-gray-500">
+                  <div className="w-full h-full flex items-center justify-center text-xl sm:text-2xl font-bold text-blue-600">
                     {user.username && user.username.charAt(0).toUpperCase()}
                   </div>
                 )}
               </div>
-              <label className="flex items-center space-x-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors text-sm sm:text-base">
+              <label className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl cursor-pointer transition-all shadow-sm hover:shadow-md text-sm sm:text-base font-medium">
                 <Camera size={16} className="sm:w-5 sm:h-5" />
-                <span>Change Avatar</span>
+                <span>Change Photo</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -123,16 +126,19 @@ const handleSubmit = async (e: React.FormEvent) => {
                 />
               </label>
             </div>
-            {errors.avatar && <p className="text-red-500 text-xs sm:text-sm">{errors.avatar}</p>}
+            {errors.avatar && <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+              {errors.avatar}
+            </p>}
           </div>
 
           {/* Cover Image Section */}
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-800">
               Cover Image
             </label>
             <div className="space-y-3">
-              <div className="w-full h-24 sm:h-32 rounded-lg overflow-hidden bg-gray-100">
+              <div className="w-full h-28 sm:h-36 rounded-xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 ring-1 ring-gray-200">
                 {user?.coverImage || coverFile ? (
                   <img 
                     src={coverFile ? URL.createObjectURL(coverFile) : user?.coverImage} 
@@ -140,12 +146,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                     className="w-full h-full object-cover" 
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs sm:text-sm">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs sm:text-sm font-medium">
                     No Cover Image
                   </div>
                 )}
               </div>
-              <label className="flex items-center justify-center space-x-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg cursor-pointer transition-colors text-sm sm:text-base">
+              <label className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 rounded-xl cursor-pointer transition-all text-sm sm:text-base font-medium text-gray-700">
                 <Camera size={16} className="sm:w-5 sm:h-5" />
                 <span>Change Cover</span>
                 <input
@@ -156,12 +162,15 @@ const handleSubmit = async (e: React.FormEvent) => {
                 />
               </label>
             </div>
-            {errors.coverImage && <p className="text-red-500 text-xs sm:text-sm">{errors.coverImage}</p>}
+            {errors.coverImage && <p className="text-red-500 text-xs sm:text-sm mt-1 flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+              {errors.coverImage}
+            </p>}
           </div>
 
           {/* Name Field */}
           <div className="space-y-2">
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="name" className="block text-sm font-semibold text-gray-800">
               Name
             </label>
             <input
@@ -169,16 +178,21 @@ const handleSubmit = async (e: React.FormEvent) => {
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl transition-all duration-200 text-sm sm:text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
               placeholder="Your full name"
             />
-            <div className="text-xs text-gray-500">{formData.name.length}/50</div>
-            {errors.name && <p className="text-red-500 text-xs sm:text-sm">{errors.name}</p>}
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-400">{formData.name.length}/50 characters</span>
+            </div>
+            {errors.name && <p className="text-red-500 text-xs sm:text-sm flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+              {errors.name}
+            </p>}
           </div>
 
           {/* Bio Field */}
           <div className="space-y-2">
-            <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="bio" className="block text-sm font-semibold text-gray-800">
               Bio
             </label>
             <textarea
@@ -186,16 +200,21 @@ const handleSubmit = async (e: React.FormEvent) => {
               rows={3}
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl transition-all duration-200 resize-none text-sm sm:text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
               placeholder="Tell people about yourself..."
             />
-            <div className="text-xs text-gray-500">{formData.bio.length}/160</div>
-            {errors.bio && <p className="text-red-500 text-xs sm:text-sm">{errors.bio}</p>}
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-400">{formData.bio.length}/160 characters</span>
+            </div>
+            {errors.bio && <p className="text-red-500 text-xs sm:text-sm flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+              {errors.bio}
+            </p>}
           </div>
 
           {/* Location Field */}
           <div className="space-y-2">
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="location" className="block text-sm font-semibold text-gray-800">
               Location
             </label>
             <input
@@ -203,16 +222,21 @@ const handleSubmit = async (e: React.FormEvent) => {
               id="location"
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl transition-all duration-200 text-sm sm:text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
               placeholder="Where are you based?"
             />
-            <div className="text-xs text-gray-500">{formData.location.length}/100</div>
-            {errors.location && <p className="text-red-500 text-xs sm:text-sm">{errors.location}</p>}
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-400">{formData.location.length}/100 characters</span>
+            </div>
+            {errors.location && <p className="text-red-500 text-xs sm:text-sm flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+              {errors.location}
+            </p>}
           </div>
 
           {/* Website Field */}
           <div className="space-y-2">
-            <label htmlFor="website" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="website" className="block text-sm font-semibold text-gray-800">
               Website
             </label>
             <input
@@ -220,45 +244,56 @@ const handleSubmit = async (e: React.FormEvent) => {
               id="website"
               value={formData.website}
               onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-              className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+              className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl transition-all duration-200 text-sm sm:text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-50"
               placeholder="https://your-website.com"
             />
-            {errors.website && <p className="text-red-500 text-xs sm:text-sm">{errors.website}</p>}
+            {errors.website && <p className="text-red-500 text-xs sm:text-sm mt-2 flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
+              {errors.website}
+            </p>}
           </div>
 
           {/* Private Profile Toggle */}
-          <div className="flex items-center space-x-3 p-3 sm:p-4 bg-gray-50 rounded-lg">
+          <div className="flex items-start space-x-3 p-4 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-100 rounded-xl">
             <input
               type="checkbox"
               id="isPrivate"
               checked={formData.isPrivate}
               onChange={(e) => setFormData({ ...formData, isPrivate: e.target.checked })}
-              className="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+              className="w-5 h-5 mt-0.5 rounded-md border-2 border-blue-300 text-blue-600 focus:ring-4 focus:ring-blue-100 focus:ring-offset-0 cursor-pointer transition-all"
             />
             <div className="flex-1">
-              <label htmlFor="isPrivate" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label htmlFor="isPrivate" className="text-sm font-semibold text-gray-800 cursor-pointer block">
                 Private Profile
               </label>
-              <p className="text-xs text-gray-500 mt-1">Only your followers can see your posts</p>
+              <p className="text-xs text-gray-600 mt-1">Only approved followers can see your posts and stories</p>
             </div>
           </div>
 
           {/* Action Buttons - Sticky on mobile */}
-          <div className="sticky bottom-0 bg-white pt-4 sm:pt-6 border-t border-gray-100 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 sm:px-6 pb-4 sm:pb-6">
-            <div className="flex flex-col-reverse sm:flex-row justify-end space-y-reverse space-y-3 sm:space-y-0 sm:space-x-4">
+          <div className="sticky bottom-0 bg-white pt-5 sm:pt-6 border-t-2 border-gray-100 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6 px-4 sm:px-6 pb-4 sm:pb-6">
+            <div className="flex flex-col-reverse sm:flex-row justify-end space-y-reverse space-y-3 sm:space-y-0 sm:space-x-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors text-sm sm:text-base"
+                className="w-full sm:w-auto px-6 py-3 text-gray-700 bg-white hover:bg-gray-50 border-2 border-gray-200 hover:border-gray-300 rounded-xl font-semibold transition-all text-sm sm:text-base"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full sm:w-auto px-4 py-2.5 sm:px-6 sm:py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-blue-300 disabled:to-blue-400 disabled:cursor-not-allowed text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl text-sm sm:text-base"
               >
-                {isLoading ? 'Saving...' : 'Save Changes'}
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    </svg>
+                    Saving...
+                  </span>
+                ) : 'Save Changes'}
               </button>
             </div>
           </div>

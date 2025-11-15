@@ -44,7 +44,7 @@ export const createStory = createAsyncThunk(
       const formData = new FormData();
       if (payload.file) formData.append('file', payload.file);
       formData.append('text', payload.text);
-      formData.append('fileType', payload.fileType);
+     if (payload.fileType) formData.append('fileType', payload.fileType);
       formData.append('textPosition', JSON.stringify(payload.textPosition));
       formData.append('background', payload.background || '');
       formData.append('textStyle', payload.textStyle)
@@ -56,67 +56,67 @@ export const createStory = createAsyncThunk(
       return response.data.data;
     } catch (error: any) {
       errorMessageHandler(error)
-      return rejectWithValue(error.response?.data?.message || 'Failed to create reel');
+      return rejectWithValue(error.response?.data?.message || 'Failed to create story');
     }
   }
 );
 
 export const likeStory = createAsyncThunk(
   'stories/likestory',
-  async (reelId: string, { rejectWithValue }) => {
+  async (storyId: string, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/stories/like`, { reelId });
-      return { reelId, data: response.data };
+      const response = await api.post(`/stories/like`, { storyId });
+      return { storyId, data: response.data };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to like reel');
+      return rejectWithValue(error.response?.data?.message || 'Failed to like story');
     }
   }
 );
 
 export const addViewToStory = createAsyncThunk(
   'stories/addViewToStory',
-  async (reelId: string, { rejectWithValue }) => {
+  async (storyId: string, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/stories/viewers/${reelId}`);
-      return { reelId, data: response.data };
+      const response = await api.post(`/stories/viewers/${storyId}`);
+      return { storyId, data: response.data.data };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to add view to reel');
+      return rejectWithValue(error.response?.data?.message || 'Failed to add view to story');
     }
   }
 );
 
 export const addReactionToStory = createAsyncThunk(
   'stories/addReactionToStory',
-  async ({ reelId, reactionType }: { reelId: string; reactionType: string }, { rejectWithValue }) => {
+  async ({ storyId, reactionType }: { storyId: string; reactionType: string }, { rejectWithValue }) => {
     try {
-      const response = await api.post(`stories/reaction`, { reelId, reactionType });
-      return { reelId, data: response.data.data };
+      const response = await api.post(`stories/reaction`, { storyId, reactionType });
+      return { storyId, data: response.data.data };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to add reaction to reel');
+      return rejectWithValue(error.response?.data?.message || 'Failed to add reaction to story');
     }
   }
 );
 
 export const setStoryViewers = createAsyncThunk(
   'stories/setStoryViewers',
-  async (reelId: string, { rejectWithValue }) => {
+  async (storyId: string, { rejectWithValue }) => {
     try {
-      const response = await api.post(`/stories/viewers/${reelId}`);
-      return { reelId, data: response.data.data };
+      const response = await api.post(`/stories/viewers/${storyId}`);
+      return { storyId, data: response.data.data };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to set reel viewers');
+      return rejectWithValue(error.response?.data?.message || 'Failed to set story viewers');
     }
   }
 );
 
 export const getStoryViewers = createAsyncThunk(
   'stories/setStoryViewers',
-  async (reelId: string, { rejectWithValue }) => {
+  async (storyId: string, { rejectWithValue }) => {
     try {
-      const response = await api.get(`/stories/viewers/${reelId}`);
-      return { reelId, data: response.data.data };
+      const response = await api.get(`/stories/viewers/${storyId}`);
+      return { storyId, data: response.data.data };
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to set reel viewers');
+      return rejectWithValue(error.response?.data?.message || 'Failed to set story viewers');
     }
   }
 );
@@ -147,11 +147,11 @@ const storiesSlice = createSlice({
       state.stories = [action.payload, ...state.stories];
       state.total += 1;
     },
-    updateStoryLocally: (state, action: PayloadAction<{ reelId: string; updates: Partial<Story> }>) => {
-      const { reelId, updates } = action.payload;
-      const reel = state.stories.find((r) => r._id === reelId);
-      if (reel) {
-        Object.assign(reel, updates);
+    updateStoryLocally: (state, action: PayloadAction<{ storyId: string; updates: Partial<Story> }>) => {
+      const { storyId, updates } = action.payload;
+      const story = state.stories.find((r) => r._id === storyId);
+      if (story) {
+        Object.assign(story, updates);
       }
     },
   },
@@ -190,11 +190,11 @@ const storiesSlice = createSlice({
       })
       
       .addCase(likeStory.fulfilled, (state, action) => {
-        const { reelId, data } = action.payload;
-        const reel = state.stories.find((r) => r._id === reelId);
-        if (reel) {
-          reel.reactions = data.reactions;
-          reel.isLiked = data.isLiked;
+        const { storyId, data } = action.payload;
+        const story = state.stories.find((r) => r._id === storyId);
+        if (story) {
+          story.reactions = data.reactions;
+          story.isLiked = data.isLiked;
         }
       })
       .addCase(likeStory.rejected, (state, action) => {
@@ -206,8 +206,8 @@ const storiesSlice = createSlice({
       })
       
       .addCase(addViewToStory.fulfilled, (state, action) => {
-        const { reelId, data } = action.payload;
-        const story = state.stories.find((r) => r._id === reelId);
+        const { storyId, data } = action.payload;
+        const story = state.stories.find((r) => r._id === storyId);
         if (story) {
           story.viewers = data.viewers;
         }
@@ -217,10 +217,10 @@ const storiesSlice = createSlice({
       })
       
       .addCase(addReactionToStory.fulfilled, (state, action) => {
-        const { reelId, data } = action.payload;
-        const reel = state.stories.find((r) => r._id === reelId);
-        if (reel) {
-          reel.reactions = data.reactions;
+        const { storyId, data } = action.payload;
+        const story = state.stories.find((r) => r._id === storyId);
+        if (story) {
+          story.reactions = data.reactions;
         }
       })
       .addCase(addReactionToStory.rejected, (state, action) => {
@@ -228,10 +228,10 @@ const storiesSlice = createSlice({
       })
       
       .addCase(setStoryViewers.fulfilled, (state, action) => {
-        const { reelId, data } = action.payload;
-        const reel = state.stories.find((r) => r._id === reelId);
-        if (reel) {
-          reel.viewers = data.viewers;
+        const { storyId, data } = action.payload;
+        const story = state.stories.find((r) => r._id === storyId);
+        if (story) {
+          story.viewers = data.viewers;
         }
       })
       .addCase(setStoryViewers.rejected, (state, action) => {

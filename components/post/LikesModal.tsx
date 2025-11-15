@@ -73,10 +73,6 @@ export const ReactionsModal: React.FC<ReactionModalProps> = ({
     }
   };
 
-  // const getTotalCount = () => {
-  //   return activeTab === "All" ? reactions.length : reactionCounts[activeTab] || 0;
-  // };
-
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"

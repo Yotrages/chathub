@@ -308,7 +308,7 @@ export interface StoryResponse {
 export interface CreateStoryPayload {
   text: string;
   file?: File;
-  fileType: "image" | "video";
+  fileType?: "image" | "video";
   background?: string;
   textPosition: { x: number; y: number };
   textStyle: string;

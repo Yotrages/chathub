@@ -35,7 +35,6 @@ const ReelsPage: React.FC = () => {
 
   const hasMore = pagination.reels?.hasNextPage ?? false;
 
-  // Set CSS variable for actual viewport height
   useEffect(() => {
     const setVH = () => {
       const vh = window.innerHeight * 0.01;

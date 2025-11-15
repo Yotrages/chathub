@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import InfiniteScroll from 'react-infinite-scroll-component';
-import { fetchStory, likeStory, resetStory } from '@/libs/redux/storySlice';
+import { fetchStory, resetStory } from '@/libs/redux/storySlice';
 import CreateReelModal from '@/components/reels/createReelModal';
 import { PlusCircleIcon } from '@heroicons/react/24/outline';
 import { AppDispatch, RootState } from '@/libs/redux/store';
@@ -28,9 +28,9 @@ const ReelsPage: React.FC = () => {
     }
   };
 
-  const handleLike = (reelId: string) => {
-    dispatch(likeStory(reelId));
-  };
+  // const handleLike = (reelId: string) => {
+  //   dispatch(likeStory(reelId));
+  // };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center py-4">
@@ -55,7 +55,7 @@ const ReelsPage: React.FC = () => {
           className="space-y-4"
         >
           {stories.map((story) => (
-            <StoryCard key={story._id} story={story} onLike={handleLike} />
+            <StoryCard key={story._id} story={story} />
           ))}
         </InfiniteScroll>
       </div>

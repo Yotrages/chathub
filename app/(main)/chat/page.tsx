@@ -68,7 +68,7 @@ export default function ChatPage() {
       style={{ height: chatHeight }}
     >
       {/* Sidebar - Never scrolls */}
-      <div className="w-full min-h-screen flex-shrink-0 sm:w-80 bg-white/80 dark:bg-gray-900/15 backdrop-blur-sm border-r border-gray-200/50 flex flex-col shadow-xl overflow-hidden">
+      <div className="w-full sm:w-80 bg-white/80 dark:bg-gray-900/15 backdrop-blur-sm border-r border-gray-200/50 flex flex-col shadow-xl">
         <ChatSidebar />
       </div>
 

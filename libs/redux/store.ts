@@ -1,5 +1,5 @@
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
-import { persistStore, persistReducer } from "redux-persist";
+import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from "redux-persist";
 import { createTransform } from "redux-persist";
 import { useEffect, useState } from 'react';
 import createInvisibleStorage from './invisibleIndexDBStore';
@@ -44,26 +44,41 @@ const offlineStorageTransform = createTransform<any, any, RootState>(
   }
 );
 
-const storage = createInvisibleStorage();
+const isClient = typeof window !== 'undefined';
+
+let storage: any;
+if (isClient) {
+  storage = createInvisibleStorage();
+  console.log('✅ Client-side: Using IndexedDB storage');
+} else {
+  console.log('🔴 Server-side: No storage (will persist on client)');
+}
 
 const persistConfig = {
   key: "root",
-  storage: storage,
+  storage: storage as any,
   transforms: [offlineStorageTransform],
-  throttle: 1000, 
-  serialize: true, 
-  debug: process.env.NODE_ENV === 'development', 
-  whitelist: ['auth', 'chat', 'post', 'stories', 'reels'], 
+  throttle: 1000,
+  serialize: true,
+  debug: process.env.NODE_ENV === 'development',
+  whitelist: ['auth', 'chat', 'post', 'stories', 'reels'],
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
+const getReducer = () => {
+  if (isClient && storage) {
+    console.log('✅ Creating persisted reducer');
+    return persistReducer(persistConfig, rootReducer);
+  }
+  console.log('⚠️ Creating non-persisted reducer (SSR)');
+  return rootReducer;
+};
 
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: getReducer() as any, 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
         ignoredActionsPaths: ['register', 'rehydrate'],
         ignoredPaths: ['_persist'],
       },
@@ -71,13 +86,16 @@ export const store = configureStore({
   devTools: process.env.NODE_ENV === 'development',
 });
 
-export const persistor = persistStore(store, null, () => {
+export const persistor = isClient && storage ? persistStore(store, null, () => {
   console.log('Redux persist rehydration complete');
-});
+}) : null;
 
-persistor.subscribe(() => {
-  console.log('Persistor state changed:', persistor.getState());
-});
+if (persistor) {
+  persistor.subscribe(() => {
+    const state = persistor.getState();
+    console.log('Persistor state changed:', state);
+  });
+}
 
 export type AppDispatch = typeof store.dispatch;
 
@@ -150,10 +168,14 @@ export const useInvisibleStorageInfo = () => {
 };
 
 export const manualPersist = () => {
-  persistor.persist();
+  if (persistor) {
+    persistor.persist();
+  }
 };
 
 export const checkPersistedData = async () => {
+  if (typeof window === 'undefined') return null;
+  
   const storage = createInvisibleStorage();
   try {
     const rootData = await storage.getItem('persist:root');
@@ -171,14 +193,18 @@ export const checkPersistedData = async () => {
 };
 
 export const clearPersistedData = async () => {
+  if (typeof window === 'undefined') return;
+  
   try {
     const storage = createInvisibleStorage();
     if ('clearAll' in storage && typeof storage.clearAll === 'function') {
       await (storage as any).clearAll();
-      console.log('All persisted data cleared');
+      console.log('🗑️ All persisted data cleared');
     }
     
-    persistor.purge();
+    if (persistor) {
+      persistor.purge();
+    }
   } catch (error) {
     console.error('Failed to clear persisted data:', error);
   }

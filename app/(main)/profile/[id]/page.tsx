@@ -24,18 +24,21 @@ import Link from 'next/link';
 import { User } from '@/types';
 import UserReelsComponent from '@/components/reels/UserReels';
 import { setActiveChat } from '@/libs/redux/chatSlice';
+import { useDispatch } from 'react-redux';
 
 const UserProfilePage = () => {
   const { id } = useParams();
   const router = useRouter();
+  const dispatch = useDispatch();
   const { user: currentUser } = useSelector((state: RootState) => state.auth);
-    const { chats } = useSelector((state: RootState) => state.chat);
+  const { chats } = useSelector((state: RootState) => state.chat);
   const [profileUser, setProfileUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'posts' | 'reels' | 'likes' | 'saved'>('posts');
   const [showEditModal, setShowEditModal] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [mounted, setMounted] = useState(false);
   
   const { data: profileData, isLoading: profileLoading } = useGetUser(id as string);
   const { mutate: followUser, isLoading: followLoading } = useFollowUser(id as string, () => {
@@ -47,6 +50,7 @@ const UserProfilePage = () => {
   const { createChat } = useChat();
 
   useEffect(() => {
+    setMounted(true);
     const handleResize = () => setWindowWidth(window.innerWidth);
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -54,48 +58,59 @@ const UserProfilePage = () => {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
+
+    console.log('📍 Profile effect running:', {
+      id,
+      currentUserId: currentUser?._id,
+      hasCurrentUser: !!currentUser,
+      hasProfileData: !!profileData,
+      profileLoading
+    });
+
     const fetchUserProfile = async () => {
       setIsLoading(true);
       try {
         if (id && id === currentUser?._id) {
+          console.log('✅ Viewing own profile, using currentUser from Redux');
           setProfileUser({
-            _id: currentUser?._id || '',
-            username: currentUser?.username || '',
-            email: currentUser?.email || '',
-            avatar: currentUser?.avatar || '',
-            coverImage: currentUser?.coverImage || '',
+            _id: currentUser._id,
+            username: currentUser.username,
+            email: currentUser.email,
+            avatar: currentUser.avatar,
+            coverImage: currentUser.coverImage,
             online: currentUser.online,
             lastSeen: currentUser.lastSeen,
-            createdAt: currentUser?.createdAt,
-            bio: currentUser?.bio || '',
-            location: currentUser?.location || '',
-            website: currentUser?.website || '',
-            isVerified: currentUser?.isVerified || false,
-            isPrivate: currentUser?.isPrivate || false,
-            followersCount: currentUser?.followersCount || 0,
-            followingCount: currentUser?.followingCount || 0,
-            postsCount: currentUser?.postsCount || 0,
+            createdAt: currentUser.createdAt,
+            bio: currentUser.bio,
+            location: currentUser.location,
+            website: currentUser.website,
+            isVerified: currentUser.isVerified,
+            isPrivate: currentUser.isPrivate,
+            followersCount: currentUser.followersCount,
+            followingCount: currentUser.followingCount,
+            postsCount: currentUser.postsCount,
             followers: currentUser.followers,
             following: currentUser.following
           });
           setIsOwnProfile(true);
-        } else if (profileData) {
-          setProfileUser({
-            ...profileData
-          });
+        } else if (profileData && !profileLoading) {
+          console.log('✅ Viewing other user profile');
+          setProfileUser(profileData);
           setIsOwnProfile(false);
-        } else {
+        } else if (!profileData && !profileLoading) {
+          console.log('❌ No profile data found');
           setProfileUser(null);
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('❌ Error fetching user profile:', error);
         setProfileUser(null);
       }
       setIsLoading(false);
     };
 
     fetchUserProfile();
-  }, [id, currentUser, profileData]);
+  }, [id, currentUser, profileData, profileLoading, mounted]);
 
   const handleFollow = () => {
     if (isFollowing) {
@@ -107,7 +122,7 @@ const UserProfilePage = () => {
 
   const handleEditProfile = () => {
     if (windowWidth < 640) {
-      router.push(`/profile/edit`);
+      router.push(`/profile/${currentUser?._id}/edit`);
     } else {
       setShowEditModal(true);
     }
@@ -116,17 +131,17 @@ const UserProfilePage = () => {
   const handleMessage = async () => {
     if (!currentUser || !profileUser) return;
     const matchedChat = chats.find((c) => {
-      return c.participants.map((u) => u._id === profileUser._id) && c.type === 'direct'
+      return c.participants.some((u) => u._id === profileUser._id) && c.type === 'direct'
     })
     if (matchedChat) {
-      setActiveChat(matchedChat._id)
+      dispatch(setActiveChat(matchedChat._id))
     } else {
-      await createChat([currentUser?._id, profileUser?._id], "direct");
+      await createChat([currentUser._id, profileUser._id], "direct");
     }
-    router.push(window.innerWidth < 768 ? '/message' : '/chat');
+    router.push(windowWidth < 768 ? '/message' : '/chat');
   };
 
-  if (isLoading || profileLoading) {
+  if (!mounted || isLoading || profileLoading) {
     return <ProfileSkeleton />;
   }
 
@@ -216,7 +231,7 @@ const UserProfilePage = () => {
                         )}
                       </div>
                       <p className="text-gray-600 mb-1 sm:mb-2 text-sm sm:text-base">@{profileUser.username}</p>
-                      <p className="text-xs sm:text-sm text-gray-500">
+                      <span className="text-xs sm:text-sm text-gray-500">
                         {profileUser.online ? (
                           <span className="flex items-center justify-center sm:justify-start space-x-1">
                             <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full"></div>
@@ -227,7 +242,7 @@ const UserProfilePage = () => {
                         ) : (
                           'Offline'
                         )}
-                      </p>
+                      </span>
                     </div>
 
                     <div className="flex items-center justify-center sm:justify-end space-x-2 sm:space-x-3">
@@ -387,6 +402,7 @@ const UserProfilePage = () => {
             user={profileUser}
             onClose={() => setShowEditModal(false)}
             onSave={(updatedUser) => {
+              console.log('📝 Profile updated from modal:', updatedUser);
               setProfileUser(updatedUser);
               setShowEditModal(false);
             }}

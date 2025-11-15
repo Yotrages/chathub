@@ -12,7 +12,6 @@ export function useRenderLogger(componentName: string, props?: Record<string, an
   const renderTimes = useRef<number[]>([]);
   const propsHistory = useRef<any[]>([]);
 
-  // This runs on EVERY render
   renderCount.current++;
   const now = Date.now();
   const timeSinceLastRender = now - lastRenderTime.current;
@@ -31,17 +30,14 @@ export function useRenderLogger(componentName: string, props?: Record<string, an
   
   lastRenderTime.current = now;
 
-  // Calculate average render interval
   const avgInterval = renderTimes.current.reduce((a, b) => a + b, 0) / renderTimes.current.length;
 
-  // Log every render
   console.log(`🔄 ${componentName} render #${renderCount.current}`, {
     timeSinceLastRender: `${timeSinceLastRender}ms`,
     avgInterval: `${avgInterval.toFixed(0)}ms`,
     props: props ? JSON.stringify(props).slice(0, 100) : 'none'
   });
 
-  // Detect FAST loop (more than 5 renders in quick succession)
   if (renderCount.current > 5 && avgInterval < 100) {
     console.error(`🚨 FAST LOOP DETECTED in ${componentName}!`);
     console.error(`🚨 ${renderCount.current} renders, avg ${avgInterval.toFixed(0)}ms apart`);
@@ -53,13 +49,11 @@ export function useRenderLogger(componentName: string, props?: Record<string, an
     console.trace('Stack trace:');
   }
 
-  // Detect SLOW loop (more than 20 renders total)
   if (renderCount.current > 20) {
     console.error(`🚨 EXCESSIVE RENDERS in ${componentName}: ${renderCount.current} total renders`);
     console.trace('Stack trace:');
   }
 
-  // Reset counter when component unmounts
   useEffect(() => {
     return () => {
       console.log(`✅ ${componentName} unmounted after ${renderCount.current} renders`);

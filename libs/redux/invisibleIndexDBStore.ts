@@ -11,6 +11,9 @@ class InvisibleIndexedDBStorage implements WebStorage {
 
   constructor() {
     this.isClient = typeof window !== 'undefined' && 'indexedDB' in window;
+    if (!this.isClient) {
+      console.log('❌ IndexedDBStorage: Not in browser environment');
+    }
   }
 
   private async initDB(): Promise<void> {
@@ -22,14 +25,14 @@ class InvisibleIndexedDBStorage implements WebStorage {
       const request = indexedDB.open(this.dbName, this.version);
 
       request.onerror = () => {
-        console.error('IndexedDB initialization failed:', request.error);
+        console.error('❌ IndexedDB initialization failed:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
         this.db = request.result;
         this.isInitialized = true;
-        console.log('IndexedDB initialized successfully');
+        console.log('✅ IndexedDB initialized successfully');
         resolve();
       };
 
@@ -39,7 +42,7 @@ class InvisibleIndexedDBStorage implements WebStorage {
           const objectStore = db.createObjectStore(this.storeName);
           objectStore.createIndex('timestamp', 'timestamp', { unique: false });
           objectStore.createIndex('type', 'type', { unique: false });
-          console.log('IndexedDB object store created');
+          console.log('✅ IndexedDB object store created');
         }
       };
     });
@@ -53,7 +56,7 @@ class InvisibleIndexedDBStorage implements WebStorage {
       const base64 = btoa(utf8Encoded);
       return base64.split('').reverse().join('');
     } catch (error) {
-      console.warn('Obfuscation failed, using simple reversal:', error);
+      console.warn('⚠️ Obfuscation failed, using simple reversal:', error);
       return data.split('').reverse().join('');
     }
   }
@@ -64,11 +67,11 @@ class InvisibleIndexedDBStorage implements WebStorage {
       const decoded = atob(reversed);
       return decodeURIComponent(decoded);
     } catch (error) {
-      console.warn('Deobfuscation failed, trying simple reversal:', error);
+      console.warn('⚠️ Deobfuscation failed, trying simple reversal:', error);
       try {
         return data.split('').reverse().join('');
       } catch (fallbackError) {
-        console.warn('Fallback deobfuscation also failed, returning as is:', fallbackError);
+        console.warn('⚠️ Fallback deobfuscation also failed, returning as is:', fallbackError);
         return data;
       }
     }
@@ -82,7 +85,7 @@ class InvisibleIndexedDBStorage implements WebStorage {
     try {
       await this.initDB();
       if (!this.db) {
-        console.warn('Database not available for getItem:', key);
+        console.warn('⚠️ Database not available for getItem:', key);
         return null;
       }
       
@@ -97,30 +100,30 @@ class InvisibleIndexedDBStorage implements WebStorage {
           if (request.result && request.result.data) {
             try {
               const deobfuscated = this.deobfuscate(request.result.data);
-              console.log(`Retrieved data for key: ${key}`, { size: deobfuscated.length });
+              console.log(`📥 Retrieved data for key: ${key}`, { size: deobfuscated.length });
               resolve(deobfuscated);
             } catch (error) {
-              console.error('Failed to deobfuscate data for key:', key, error);
+              console.error('❌ Failed to deobfuscate data for key:', key, error);
               resolve(null);
             }
           } else {
-            console.log(`No data found for key: ${key}`);
+            console.log(`📭 No data found for key: ${key}`);
             resolve(null);
           }
         };
 
         request.onerror = () => {
-          console.error('Error retrieving data for key:', key, request.error);
+          console.error('❌ Error retrieving data for key:', key, request.error);
           resolve(null);
         };
 
         transaction.onerror = () => {
-          console.error('Transaction error for getItem:', key, transaction.error);
+          console.error('❌ Transaction error for getItem:', key, transaction.error);
           resolve(null);
         };
       });
     } catch (error) {
-      console.error('getItem failed for key:', key, error);
+      console.error('❌ getItem failed for key:', key, error);
       return null;
     }
   }
@@ -133,7 +136,7 @@ class InvisibleIndexedDBStorage implements WebStorage {
     try {
       await this.initDB();
       if (!this.db) {
-        console.warn('Database not available for setItem:', key);
+        console.warn('⚠️ Database not available for setItem:', key);
         return;
       }
       
@@ -154,28 +157,28 @@ class InvisibleIndexedDBStorage implements WebStorage {
           const request = objectStore.put(dataWithMeta, key);
 
           request.onsuccess = () => {
-            console.log(`Data stored for key: ${key}`, { size: dataWithMeta.size });
+            console.log(`💾 Data stored for key: ${key}`, { size: dataWithMeta.size });
             resolve();
           };
 
           request.onerror = () => {
-            console.error('Error storing data for key:', key, request.error);
+            console.error('❌ Error storing data for key:', key, request.error);
             resolve();
           };
 
           transaction.onerror = () => {
-            console.error('Transaction error for setItem:', key, transaction.error);
+            console.error('❌ Transaction error for setItem:', key, transaction.error);
             resolve();
           };
           
           setTimeout(() => this.cleanupOldData(), 1000);
         } catch (error) {
-          console.error('setItem failed for key:', key, error);
+          console.error('❌ setItem failed for key:', key, error);
           resolve();
         }
       });
     } catch (error) {
-      console.error('setItem initialization failed for key:', key, error);
+      console.error('❌ setItem initialization failed for key:', key, error);
       return Promise.resolve();
     }
   }
@@ -188,7 +191,7 @@ class InvisibleIndexedDBStorage implements WebStorage {
     try {
       await this.initDB();
       if (!this.db) {
-        console.warn('Database not available for removeItem:', key);
+        console.warn('⚠️ Database not available for removeItem:', key);
         return;
       }
       
@@ -200,17 +203,17 @@ class InvisibleIndexedDBStorage implements WebStorage {
         const request = objectStore.delete(key);
 
         request.onsuccess = () => {
-          console.log(`Data removed for key: ${key}`);
+          console.log(`🗑️ Data removed for key: ${key}`);
           resolve();
         };
 
         request.onerror = () => {
-          console.error('Error removing data for key:', key, request.error);
+          console.error('❌ Error removing data for key:', key, request.error);
           resolve();
         };
       });
     } catch (error) {
-      console.error('removeItem failed for key:', key, error);
+      console.error('❌ removeItem failed for key:', key, error);
       return Promise.resolve();
     }
   }
@@ -246,11 +249,11 @@ class InvisibleIndexedDBStorage implements WebStorage {
           deletedCount++;
           cursor.continue();
         } else if (deletedCount > 0) {
-          console.log(`Cleaned up ${deletedCount} old entries`);
+          console.log(`🧹 Cleaned up ${deletedCount} old entries`);
         }
       };
     } catch (error) {
-      console.error('Cleanup failed:', error);
+      console.error('❌ Cleanup failed:', error);
     }
   }
 
@@ -275,17 +278,17 @@ class InvisibleIndexedDBStorage implements WebStorage {
             totalItems: items.length,
             totalSize
           };
-          console.log('Storage info:', info);
+          console.log('📊 Storage info:', info);
           resolve(info);
         };
 
         request.onerror = () => {
-          console.error('Failed to get storage info:', request.error);
+          console.error('❌ Failed to get storage info:', request.error);
           resolve({ totalItems: 0, totalSize: 0 });
         };
       });
     } catch (error) {
-      console.error('getStorageInfo failed:', error);
+      console.error('❌ getStorageInfo failed:', error);
       return { totalItems: 0, totalSize: 0 };
     }
   }
@@ -303,16 +306,16 @@ class InvisibleIndexedDBStorage implements WebStorage {
 
       return new Promise((resolve) => {
         request.onsuccess = () => {
-          console.log('All data cleared from IndexedDB');
+          console.log('🗑️ All data cleared from IndexedDB');
           resolve();
         };
         request.onerror = () => {
-          console.error('Failed to clear data:', request.error);
+          console.error('❌ Failed to clear data:', request.error);
           resolve();
         };
       });
     } catch (error) {
-      console.error('clearAll failed:', error);
+      console.error('❌ clearAll failed:', error);
       return Promise.resolve();
     }
   }
@@ -324,35 +327,44 @@ class InvisibleIndexedDBStorage implements WebStorage {
       await this.initDB();
       return this.db !== null && this.isInitialized;
     } catch (error) {
-      console.error('Storage check failed:', error);
+      console.error('❌ Storage check failed:', error);
       return false;
     }
   }
 }
 
 const fallbackStorage: WebStorage = {
-  getItem: () => Promise.resolve(null),
-  setItem: () => Promise.resolve(),
-  removeItem: () => Promise.resolve(),
+  getItem: () => {
+    console.log('⚠️ Fallback storage getItem called (no-op)');
+    return Promise.resolve(null);
+  },
+  setItem: () => {
+    console.log('⚠️ Fallback storage setItem called (no-op)');
+    return Promise.resolve();
+  },
+  removeItem: () => {
+    console.log('⚠️ Fallback storage removeItem called (no-op)');
+    return Promise.resolve();
+  },
 };
 
 export function createInvisibleStorage(): WebStorage {
   if (typeof window === 'undefined') {
-    console.log('SSR detected, using fallback storage');
+    console.log('🔴 SSR detected, using fallback storage (will persist on client)');
     return fallbackStorage;
   }
   
   if (!('indexedDB' in window)) {
-    console.warn('IndexedDB not supported, using fallback storage');
+    console.warn('❌ IndexedDB not supported, using fallback storage');
     return fallbackStorage;
   }
   
   try {
     const storage = new InvisibleIndexedDBStorage();
-    console.log('IndexedDB storage created successfully');
+    console.log('✅ IndexedDB storage created successfully');
     return storage;
   } catch (error) {
-    console.error('Failed to create IndexedDB storage, using fallback:', error);
+    console.error('❌ Failed to create IndexedDB storage, using fallback:', error);
     return fallbackStorage;
   }
 }

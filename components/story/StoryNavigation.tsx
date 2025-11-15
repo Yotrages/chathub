@@ -22,7 +22,6 @@ const StoryNavigation: React.FC<ReelNavigationProps> = ({
 }) => {
   return (
     <div className="absolute inset-y-0 left-0 right-0 flex items-center justify-between pointer-events-none z-10">
-      {/* Previous button */}
       {hasPrevious && (
         <button
           onClick={onPrevious}
@@ -34,7 +33,6 @@ const StoryNavigation: React.FC<ReelNavigationProps> = ({
       
       <div className="flex-1" />
       
-      {/* Next button */}
       {hasNext && (
         <button
           onClick={onNext}

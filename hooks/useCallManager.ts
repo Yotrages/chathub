@@ -21,7 +21,7 @@ type ConnectionState =
   | "closed";
 
 const isLowEndDevice = () => {
-  const memory = (navigator as any).deviceMemory; // GB
+  const memory = (navigator as any).deviceMemory; 
   const hardwareConcurrency = navigator.hardwareConcurrency || 1;
   const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
 
@@ -32,10 +32,7 @@ const isLowEndDevice = () => {
     userAgent: navigator.userAgent,
   });
 
-  // Consider low-end if:
-  // - Less than 2GB RAM OR
-  // - Less than 4 CPU cores OR
-  // - Specific low-end device detected
+
   const isLowRam = memory && memory < 2;
   const isLowCpu = hardwareConcurrency < 4;
   const isItelOrLowEnd = /Itel|Symphony|Infinix|Tecno/i.test(
@@ -98,11 +95,11 @@ const checkStorageSpace = async () => {
       return true;
     } catch (error) {
       console.error("Could not estimate storage:", error);
-      return true; // Assume OK if can't check
+      return true; 
     }
   }
 
-  return true; // Assume OK if API not supported
+  return true; 
 };
 
 // ===== MEMORY PRESSURE DETECTION =====
@@ -285,7 +282,6 @@ export const useCallManagement = (currentChat: any) => {
       setRemoteStream(null);
     }
 
-    // 🔴 Clean up audio element
     if (remoteAudioRef.current) {
       remoteAudioRef.current.pause();
       remoteAudioRef.current.srcObject = null;
@@ -354,7 +350,6 @@ export const useCallManagement = (currentChat: any) => {
       }
     };
 
-    // CRITICAL FIX: Remote video UNMUTED, local video MUTED
     pc.ontrack = (event) => {
       console.log("📥 ===== ONTRACK FIRED =====");
       console.log("📥 Track kind:", event.track.kind);
@@ -420,10 +415,8 @@ export const useCallManagement = (currentChat: any) => {
         if (event.track.kind === "audio") {
           console.log("🔊 Setting remote AUDIO stream (UNMUTED)");
 
-          // Create audio-only stream
           const audioStream = new MediaStream([event.track]);
 
-          // Create or reuse audio element
           if (!remoteAudioRef.current) {
             remoteAudioRef.current = new Audio();
             remoteAudioRef.current.autoplay = true;
@@ -431,11 +424,10 @@ export const useCallManagement = (currentChat: any) => {
           }
 
           remoteAudioRef.current.srcObject = audioStream;
-          remoteAudioRef.current.muted = false; // ✅ UNMUTED - we want to hear audio
-          remoteAudioRef.current.volume = 1.0; // ✅ Full volume
+          remoteAudioRef.current.muted = false; 
+          remoteAudioRef.current.volume = 1.0; 
           remoteAudioRef.current.autoplay = true;
 
-          // Attempt to play audio
           const playAudio = () => {
             if (remoteAudioRef.current) {
               remoteAudioRef.current
@@ -449,7 +441,6 @@ export const useCallManagement = (currentChat: any) => {
                 })
                 .catch((err) => {
                   console.error("❌ Remote audio play failed:", err);
-                  // Retry after user interaction
                   setTimeout(playAudio, 1000);
                 });
             }
@@ -526,7 +517,6 @@ export const useCallManagement = (currentChat: any) => {
       }
 
       try {
-        // 🔴 CRITICAL: Check device capabilities
         const hasStorage = await checkStorageSpace();
         const hasMemory = checkMemoryPressure();
 
@@ -574,7 +564,6 @@ export const useCallManagement = (currentChat: any) => {
           }))
         );
 
-        // Log actual video settings
         const videoTrack = stream.getVideoTracks()[0];
         if (videoTrack && videoTrack.getSettings) {
           const settings = videoTrack.getSettings();
@@ -588,7 +577,6 @@ export const useCallManagement = (currentChat: any) => {
 
         setLocalStream(stream);
 
-        // Local video MUST be muted
         if (localVideoRef.current) {
           localVideoRef.current.srcObject = stream;
           localVideoRef.current.muted = true;
@@ -699,7 +687,6 @@ export const useCallManagement = (currentChat: any) => {
     }
 
     try {
-      // Set a longer timeout state while waiting for permissions
       setCallState("connecting");
       setCallError("Requesting camera/microphone permission...");
 
@@ -712,7 +699,6 @@ export const useCallManagement = (currentChat: any) => {
         callTimeoutRef.current = null;
       }
 
-      // Check device capabilities
       const hasStorage = await checkStorageSpace();
       const hasMemory = checkMemoryPressure();
 
@@ -735,7 +721,6 @@ export const useCallManagement = (currentChat: any) => {
 
       console.log("🎤 Requesting user media with optimized settings...");
 
-      // Give user up to 30 seconds to grant permissions
       const permissionTimeout = setTimeout(() => {
         if (callStateRef.current === "connecting") {
           console.log("⏰ Permission timeout");
@@ -748,17 +733,16 @@ export const useCallManagement = (currentChat: any) => {
           });
           cleanup();
         }
-      }, 30000);
+      }, 40000);
 
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: getOptimizedAudioConstraints(),
         video: getOptimizedVideoConstraints(callData.isVideo),
       });
 
-      // Clear permission timeout if we got the stream
       clearTimeout(permissionTimeout);
 
-      setCallError(null); // Clear the "requesting permission" message
+      setCallError(null); 
 
       console.log("✅ Got local media stream");
       console.log(
@@ -880,7 +864,6 @@ export const useCallManagement = (currentChat: any) => {
       setCallError(message);
       toast.error(message);
 
-      // Notify the caller that we failed
       if (incomingCall) {
         socket.emit("call_failed", {
           to: incomingCall.from,
@@ -1000,7 +983,6 @@ export const useCallManagement = (currentChat: any) => {
     }
   }, [callState, isVideoCall]);
 
-  // Socket event handlers
   useEffect(() => {
     if (!socket || !isConnected) return;
 
@@ -1065,7 +1047,6 @@ export const useCallManagement = (currentChat: any) => {
     }) => {
       console.log("🔌 Call disconnected:", data);
 
-      // Show appropriate message based on status
       if (data.status === "failed") {
         toast.error("Call failed - Connection lost");
         setCallError("Call failed - Connection lost");
@@ -1076,7 +1057,6 @@ export const useCallManagement = (currentChat: any) => {
         setCallError(`Connection lost after ${formatDuration(data.duration)}`);
       }
 
-      // Clean up after a short delay
       setTimeout(() => {
         cleanup();
       }, 2000);

@@ -7,7 +7,6 @@ import { CallInterface } from '@/components/chat/CallInterface';
 import { IncomingCallModal } from '@/components/chat/IncomingCallModal';
 import MobileDebugPanel from '@/components/chat/MobileDebugPanel';
 
-// Export the return type from your hook
 type CallManagementType = ReturnType<typeof useCallManagement>;
 
 const CallContext = createContext<CallManagementType | null>(null);
@@ -21,17 +20,12 @@ export const useCall = () => {
 export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   const { chats, activeChat } = useSelector((state: RootState) => state.chat);
   
-  // Use a global "current chat" for calls (can be null initially)
-  // When a call comes in, we'll find the chat based on the caller's ID
   const [globalCallChatId, setGlobalCallChatId] = React.useState<string | null>(activeChat);
   
-  // Get the chat object for the current call
   const currentCallChat = chats.find((chat) => chat._id === globalCallChatId);
   
-  // Use your existing useCallManagement hook with ALL its functionality
   const callManagement = useCallManagement(currentCallChat);
 
-  // Extract what we need from the hook
   const {
     callState,
     connectionState,
@@ -61,7 +55,6 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     formatDuration,
   } = callManagement;
 
-  // Wrapper for startCall that sets the global chat context
   const startCall = React.useCallback((userId: string, isVideo: boolean) => {
     const chat = chats.find(c => 
       c.type !== 'group' && 
@@ -70,7 +63,6 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (chat) {
       setGlobalCallChatId(chat._id);
-      // Give a small delay for state to update
       setTimeout(() => {
         originalStartCall(isVideo);
       }, 50);
@@ -79,7 +71,6 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [chats, originalStartCall]);
 
-  // When incoming call arrives, set the global chat context
   React.useEffect(() => {
     if (incomingCall) {
       const chat = chats.find(c => 
@@ -92,33 +83,22 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [incomingCall, chats]);
 
-  // Reset global chat when call ends
   React.useEffect(() => {
     if (callState === 'idle') {
-      // Reset to active chat after call ends
       setGlobalCallChatId(activeChat);
     }
   }, [callState, activeChat]);
 
-  // Create the context value with all functions from your hook
   const contextValue = React.useMemo(() => ({
     ...callManagement,
-    // startCall, // Use our wrapped version
+    // startCall, 
     isInCall: callState !== 'idle',
   }), [callManagement, startCall, callState]);
 
   return (
     <CallContext.Provider value={contextValue}>
       {children}
-      
-      {/* <audio 
-        ref={remoteAudioRef} 
-        autoPlay 
-        playsInline 
-        style={{ display: 'none' }} 
-      /> */}
 
-      {/* Incoming Call Modal - Shows on any page */}
       <IncomingCallModal
         incomingCall={incomingCall}
         callState={callState}
@@ -127,7 +107,6 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         onDecline={declineCall}
       />
 
-      {/* Call Interface - Shows on any page */}
       <CallInterface
         callState={callState}
         connectionState={connectionState}
@@ -150,12 +129,14 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         onToggleMinimize={() => setIsCallMinimized(!isCallMinimized)}
         formatDuration={formatDuration}
       />
-              <MobileDebugPanel
+      {/* {callState !== 'idle' && (
+      <MobileDebugPanel
                 localStream={localStream}
                 remoteStream={remoteStream}
                 peerConnection={peerConnectionRef.current}
                 callState={callState}
               />
+      )} */}
     </CallContext.Provider>
   );
 };

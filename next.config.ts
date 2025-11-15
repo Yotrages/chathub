@@ -14,7 +14,6 @@ const nextConfig: NextConfig = {
     if (!isServer && !dev) {
       config.optimization = {
         ...config.optimization,
-        // 🔥 NEW: Use deterministic module IDs for better caching
         moduleIds: 'deterministic',
         splitChunks: {
           chunks: 'all',
@@ -54,7 +53,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      // 🔥 NEW: Add headers for chunk files
       {
         source: '/_next/static/chunks/:path*',
         headers: [

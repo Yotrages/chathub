@@ -1,7 +1,6 @@
 "use client";
-import { Provider, useDispatch, useSelector } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor, RootState, AppDispatch } from "@/libs/redux/store";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/libs/redux/store";
 import { SocketProvider } from "@/context/socketContext";
 import ReactQueryProvider from "@/libs/react-query/react-query-provider";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -18,6 +17,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { usePathname } from "next/navigation";
 import { ChunkErrorBoundary } from "@/components/layout/ChunckErrorBoundary";
 import { CallProvider } from "@/context/CallProvider";
+import { ReduxProvider } from "@/libs/redux/redux-provider";
 
 function NotificationWrapper({ children }: { children: React.ReactNode }) {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -232,8 +232,7 @@ export default function MainLayout({
       </head>
       <body>
         <ChunkErrorBoundary>
-        <Provider store={store}>
-          <PersistGate loading={null} persistor={persistor}>
+        <ReduxProvider>
             <ThemeProvider defaultTheme="light" storageKey="chathub-theme">
               <ReactQueryProvider>
                 <SocketProvider>
@@ -262,16 +261,15 @@ export default function MainLayout({
                       }}
                     />
                     <Analytics />
-                    <div className="min-h-screen overflow-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+                    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
                       <main>{children}</main>
                     </div>
                   </NotificationWrapper>
                 </SocketProvider>
               </ReactQueryProvider>
             </ThemeProvider>
-          </PersistGate>
-        </Provider>
-        </ChunkErrorBoundary>
+        </ReduxProvider>
+          </ChunkErrorBoundary>
       </body>
     </html>
   );
