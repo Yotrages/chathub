@@ -147,10 +147,10 @@ const UserProfilePage = () => {
 
   if (!profileUser) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4 transition-colors duration-200">
         <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">User not found</h2>
-          <p className="text-gray-600 text-sm sm:text-base">The user you&apos;re looking for doesn&apos;t exist.</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">User not found</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">The user you&apos;re looking for doesn&apos;t exist.</p>
         </div>
       </div>
     );
@@ -161,7 +161,7 @@ const UserProfilePage = () => {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div className="relative h-48 sm:h-64 md:h-80 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500">
         {profileUser.coverImage && (
           <img
@@ -175,7 +175,7 @@ const UserProfilePage = () => {
         {isOwnProfile && (
           <button 
             onClick={handleEditProfile}
-            className="absolute top-2 right-2 bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm"
+            className="absolute top-2 right-2 bg-white dark:bg-gray-700 bg-opacity-90 dark:bg-opacity-70 hover:bg-opacity-100 dark:hover:bg-opacity-100 text-gray-800 dark:text-white px-2 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium transition-all duration-200 flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm shadow-md dark:shadow-lg"
           >
             <Camera size={14} className="sm:w-4 sm:h-4" />
             <span>Edit Cover</span>
@@ -184,7 +184,7 @@ const UserProfilePage = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-0.5 xs:px-2 sm:px-4 -mt-16 sm:-mt-20 relative z-10">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
           <div className="p-4 sm:p-6 md:p-8">
             <div className="flex flex-col space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-4 md:space-x-8">
@@ -414,16 +414,16 @@ const UserProfilePage = () => {
 };
 
 const ProfileSkeleton = () => (
-  <div className="min-h-screen bg-gray-50">
-    <div className="h-48 sm:h-64 md:h-80 bg-gray-200 animate-pulse"></div>
+  <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="h-48 sm:h-64 md:h-80 bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
     <div className="max-w-4xl mx-auto px-2 sm:px-4 -mt-16 sm:-mt-20 relative z-10">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="p-4 sm:p-6 md:p-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-8">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gray-200 animate-pulse mb-4 sm:mb-0 self-center sm:self-auto"></div>
+            <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse mb-4 sm:mb-0 self-center sm:self-auto"></div>
             <div className="flex-1 space-y-3 sm:space-y-4">
-              <div className="h-6 sm:h-8 bg-gray-200 rounded animate-pulse w-48 sm:w-64 mx-auto sm:mx-0"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-24 sm:w-32 mx-auto sm:mx-0"></div>
+              <div className="h-6 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-48 sm:w-64 mx-auto sm:mx-0"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-24 sm:w-32 mx-auto sm:mx-0"></div>
               <div className="flex justify-center sm:justify-start space-x-8">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-2">

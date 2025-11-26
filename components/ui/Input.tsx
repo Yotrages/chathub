@@ -60,7 +60,7 @@ export const Input = ({
       <label
         htmlFor={label}
         id={label}
-        className="text-black font-semibold text-base"
+        className="text-black dark:text-gray-100 font-semibold text-base"
       >
         {label}
       </label>

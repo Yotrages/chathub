@@ -118,7 +118,7 @@ const ReelContextMenu = ({ reel, onHide }: ReelContextProps) => {
   return (
     <div
       ref={menuRef}
-      className="bg-white rounded-lg shadow-xl border border-gray-200 py-2 min-w-[160px] z-50"
+      className="bg-white dark:bg-gray-800 rounded-lg shadow-xl dark:shadow-2xl border border-gray-200 dark:border-gray-700 py-2 min-w-[160px] z-50 transition-colors duration-200"
       style={{
         boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05)'
       }}

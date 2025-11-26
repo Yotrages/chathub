@@ -294,7 +294,7 @@ const SearchPage: React.FC = () => {
         <Link
           key={user._id}
           href={`/profile/${user._id}`}
-          className="group flex items-center p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 hover:border-blue-200"
+          className="group flex items-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-md hover:shadow-md dark:hover:shadow-lg transition-all duration-200 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600"
         >
           <div className="relative">
             <UserAvatar avatar={user.avatar} username={user.username} className="w-14 h-14"/>
@@ -500,42 +500,42 @@ const SearchPage: React.FC = () => {
   const currentPagination = getCurrentPagination();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Search className="h-6 w-6 text-blue-600" />
+            <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-full">
+              <Search className="h-6 w-6 text-blue-600 dark:text-blue-400" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Search Results</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Search Results</h1>
             {user && (
               <button
                 onClick={() => setShowHistory(!showHistory)}
-                className="ml-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="ml-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title="Search History"
               >
-                <Clock className="h-5 w-5 text-gray-600" />
+                <Clock className="h-5 w-5 text-gray-600 dark:text-gray-400" />
               </button>
             )}
           </div>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 dark:text-gray-400">
             Showing results for{" "}
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-blue-600 dark:text-blue-400">
               &apos;{query}&apos;
             </span>
           </p>
         </div>
 
         {showHistory && user && (
-          <div className="fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-50 overflow-y-auto">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-gray-900">Search History</h2>
+          <div className="fixed right-0 top-0 h-full w-80 bg-white dark:bg-gray-800 shadow-2xl dark:shadow-2xl z-50 overflow-y-auto transition-colors duration-200">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Search History</h2>
               <button
                 onClick={() => setShowHistory(false)}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-gray-600 dark:text-gray-400" />
               </button>
             </div>
 
@@ -547,7 +547,7 @@ const SearchPage: React.FC = () => {
               ) : frequentSearches.length > 0 ? (
                 <>
                   <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       {frequentSearches.length} searches
                     </span>
                     <button
@@ -603,15 +603,15 @@ const SearchPage: React.FC = () => {
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-700 text-center">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 transition-colors">
+            <p className="text-red-700 dark:text-red-300 text-center">{error}</p>
           </div>
         )}
 
         {!loading && !error && (
           <>
             {/* Tabs */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-md border border-gray-200 dark:border-gray-700 mb-6 overflow-hidden transition-colors duration-200">
               <div className="flex overflow-x-auto snap-start snap-x snap-mandatory scrollbar-hide">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -621,8 +621,8 @@ const SearchPage: React.FC = () => {
                       onClick={() => setActiveTab(tab.id)}
                       className={`flex items-center space-x-2 px-6 py-4 font-medium text-sm border-b-2 transition-all whitespace-nowrap ${
                         activeTab === tab.id
-                          ? "border-blue-500 text-blue-600 bg-blue-50"
-                          : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                          ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -631,8 +631,8 @@ const SearchPage: React.FC = () => {
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${
                             activeTab === tab.id
-                              ? "bg-blue-100 text-blue-700"
-                              : "bg-gray-100 text-gray-600"
+                              ? "bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
                           }`}
                         >
                           {tab.count}
@@ -646,14 +646,14 @@ const SearchPage: React.FC = () => {
 
             {/* Controls */}
             {hasResults && activeTab !== "all" && (
-              <div className="flex items-center justify-between mb-6 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between mb-6 bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm dark:shadow-md border border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    <Filter className="h-4 w-4 text-gray-600" />
+                    <Filter className="h-4 w-4 text-gray-600 dark:text-gray-400" />
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
-                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
                     >
                       <option value="relevant">Most Relevant</option>
                       <option value="recent">Most Recent</option>
@@ -663,13 +663,13 @@ const SearchPage: React.FC = () => {
                 </div>
 
                 {(activeTab === "reels" || activeTab === "stories") && (
-                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                  <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                     <button
                       onClick={() => setViewMode("grid")}
                       className={`p-2 rounded-md transition-all ${
                         viewMode === "grid"
-                          ? "bg-white shadow-sm text-blue-600"
-                          : "text-gray-600 hover:text-gray-900"
+                          ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                       }`}
                     >
                       <Grid className="h-4 w-4" />
@@ -678,8 +678,8 @@ const SearchPage: React.FC = () => {
                       onClick={() => setViewMode("list")}
                       className={`p-2 rounded-md transition-all ${
                         viewMode === "list"
-                          ? "bg-white shadow-sm text-blue-600"
-                          : "text-gray-600 hover:text-gray-900"
+                          ? "bg-white dark:bg-gray-600 shadow-sm text-blue-600 dark:text-blue-400"
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
                       }`}
                     >
                       <List className="h-4 w-4" />

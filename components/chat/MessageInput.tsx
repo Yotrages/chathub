@@ -508,7 +508,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
   return (
    <div 
     ref={containerRef}
-    className="surface-primary border-t z-50 w-full"
+    className="surface-primary dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 z-50 w-full transition-colors duration-200"
      style={{
     paddingBottom: 'env(safe-area-inset-bottom, 0)',
     marginBottom: 0
@@ -519,10 +519,10 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         
         {/* Recording Controls */}
         {isRecording && (
-          <div className="flex items-center justify-between p-2 bg-red-50 rounded-lg mb-2 border border-red-200">
+          <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/30 rounded-lg mb-2 border border-red-200 dark:border-red-700">
             <div className="flex items-center space-x-2 min-w-0">
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse flex-shrink-0"></div>
-              <span className="text-xs text-red-600 font-medium truncate">
+              <span className="text-xs text-red-600 dark:text-red-400 font-medium truncate">
                 {isPaused ? 'Paused' : 'Recording'}: {formatRecordingTime(recordingDuration)}
               </span>
             </div>
@@ -530,7 +530,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
             <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
               <button
                 onClick={isPaused ? resumeRecording : pauseRecording}
-                className="p-1 bg-yellow-500 text-white rounded-full hover:bg-yellow-600 transition-colors active:scale-95"
+                className="p-1 bg-yellow-500 dark:bg-yellow-600 text-white rounded-full hover:bg-yellow-600 dark:hover:bg-yellow-700 transition-colors active:scale-95"
                 title={isPaused ? 'Resume' : 'Pause'}
               >
                 {isPaused ? <Play size={12} /> : <Pause size={12} />}
@@ -538,14 +538,14 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
               
               <button
                 onClick={cancelRecording}
-                className="px-2 py-1 bg-gray-500 text-white text-xs rounded-full hover:bg-gray-600 transition-colors active:scale-95"
+                className="px-2 py-1 bg-gray-500 dark:bg-gray-600 text-white text-xs rounded-full hover:bg-gray-600 dark:hover:bg-gray-700 transition-colors active:scale-95"
               >
                 Cancel
               </button>
               
               <button
                 onClick={stopRecording}
-                className="px-2 py-1 bg-red-500 text-white text-xs rounded-full hover:bg-red-600 transition-colors active:scale-95"
+                className="px-2 py-1 bg-red-500 dark:bg-red-600 text-white text-xs rounded-full hover:bg-red-600 dark:hover:bg-red-700 transition-colors active:scale-95"
               >
                 Send
               </button>
@@ -555,18 +555,18 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
         
         {/* Reply Section */}
         {replyingTo && (
-          <div className="bg-gray-100 p-2 rounded-lg mb-2 relative">
+          <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg mb-2 relative">
             <div className="flex items-start space-x-2">
               <div className="w-1 bg-blue-500 rounded-full h-10 flex-shrink-0"></div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-gray-700 truncate">
+                <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
                   {typeof replyingTo.sender === 'string' ? replyingTo.sender : replyingTo.sender.username}
                 </p>
-                <p className="text-xs text-gray-500 line-clamp-2 break-words">{replyingTo.content}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 break-words">{replyingTo.content}</p>
               </div>
               <button
                 onClick={() => dispatch(clearReplyingTo())}
-                className="p-1 hover:bg-gray-200 rounded-full transition-colors active:scale-95 flex-shrink-0"
+                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors active:scale-95 flex-shrink-0"
               >
                 <X size={14} />
               </button>
@@ -600,7 +600,7 @@ export const MessageInput = ({ currentChat, onShowFileUpload }: MessageInputProp
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="p-2 sm:flex hidden text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors active:scale-95 flex-shrink-0"
+                className="p-2 sm:flex hidden text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors active:scale-95 flex-shrink-0"
                 title="Attach file"
               >
                 <Paperclip size={isVerySmallScreen ? 16 : 18} />

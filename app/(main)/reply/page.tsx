@@ -75,14 +75,16 @@ const ReplyPage = () => {
   
   if (!originalComment || originalComment.replies?.length === 0) {
     return (
-      <div>
-        <div>Error: No comments found for this post</div>
-        <button 
-          onClick={() => router.back()}
-          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Go Back
-        </button>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center p-4 transition-colors duration-200">
+        <div className="text-center">
+          <div className="text-3xl bg-gradient-to-r from-red-400 to-pink-300 dark:from-red-500 dark:to-pink-400 bg-clip-text text-transparent mb-4">No reply found for this comment</div>
+          <button 
+            onClick={() => router.back()}
+            className="mt-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
@@ -100,7 +102,7 @@ const ReplyPage = () => {
   
 
   return (
-    <div className="p-4 min-h-screen">
+    <div className="p-4 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <CommentItem comment={originalComment} onShowReactions={handleReaction} type='post' dynamicId={originalComment.dynamicId}/>
 
       {replies?.map((reply, index) => (

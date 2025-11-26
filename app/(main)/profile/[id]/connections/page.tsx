@@ -35,7 +35,7 @@ const ConnectionsPage = () => {
       <div className="max-w-4xl mx-auto px-2 sm:px-4 py-4 sm:py-8">
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-14 sm:h-16 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div key={i} className="h-14 sm:h-16 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
           ))}
         </div>
       </div>
@@ -43,16 +43,16 @@ const ConnectionsPage = () => {
   }
 
   return (
-    <div className="max-w-4xl min-h-screen bg-white mx-auto px-2 sm:px-4 py-4 sm:py-8">
-      <div className="rounded-xl sm:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div className="border-b border-gray-200 bg-gray-50">
+    <div className="max-w-4xl min-h-screen bg-white dark:bg-gray-800 mx-auto px-2 sm:px-4 py-4 sm:py-8 transition-colors duration-200">
+      <div className="rounded-xl sm:rounded-2xl shadow-lg dark:shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors">
+        <div className="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 transition-colors">
           <div className="flex overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setActiveTab('followers')}
               className={`flex-1 min-w-[80px] py-3 sm:py-4 px-2 sm:px-6 text-xs sm:text-sm md:text-base font-medium transition-all whitespace-nowrap ${
                 activeTab === 'followers' 
-                  ? 'text-blue-600 bg-white border-b-2 border-blue-600 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  ? 'text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 border-b-2 border-blue-600 dark:border-blue-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50'
               }`}
             >
               <span className="hidden xs:inline">Followers</span>
@@ -62,8 +62,8 @@ const ConnectionsPage = () => {
               onClick={() => setActiveTab('following')}
               className={`flex-1 min-w-[80px] py-3 sm:py-4 px-2 sm:px-6 text-xs sm:text-sm md:text-base font-medium transition-all whitespace-nowrap ${
                 activeTab === 'following' 
-                  ? 'text-blue-600 bg-white border-b-2 border-blue-600 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  ? 'text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 border-b-2 border-blue-600 dark:border-blue-400 shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50'
               }`}
             >
               <span className="hidden xs:inline">Following</span>
@@ -74,8 +74,8 @@ const ConnectionsPage = () => {
                 onClick={() => setActiveTab('pending')}
                 className={`flex-1 min-w-[80px] py-3 sm:py-4 px-2 sm:px-6 text-xs sm:text-sm md:text-base font-medium transition-all whitespace-nowrap ${
                   activeTab === 'pending' 
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                    ? 'text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 border-b-2 border-blue-600 dark:border-blue-400 shadow-sm' 
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/50'
                 }`}
               >
                 <span className="hidden sm:inline">Pending Requests</span>
@@ -109,7 +109,7 @@ const UserList = ({ users, title }: { users: User[]; title: string }) => {
   if (!Array.isArray(users) || users.length === 0) {
     return (
       <div className="text-center py-8 sm:py-12">
-        <p className="text-sm sm:text-base text-gray-500">{title}</p>
+        <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">{title}</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ const UserList = ({ users, title }: { users: User[]; title: string }) => {
         <Link 
           key={user._id} 
           href={`/profile/${user._id}`} 
-          className="flex items-center gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 hover:bg-gray-50 active:bg-gray-100 rounded-lg transition-colors"
+          className="flex items-center gap-2 sm:gap-3 md:gap-4 p-2 sm:p-3 md:p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-600 rounded-lg transition-colors"
         >
           <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 flex-shrink-0">
             {user.avatar ? (

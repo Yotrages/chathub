@@ -343,24 +343,24 @@ const EditModal = () => {
   const totalFiles = existingFiles.length + newFiles.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div
-        className="sticky top-0 bg-white border-b border-gray-200 z-20"
+        className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-20 transition-colors duration-200"
       >
         <div className="flex items-center justify-between px-3 py-3">
           <button
             onClick={() => router.back()}
-            className="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             type="button"
           >
-            <ArrowLeft size={20} className="text-gray-700" />
+            <ArrowLeft size={20} className="text-gray-700 dark:text-gray-300" />
           </button>
-          <h1 className="text-base font-semibold text-gray-900">Edit Post</h1>
+          <h1 className="text-base font-semibold text-gray-900 dark:text-white">Edit Post</h1>
           <button
             type="submit"
             form="edit-post-form"
             disabled={isPending}
-            className="px-3 py-1.5 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="px-3 py-1.5 bg-blue-500 dark:bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isPending ? "Saving..." : "Save"}
           </button>
@@ -419,12 +419,12 @@ const EditModal = () => {
                 )}
               </div>
 
-              <div className="bg-gray-50 rounded-lg p-2">
-                <p className="text-xs text-gray-600">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-2 transition-colors duration-200">
+                <p className="text-xs text-gray-600 dark:text-gray-400">
                   <span className="font-medium">{totalFiles}</span> file
                   {totalFiles > 1 ? "s" : ""} total
                   {removedFiles.length > 0 && (
-                    <span className="text-red-600 ml-1">
+                    <span className="text-red-600 dark:text-red-400 ml-1">
                       • {removedFiles.length} removed
                     </span>
                   )}
@@ -434,16 +434,16 @@ const EditModal = () => {
           )}
 
           {/* Add Files Section */}
-          <div className="bg-white px-3 py-4">
-            <div className="border-2 border-dashed border-gray-200 rounded-lg p-3">
+          <div className="bg-white dark:bg-gray-800 px-3 py-4 transition-colors duration-200">
+            <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-3">
               <div className="text-center">
-                <Camera size={24} className="text-gray-400 mx-auto mb-2" />
-                <p className="text-xs text-gray-600 mb-3">Add more files</p>
+                <Camera size={24} className="text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Add more files</p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-500 dark:bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
                   >
                     <Image size={14} />
                     <span>Images</span>
@@ -451,7 +451,7 @@ const EditModal = () => {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition-colors"
+                    className="flex items-center space-x-1.5 px-3 py-1.5 bg-green-500 dark:bg-green-600 text-white text-xs rounded-lg hover:bg-green-600 dark:hover:bg-green-700 transition-colors"
                   >
                     <Video size={14} />
                     <span>Videos</span>

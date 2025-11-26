@@ -96,16 +96,16 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow p-4 animate-pulse">
+          <div key={i} className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-lg p-4 animate-pulse transition-colors duration-200">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+              <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
               <div className="flex-1">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/6"></div>
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/6"></div>
               </div>
             </div>
-            <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-            <div className="h-32 bg-gray-200 rounded"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+            <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         ))}
       </div>
@@ -114,8 +114,8 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
 
   if (posts?.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <p className="text-gray-500">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-lg p-8 text-center">
+        <p className="text-gray-500 dark:text-gray-400">
           {type === "likes"
             ? "No liked posts yet"
             : type === "saved"
@@ -145,7 +145,7 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
       {posts?.map((post) => (
         <div key={post._id} className="relative">
           {type === "saved" && post.savedAt && (
-            <div className="flex items-center justify-between mb-2 px-4 text-sm text-gray-500">
+            <div className="flex items-center justify-between mb-2 px-4 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center space-x-2">
                 <Bookmark className="w-4 h-4 text-blue-500" />
                 <span>Saved {formatRelativeTime(post.savedAt)}</span>

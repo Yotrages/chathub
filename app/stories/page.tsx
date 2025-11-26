@@ -33,25 +33,25 @@ const ReelsPage: React.FC = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center py-4">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center py-4 transition-colors duration-200">
       <div className="w-full max-w-md px-4">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Reels</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Reels</h1>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded-full"
+            className="flex items-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition-colors"
           >
             <PlusCircleIcon className="h-5 w-5 mr-2" />
             Create Reel
           </button>
         </div>
-        {error && <p className="text-red-500 text-center">{error}</p>}
+        {error && <p className="text-red-500 dark:text-red-400 text-center">{error}</p>}
         <InfiniteScroll
           dataLength={stories.length}
           next={loadMore}
           hasMore={hasMore}
-          loader={<p className="text-center py-4">Loading...</p>}
-          endMessage={<p className="text-center py-4">No more reels to show</p>}
+          loader={<p className="text-center py-4 text-gray-700 dark:text-gray-400">Loading...</p>}
+          endMessage={<p className="text-center py-4 text-gray-700 dark:text-gray-400">No more reels to show</p>}
           className="space-y-4"
         >
           {stories.map((story) => (

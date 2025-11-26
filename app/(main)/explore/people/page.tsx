@@ -40,32 +40,32 @@ const ExplorePeoplePage = () => {
   ) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/20 to-pink-50/20">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-purple-50/20 to-pink-50/20 dark:from-gray-900 dark:via-purple-900/10 dark:to-gray-900 transition-colors duration-200">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200 shadow-sm">
+      <div className="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-md transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
               >
-                <ArrowLeft size={20} className="text-gray-700" />
+                <ArrowLeft size={20} className="text-gray-700 dark:text-gray-300" />
               </button>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
                   <Users size={20} className="text-white" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">Explore People</h1>
-                  <p className="text-sm text-gray-500">Discover amazing creators</p>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white">Explore People</h1>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Discover amazing creators</p>
                 </div>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 hidden sm:inline">
-                <span className="font-semibold text-purple-600">{suggestedUsers?.length || 0}</span> users found
+              <span className="text-sm text-gray-600 dark:text-gray-400 hidden sm:inline">
+                <span className="font-semibold text-purple-600 dark:text-purple-400">{suggestedUsers?.length || 0}</span> users found
               </span>
             </div>
           </div>
@@ -78,18 +78,18 @@ const ExplorePeoplePage = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search Input */}
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
               <input
                 type="text"
                 placeholder="Search by username..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 dark:focus:ring-purple-400 focus:border-transparent transition-all"
               />
             </div>
 
             {/* Filter Button */}
-            <button className="sm:w-auto w-full px-6 py-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+            <button className="sm:w-auto w-full px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-2 text-gray-900 dark:text-white">
               <Filter size={18} />
               <span className="font-medium">Filters</span>
             </button>
@@ -97,50 +97,50 @@ const ExplorePeoplePage = () => {
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-md transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Users size={18} className="text-purple-600" />
+                <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                  <Users size={18} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Total</p>
-                  <p className="text-lg font-bold text-gray-900">{suggestedUsers?.length || 0}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">{suggestedUsers?.length || 0}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-md transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Active</p>
-                  <p className="text-lg font-bold text-gray-900">{suggestedUsers?.length || 0}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Active</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">{suggestedUsers?.length || 0}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-md transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <TrendingUp size={18} className="text-blue-600" />
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <TrendingUp size={18} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Trending</p>
-                  <p className="text-lg font-bold text-gray-900">12</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Trending</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">12</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm dark:shadow-md transition-colors">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
-                  <Sparkles size={18} className="text-pink-600" />
+                <div className="w-10 h-10 rounded-lg bg-pink-100 dark:bg-pink-900/30 flex items-center justify-center">
+                  <Sparkles size={18} className="text-pink-600 dark:text-pink-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">New</p>
-                  <p className="text-lg font-bold text-gray-900">8</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">New</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-white">8</p>
                 </div>
               </div>
             </div>
@@ -150,16 +150,16 @@ const ExplorePeoplePage = () => {
         {/* Users Grid */}
         {isPending && suggestedUsers?.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 size={48} className="text-purple-500 animate-spin mb-4" />
-            <p className="text-gray-600">Loading amazing people...</p>
+            <Loader2 size={48} className="text-purple-500 dark:text-purple-400 animate-spin mb-4" />
+            <p className="text-gray-600 dark:text-gray-400">Loading amazing people...</p>
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-              <Search size={32} className="text-gray-400" />
+            <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+              <Search size={32} className="text-gray-400 dark:text-gray-500" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">No users found</h3>
-            <p className="text-gray-500">Try adjusting your search query</p>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">No users found</h3>
+            <p className="text-gray-500 dark:text-gray-400">Try adjusting your search query</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -167,10 +167,10 @@ const ExplorePeoplePage = () => {
               <Link 
                 href={`/profile/${user?._id}`} 
                 key={index}
-                className="group relative bg-white hover:bg-gradient-to-br hover:from-purple-50 hover:to-pink-50 rounded-2xl p-6 border border-gray-100 hover:border-purple-200 transition-all duration-300 hover:shadow-xl hover:scale-105"
+                className="group relative bg-white dark:bg-gray-800 hover:bg-gradient-to-br hover:from-purple-50 dark:hover:from-purple-900/20 hover:to-pink-50 dark:hover:to-pink-900/20 rounded-2xl p-6 border border-gray-100 dark:border-gray-700 hover:border-purple-200 dark:hover:border-purple-600 transition-all duration-300 hover:shadow-xl dark:hover:shadow-2xl hover:scale-105"
               >
                 {/* Background Pattern */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-100/20 to-pink-100/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-100/20 dark:from-purple-400/10 to-pink-100/20 dark:to-pink-400/10 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 
                 <div className="relative flex flex-col items-center gap-4">
                   {/* Avatar with ring */}
@@ -189,10 +189,10 @@ const ExplorePeoplePage = () => {
 
                   {/* User Info */}
                   <div className="text-center space-y-2 w-full">
-                    <p className="text-base font-bold text-gray-900 truncate px-2 group-hover:text-purple-700 transition-colors">
+                    <p className="text-base font-bold text-gray-900 dark:text-white truncate px-2 group-hover:text-purple-700 dark:group-hover:text-purple-400 transition-colors">
                       {user.username}
                     </p>
-                    <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center justify-center gap-4 text-xs text-gray-500 dark:text-gray-400">
                       <span className="flex items-center gap-1">
                         <Users size={12} />
                         {user.followers?.length || 0} followers
@@ -206,7 +206,7 @@ const ExplorePeoplePage = () => {
 
                   {/* Bio (if available) */}
                   {user.bio && (
-                    <p className="text-xs text-gray-500 text-center line-clamp-2 w-full">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center line-clamp-2 w-full">
                       {user.bio}
                     </p>
                   )}
@@ -229,7 +229,7 @@ const ExplorePeoplePage = () => {
             <button
               onClick={loadMore}
               disabled={isPending}
-              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center gap-3 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed dark:shadow-xl dark:hover:shadow-2xl"
             >
               {isPending ? (
                 <>
@@ -249,9 +249,9 @@ const ExplorePeoplePage = () => {
         {/* End Message */}
         {!pagination?.hasNextPage && suggestedUsers && suggestedUsers?.length > 0 && (
           <div className="mt-12 text-center">
-            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 rounded-full">
-              <Sparkles size={16} className="text-purple-500" />
-              <span className="text-sm text-gray-600">You&apos;ve seen all available users</span>
+            <div className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 dark:bg-gray-800 rounded-full transition-colors">
+              <Sparkles size={16} className="text-purple-500 dark:text-purple-400" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">You&apos;ve seen all available users</span>
             </div>
           </div>
         )}

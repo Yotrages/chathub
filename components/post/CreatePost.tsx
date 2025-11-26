@@ -35,7 +35,7 @@ export const CreatePost = () => {
 
   return (
     <>
-      <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-gradient-to-br from-white dark:from-gray-800 to-gray-50 dark:to-gray-900 rounded-xl shadow-sm dark:shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
         {/* Header with gradient accent */}
         <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"></div>
         
@@ -43,19 +43,19 @@ export const CreatePost = () => {
           <div className="flex items-center max-w-full gap-3 mb-4">
             <div className="relative">
               <UserAvatar username={user?.username} avatar={user?.avatar} className="w-10 h-10"/>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
             </div>
             
             <button
               onClick={handleShow}
-              className="flex-1 text-left max-w-full px-5 py-3 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-500 transition-all duration-200 hover:shadow-md group"
+              className="flex-1 text-left max-w-full px-5 py-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-gray-500 dark:text-gray-400 transition-all duration-200 hover:shadow-md group"
             >
-              <span className="group-hover:text-gray-700 text-sm select-none w-full truncate">Share your thoughts, {user?.username?.split(' ')[0] || 'there'}?</span>
+              <span className="group-hover:text-gray-700 dark:group-hover:text-gray-300 text-sm select-none w-full truncate">Share your thoughts, {user?.username?.split(' ')[0] || 'there'}?</span>
             </button>
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-3"></div>
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent mb-3"></div>
 
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -63,7 +63,7 @@ export const CreatePost = () => {
               <button
                 key={index}
                 onClick={handleShow}
-                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg transition-all duration-200 ${action.bgColor} group`}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg transition-all duration-200 ${action.bgColor} dark:bg-gray-700 dark:hover:bg-gray-600 group`}
               >
                 <action.icon size={20} className={`${action.color} group-hover:scale-110 transition-transform`} />
                 <span className={`text-sm font-medium ${action.color} hidden sm:inline`}>

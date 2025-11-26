@@ -10,7 +10,7 @@ const Page = () => {
       errorNotification(error)
      }
   return (
-    <div className='w-full mx-auto flex items-center justify-center py-6'>
+    <div className='w-full mx-auto flex items-center justify-center py-6 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200'>
         <SignUp />
     </div>
   )

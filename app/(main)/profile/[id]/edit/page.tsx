@@ -227,76 +227,76 @@ const MobileEditProfilePage = () => {
         <div className="px-4 space-y-6">
           {/* Name */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">Name</label>
+            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              className="w-full px-4 py-3 text-base bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all duration-200 placeholder-gray-400"
+              className="w-full px-4 py-3 text-base bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/30 transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
               placeholder="Your full name"
             />
             <div className="flex justify-between items-center px-1">
               {errors.name ? (
-                <p className="text-red-500 text-xs flex items-center gap-1">
+                <p className="text-red-500 dark:text-red-400 text-xs flex items-center gap-1">
                   <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.name}
                 </p>
               ) : (
                 <span></span>
               )}
-              <span className="text-xs text-gray-400 font-medium">{formData.name.length}/50</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{formData.name.length}/50</span>
             </div>
           </div>
 
           {/* Bio */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">Bio</label>
+            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Bio</label>
             <textarea
               rows={3}
               value={formData.bio}
               onChange={(e) => handleInputChange('bio', e.target.value)}
-              className="w-full px-4 py-3 text-base bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all duration-200 resize-none placeholder-gray-400"
+              className="w-full px-4 py-3 text-base bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/30 transition-all duration-200 resize-none placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
               placeholder="Tell people about yourself..."
             />
             <div className="flex justify-between items-center px-1">
               {errors.bio ? (
-                <p className="text-red-500 text-xs flex items-center gap-1">
+                <p className="text-red-500 dark:text-red-400 text-xs flex items-center gap-1">
                   <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.bio}
                 </p>
               ) : (
                 <span></span>
               )}
-              <span className="text-xs text-gray-400 font-medium">{formData.bio.length}/160</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{formData.bio.length}/160</span>
             </div>
           </div>
 
           {/* Location */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">Location</label>
+            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Location</label>
             <input
               type="text"
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
-              className="w-full px-4 py-3 text-base bg-white border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 transition-all duration-200 placeholder-gray-400"
+              className="w-full px-4 py-3 text-base bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-50 dark:focus:ring-blue-900/30 transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white"
               placeholder="Where are you based?"
             />
             <div className="flex justify-between items-center px-1">
               {errors.location ? (
-                <p className="text-red-500 text-xs flex items-center gap-1">
+                <p className="text-red-500 dark:text-red-400 text-xs flex items-center gap-1">
                   <span className="inline-block w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.location}
                 </p>
               ) : (
                 <span></span>
               )}
-              <span className="text-xs text-gray-400 font-medium">{formData.location.length}/100</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{formData.location.length}/100</span>
             </div>
           </div>
 
           {/* Website */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-800">Website</label>
+            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Website</label>
             <input
               type="url"
               value={formData.website}

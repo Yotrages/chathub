@@ -27,12 +27,12 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto transition-colors duration-200">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Share {type}</h2>
+          <h2 className="text-lg font-semibold dark:text-gray-100">Share {type}</h2>
           <button
             onClick={onClose}
-            className="text-gray-600 hover:text-gray-800"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300"
           >
             <X size={24} />
           </button>
@@ -43,15 +43,15 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
             placeholder="Search chats..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-lg"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg"
           />
         </div>
         <button
           onClick={handleNativeShare}
-          className="w-full p-3 mb-4 text-left flex items-center space-x-2 bg-gray-50 hover:bg-gray-100 rounded-lg"
+          className="w-full p-3 mb-4 text-left flex items-center space-x-2 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg"
         >
           <span className="text-green-500">📱</span>
-          <span>Share via...</span>
+          <span className="dark:text-gray-100">Share via...</span>
         </button>
         {filteredConversations.length > 0 ? (
           <ul className="space-y-2">
@@ -59,7 +59,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
               <li key={chat._id}>
                 <button
                   onClick={() => onShare(chat._id)}
-                  className="w-full p-3 text-left flex items-center space-x-2 hover:bg-gray-100 rounded-lg"
+                  className="w-full p-3 text-left flex items-center space-x-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg dark:text-gray-100"
                 >
                   <div className="flex-shrink-0 mr-3">
                     {chat.type === "group" ? (
@@ -104,7 +104,7 @@ const SharePostModal: React.FC<SharePostModalProps> = ({
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500 text-center">No chats found.</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center">No chats found.</p>
         )}
       </div>
     </div>

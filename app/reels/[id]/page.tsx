@@ -137,7 +137,7 @@ const SingleReelPage: React.FC = () => {
 
   if (reelsLoading && !currentReel) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black dark:bg-gray-950 flex items-center justify-center transition-colors duration-200">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-white mx-auto"></div>
           <p className="mt-4 text-white">Loading reels...</p>
@@ -148,7 +148,7 @@ const SingleReelPage: React.FC = () => {
 
   if (!currentReel) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black dark:bg-gray-950 flex items-center justify-center transition-colors duration-200">
         <div className="text-center">
           <p className="text-white mb-4">Reel not found</p>
           <Link href="/" className="text-blue-400 hover:text-blue-300">
@@ -160,8 +160,8 @@ const SingleReelPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="fixed top-0 left-0 w-full z-10 bg-black bg-opacity-50 p-4 flex justify-between items-center">
+    <div className="min-h-screen bg-black dark:bg-gray-950 transition-colors duration-200">
+      <div className="fixed top-0 left-0 w-full z-10 bg-black dark:bg-black/80 bg-opacity-50 dark:bg-opacity-60 p-4 flex justify-between items-center transition-colors">
         <Link href="/" className="text-white hover:text-gray-300">
           <XMarkIcon className="h-8 w-8" />
         </Link>

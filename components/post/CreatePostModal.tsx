@@ -283,21 +283,21 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-200">
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-white border-b border-gray-100 p-6 rounded-t-2xl">
+        <div className="sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-6 rounded-t-2xl transition-colors duration-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <LucidePenBox size={20} className="text-blue-600" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <LucidePenBox size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">Create Post</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create Post</h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
-              <X size={20} className="text-gray-500" />
+              <X size={20} className="text-gray-500 dark:text-gray-400" />
             </button>
           </div>
         </div>
@@ -307,17 +307,17 @@ const CreatePostModal = ({ onClose }: CreatePostModalProps) => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Content Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 What&apos;s on your mind?
               </label>
               <textarea
                 {...register("content")}
                 placeholder="Share your thoughts..."
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200"
+                className="w-full p-4 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 rows={4}
               />
               {errors.content && (
-                <p className="text-red-500 text-sm mt-2">
+                <p className="text-red-500 dark:text-red-400 text-sm mt-2">
                   {errors.content.message}
                 </p>
               )}

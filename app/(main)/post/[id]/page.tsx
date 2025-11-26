@@ -22,10 +22,10 @@ const PostPage = () => {
     const post = data?.post || reduxPost
      if (!post) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-black dark:bg-gray-900 flex items-center justify-center transition-colors duration-200">
         <div className="text-center">
           <p className="text-white mb-4">{'Post not found'}</p>
-          <div onClick={() => router.back()} className="text-blue-400 hover:text-blue-300">
+          <div onClick={() => router.back()} className="text-blue-400 hover:text-blue-300 cursor-pointer">
             Go back
           </div>
         </div>
@@ -33,7 +33,7 @@ const PostPage = () => {
     );
   }
   return (
-    <div className='max-w-4xl min-h-screen w-full items-center mx-auto justify-center'>
+    <div className='max-w-4xl min-h-screen w-full items-center mx-auto justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200'>
         <PostItem post={post} isModal={true}/>
     </div>
   )

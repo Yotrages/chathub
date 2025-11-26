@@ -56,10 +56,10 @@ const HomePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-200">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     );
@@ -67,19 +67,19 @@ const HomePage: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors duration-200">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Redirecting to login...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">Redirecting to login...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <div
-        className={`fixed top-0 left-0 right-0 z-50 bg-white shadow-sm transition-transform duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 bg-white dark:bg-gray-800 shadow-sm dark:shadow-md transition-all duration-300 ${
           isHeaderVisible ? "translate-y-0" : "-translate-y-[105%]"
         }`}
       >
@@ -88,7 +88,7 @@ const HomePage: React.FC = () => {
 
       <div className="flex">
         <div
-          className={`fixed sm:flex hidden left-0 bottom-0 sm:w-[250px] z-40 overflow-y-auto bg-white border-r border-gray-200 transition-all duration-300 ${
+          className={`fixed sm:flex hidden left-0 bottom-0 sm:w-[250px] z-40 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 ${
             isHeaderVisible ? "top-[88px]" : "top-0"
           }`}
         >
@@ -98,7 +98,7 @@ const HomePage: React.FC = () => {
         <div className="flex-1 sm:ml-[250px] max-w-full overflow-hidden lg:mr-80 min-h-screen pt-24">
           {/* Main Content */}
           <div className="md:py-6 sm:px-6 max-w-full overflow-hidden space-y-6">
-            <div className="bg-white px-2 rounded-lg shadow-sm p-6">
+            <div className="bg-white dark:bg-gray-800 px-2 rounded-lg shadow-sm dark:shadow-md p-6 transition-colors duration-200">
               <CreatePost />
             </div>
 
@@ -117,7 +117,7 @@ const HomePage: React.FC = () => {
         </div>
 
         <div
-          className={`fixed right-0 bottom-0 w-80 z-40 overflow-y-auto bg-white border-l border-gray-200 hidden lg:flex flex-col transition-all duration-300 ${
+          className={`fixed right-0 bottom-0 w-80 z-40 overflow-y-auto bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 hidden lg:flex flex-col transition-all duration-300 ${
             isHeaderVisible ? "top-[88px]" : "top-0"
           }`}
         >

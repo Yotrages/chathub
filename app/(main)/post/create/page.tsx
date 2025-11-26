@@ -165,7 +165,7 @@ const CreatePostPage: React.FC = () => {
 
     return (
       <div key={`new-${index}`} className="relative group">
-        <div className="relative bg-gray-50 rounded-xl overflow-hidden shadow-sm">
+        <div className="relative bg-gray-50 dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm dark:shadow-md transition-colors duration-200">
           {/* Remove button */}
           <button
             type="button"
@@ -196,15 +196,15 @@ const CreatePostPage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <Video size={32} className="text-gray-400" />
+                  <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                    <Video size={32} className="text-gray-400 dark:text-gray-500" />
                   </div>
                 )}
               </div>
             )}
 
             {type === "audio" && (
-              <div className="relative w-full h-full bg-gray-900 flex flex-col items-center justify-center p-4">
+              <div className="relative w-full h-full bg-gray-900 dark:bg-gray-900 flex flex-col items-center justify-center p-4">
                 {preview ? (
                   <div className="w-full">
                     <div className="flex flex-col items-center mb-3">
@@ -220,17 +220,17 @@ const CreatePostPage: React.FC = () => {
                     />
                   </div>
                 ) : (
-                  <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                    <Music size={32} className="text-gray-400" />
+                  <div className="w-full h-full bg-gray-800 dark:bg-gray-800 flex items-center justify-center">
+                    <Music size={32} className="text-gray-400 dark:text-gray-500" />
                   </div>
                 )}
               </div>
             )}
 
             {type === "document" && (
-              <div className="w-full h-full bg-gradient-to-br from-purple-50 to-purple-100 flex flex-col items-center justify-center p-4">
-                <FileText size={32} className="text-purple-500 mb-2" />
-                <span className="text-xs text-purple-700 text-center truncate w-full font-medium">
+              <div className="w-full h-full bg-gradient-to-br from-purple-50 dark:from-purple-900/30 to-purple-100 dark:to-purple-800/30 flex flex-col items-center justify-center p-4">
+                <FileText size={32} className="text-purple-500 dark:text-purple-400 mb-2" />
+                <span className="text-xs text-purple-700 dark:text-purple-300 text-center truncate w-full font-medium">
                   {file.name}
                 </span>
               </div>
@@ -281,9 +281,9 @@ const CreatePostPage: React.FC = () => {
   const totalFiles = newFiles.length;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
       {/* Mobile Header */}
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 shadow-lg">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-800 dark:to-purple-800 px-4 py-3 shadow-lg dark:shadow-xl transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button 

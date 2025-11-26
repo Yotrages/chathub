@@ -88,10 +88,10 @@ export const ChatHeader = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 transition-colors duration-200">
       <div className="flex items-center justify-between min-w-0">
 
-          <button onClick={() => router.push('/chat')} className={`${window.location.pathname.includes('message') ? 'flex' : 'hidden'} p-2 bg-gray-600 dark:bg-white items-center justify-center rounded-full transition-all duration-200 mr-3`}>
+          <button onClick={() => router.push('/chat')} className={`${window.location.pathname.includes('message') ? 'flex' : 'hidden'} p-2 bg-gray-600 dark:bg-white items-center justify-center rounded-full transition-all duration-200 mr-3 hover:shadow-lg`}>
             <ArrowLeft className='text-white dark:text-black' size={18}/>
           </button>
         {/* Left side - Avatar and info */}
@@ -105,12 +105,12 @@ export const ChatHeader = ({
           <div className="min-w-0 flex-1">
             <h2 
               onClick={() => currentChat.type !== 'group' && router.push(`/profile/${otherUserId?._id}`)} 
-              className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 truncate leading-tight"
+              className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 truncate leading-tight transition-colors duration-150"
               title={currentChat.name || 'Unknown Chat'}
             >
               {currentChat.name || 'Unknown Chat'}
             </h2>
-            <div className="text-gray-500 min-w-0 mt-0.5">
+            <div className="text-gray-500 dark:text-gray-400 min-w-0 mt-0.5">
               {renderStatus()}
             </div>
           </div>
@@ -122,7 +122,7 @@ export const ChatHeader = ({
             <>
               <button
                 onClick={() => onStartCall(false)}
-                className={`p-1.5 sm:p-2 rounded-full transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100`}
+                className={`p-1.5 sm:p-2 rounded-full transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700`}
                 title={"Voice call"}
               >
                 <Phone size={20} className="w-5 h-5" />
@@ -131,7 +131,7 @@ export const ChatHeader = ({
               {/* Video call button */}
               <button
                 onClick={() => onStartCall(true)}
-                className={`p-1.5 sm:p-2 rounded-full transition-colors text-gray-500 hover:text-gray-700 hover:bg-gray-100 `}
+                className={`p-1.5 sm:p-2 rounded-full transition-colors text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700`}
                 title={"Video call"}
               >
                 <Video size={20} className="w-5 h-5" />
@@ -142,7 +142,7 @@ export const ChatHeader = ({
           {/* More options button */}
           <button
             onClick={onShowProfile}
-            className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1.5 sm:p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             title="More options"
           >
             <MoreVertical size={20} className="w-5 h-5" />

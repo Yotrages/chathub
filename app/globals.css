@@ -138,6 +138,13 @@
 body {
   background-color: white !important;
   color: black !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark,
+[data-theme="dark"] body {
+  background-color: #111827 !important;
+  color: #f3f4f6 !important;
 }
 
 
@@ -426,16 +433,30 @@ body {
   .comment-thread-line,
   .reply-connector,
   .nested-reply-line {
-    background-color: #374151;
+    background-color: #4b5563;
   }
   
   .nested-reply::before {
-    background-color: #374151;
+    background-color: #4b5563;
   }
   
   .dotted-connector {
     border-color: #4b5563;
   }
+}
+
+.dark .comment-thread-line,
+.dark .reply-connector,
+.dark .nested-reply-line {
+  background-color: #4b5563 !important;
+}
+
+.dark .nested-reply::before {
+  background-color: #4b5563 !important;
+}
+
+.dark .dotted-connector {
+  border-color: #4b5563 !important;
 }
 
 video {

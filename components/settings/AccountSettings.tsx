@@ -20,16 +20,16 @@ export default function AccountSettings({
 }: AccountSettingsProps) {
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-br from-white to-blue-50 p-6 rounded-2xl border border-blue-100 shadow-lg hover:shadow-xl transition-all duration-300">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+      <div className="bg-gradient-to-br from-white dark:from-gray-800 to-blue-50 dark:to-gray-800 p-6 rounded-2xl border border-blue-100 dark:border-blue-900/50 shadow-lg hover:shadow-xl dark:shadow-lg dark:hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
           <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
             <Globe className="h-4 w-4 text-white" />
           </div>
           Account Status
         </h3>
         {settings.account?.isDeactivated ? (
-          <div className="p-5 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl shadow-inner">
-            <p className="text-sm text-yellow-800 font-medium">
+          <div className="p-5 bg-gradient-to-r from-yellow-50 dark:from-yellow-900/20 to-orange-50 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-900/50 rounded-xl shadow-inner">
+            <p className="text-sm text-yellow-800 dark:text-yellow-200 font-medium">
               Your account is currently deactivated.
               {settings.account.deactivatedAt && (
                 <span className="block mt-2 text-xs opacity-80">
@@ -53,9 +53,9 @@ export default function AccountSettings({
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-xl border border-green-200">
+            <div className="flex items-center space-x-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-900/50">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-sm text-green-800 font-medium">Your account is active and healthy</p>
+              <p className="text-sm text-green-800 dark:text-green-200 font-medium">Your account is active and healthy</p>
             </div>
             <button
               onClick={deactivateAccount}
@@ -66,8 +66,8 @@ export default function AccountSettings({
           </div>
         )}
         {settings.account?.deleteScheduledAt && (
-          <div className="mt-6 p-5 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-xl shadow-inner">
-            <p className="text-sm text-red-800 font-medium">
+          <div className="mt-6 p-5 bg-gradient-to-r from-red-50 dark:from-red-900/20 to-pink-50 dark:to-pink-900/20 border border-red-200 dark:border-red-900/50 rounded-xl shadow-inner">
+            <p className="text-sm text-red-800 dark:text-red-200 font-medium">
               Account deletion scheduled for: {new Date(settings.account.deleteScheduledAt).toLocaleDateString()}
             </p>
             <button
@@ -87,8 +87,8 @@ export default function AccountSettings({
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-white to-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-lg hover:shadow-xl transition-all duration-300">
-        <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+      <div className="bg-gradient-to-br from-white dark:from-gray-800 to-indigo-50 dark:to-gray-800 p-6 rounded-2xl border border-indigo-100 dark:border-indigo-900/50 shadow-lg hover:shadow-xl dark:shadow-lg dark:hover:shadow-xl transition-all duration-300">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
           <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-lg flex items-center justify-center mr-3">
             <Download className="h-4 w-4 text-white" />
           </div>
@@ -102,7 +102,7 @@ export default function AccountSettings({
             <Download className="h-4 w-4 mr-2" />
             Request Data Download
           </button>
-          <div className="text-sm text-gray-700 p-4 bg-white/70 rounded-xl border border-blue-100">
+          <div className="text-sm text-gray-700 dark:text-gray-300 p-4 bg-white/70 dark:bg-gray-700/50 rounded-xl border border-blue-100 dark:border-blue-900/50 transition-colors duration-200">
             <p>Download a comprehensive archive of your data including posts, messages, and profile information.</p>
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function AccountSettings({
             <Trash2 className="h-4 w-4 mr-2" />
             Delete Account
           </button>
-          <div className="text-sm text-gray-700 p-4 bg-white/70 rounded-xl border border-red-200">
+          <div className="text-sm text-gray-700 dark:text-gray-300 p-4 bg-white/70 dark:bg-gray-700/50 rounded-xl border border-red-200 dark:border-red-900/50 transition-colors duration-200">
             <p>Permanently delete your account and all associated data. This action cannot be undone after 30 days.</p>
           </div>
         </div>

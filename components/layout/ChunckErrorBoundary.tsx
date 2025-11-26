@@ -162,17 +162,17 @@ export class ChunkErrorBoundary extends Component<Props, State> {
 
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-          <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <RefreshCw className="w-8 h-8 text-red-600" />
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 dark:from-gray-900 to-gray-100 dark:to-gray-950 p-4">
+          <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl dark:shadow-2xl p-8 text-center transition-colors duration-200">
+            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <RefreshCw className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
             
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               Loading Error
             </h1>
             
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {this.state.errorCount >= this.maxRetries
                 ? "We're having trouble loading the page. Please try refreshing manually."
                 : "We're attempting to recover... This may take a moment."}
@@ -181,7 +181,7 @@ export class ChunkErrorBoundary extends Component<Props, State> {
             {this.state.errorCount >= this.maxRetries && (
               <button
                 onClick={this.handleManualReload}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2"
               >
                 <RefreshCw className="w-5 h-5" />
                 Refresh Page
@@ -189,14 +189,14 @@ export class ChunkErrorBoundary extends Component<Props, State> {
             )}
 
             {this.state.errorCount < this.maxRetries && (
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-blue-500"></div>
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 dark:border-gray-600 border-t-blue-500"></div>
                 <span>Retrying... ({this.state.errorCount + 1}/{this.maxRetries})</span>
               </div>
             )}
 
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 Error: {this.state.error?.message}
               </p>
             </div>

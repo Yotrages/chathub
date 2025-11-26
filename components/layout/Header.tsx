@@ -375,8 +375,8 @@ const Header: React.FC = () => {
       autocompleteSuggestions.recent.length > 0);
 
   return (
-    <div className="bg-gray-50">
-      <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40">
+    <div className="bg-gray-50 dark:bg-gray-900">
+      <header className="bg-white dark:bg-gray-800 shadow-lg dark:shadow-2xl border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-3 xs:px-4 py-3 xs:py-4">
           <div className="sm:flex items-center justify-between gap-2 xs:gap-4">
             <div className="flex items-center justify-between">
@@ -390,20 +390,20 @@ const Header: React.FC = () => {
               </Link>
               <div className="flex sm:hidden items-center gap-2">
                 <button
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150 flex-shrink-0"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-150 flex-shrink-0"
                   onClick={() => {
                     setShowSearch(true);
                     setIsFocused(true);
                   }}
                   aria-label="Open search"
                 >
-                  <Search size={18} className="text-gray-600" />
+                  <Search size={18} className="text-gray-600 dark:text-gray-400" />
                 </button>
                 <Link
                   href="/settings"
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-150"
                 >
-                  <Settings size={18} className="text-gray-600" />
+                  <Settings size={18} className="text-gray-600 dark:text-gray-400" />
                 </Link>
               </div>
             </div>
@@ -417,8 +417,8 @@ const Header: React.FC = () => {
                 <div className="relative w-full">
                   <Input
                     type="search"
-                    className="border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
-                    icon={<Search size={16} className="text-gray-400" />}
+                    className="border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all duration-200"
+                    icon={<Search size={16} className="text-gray-400 dark:text-gray-500" />}
                     left_content
                     placeholder="Search posts, users, reels..."
                     width="100%"
@@ -433,13 +433,13 @@ const Header: React.FC = () => {
                   {(shouldShowFrequentSearches ||
                     shouldShowFilteredFrequentSearches ||
                     shouldShowAutocomplete) && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-xl mt-2 max-h-96 overflow-y-auto z-[9999]">
+                    <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl dark:shadow-2xl mt-2 max-h-96 overflow-y-auto z-[9999]">
                       <div className="p-2">
                         {/* Frequent/Recent Searches */}
                         {(shouldShowFrequentSearches ||
                           shouldShowFilteredFrequentSearches) && (
                           <>
-                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
+                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2">
                               Recent Searches
                             </p>
                             {frequentSearches
@@ -455,13 +455,13 @@ const Header: React.FC = () => {
                                 <div
                                   key={`frequent-${index}`}
                                   onClick={() => handleFrequentSearchClick(q)}
-                                  className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                  className="flex items-center px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150"
                                 >
                                   <Search
                                     size={14}
-                                    className="text-gray-400 mr-3 flex-shrink-0"
+                                    className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0"
                                   />
-                                  <span className="text-gray-700 truncate">
+                                  <span className="text-gray-700 dark:text-gray-300 truncate">
                                     {q}
                                   </span>
                                 </div>
@@ -682,12 +682,12 @@ const Header: React.FC = () => {
                   <Link
                     href={item.route}
                     key={index}
-                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 transition-all duration-150 min-w-0 group"
+                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150 min-w-0 group"
                   >
-                    <span className="text-gray-600 group-hover:text-blue-600 transition-colors duration-150">
+                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-150">
                       {item.icon}
                     </span>
-                    <p className="text-xs text-gray-500 group-hover:text-blue-600 hidden md:block truncate mt-1 transition-colors duration-150">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden md:block truncate mt-1 transition-colors duration-150">
                       {item.name}
                     </p>
                   </Link>
@@ -718,9 +718,9 @@ const Header: React.FC = () => {
               {/* User Profile */}
               <button
                 onClick={() => router.push(`/profile/${user?._id}`)}
-                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 p-2 rounded-xl hover:bg-gray-50 transition-all duration-150 min-w-0 group"
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150 min-w-0 group"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-blue-200 transition-all duration-150">
+                <div className="w-8 h-8 xs:w-9 xs:h-9 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-blue-200 dark:group-hover:ring-blue-900 transition-all duration-150">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
@@ -733,7 +733,7 @@ const Header: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <span className="font-medium hidden sm:block truncate max-w-20 md:max-w-28 group-hover:text-blue-600 transition-colors duration-150">
+                <span className="font-medium hidden sm:block truncate max-w-20 md:max-w-28 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-150">
                   {user?.username}
                 </span>
               </button>
@@ -747,16 +747,16 @@ const Header: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 sm:hidden">
           <div
             ref={mobileSearchRef}
-            className="bg-white m-4 mt-8 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4 duration-300"
+            className="bg-white dark:bg-gray-800 m-4 mt-8 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4 duration-300"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">Search</h3>
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Search</h3>
               <button
                 onClick={() => setShowSearch(false)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-150"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-150"
               >
-                <X size={20} className="text-gray-500" />
+                <X size={20} className="text-gray-500 dark:text-gray-400" />
               </button>
             </div>
 
@@ -765,8 +765,8 @@ const Header: React.FC = () => {
               <form onSubmit={handleSearchSubmit}>
                 <Input
                   type="search"
-                  className="w-full bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
-                  icon={<Search size={16} className="text-gray-400" />}
+                  className="w-full bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900"
+                  icon={<Search size={16} className="text-gray-400 dark:text-gray-500" />}
                   left_content
                   placeholder="Search posts, users, reels..."
                   width="100%"

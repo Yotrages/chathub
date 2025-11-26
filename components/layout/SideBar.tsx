@@ -42,19 +42,19 @@ const SideBar = () => {
   ]
 
   return (
-    <div className='flex flex-col h-full w-full'>
+    <div className='flex flex-col h-full w-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 transition-colors duration-200'>
       <div className='flex flex-col items-center w-full px-2 gap-3 py-4'>
         {/* User Profile Link */}
         <Link 
           href={`/profile/${user?._id}`} 
-          className='flex items-center gap-2 w-full py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 pl-2'
+          className='flex items-center gap-2 w-full py-2 rounded-lg transition-all duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800 pl-2'
         >
           <UserAvatar 
             avatar={user?.avatar} 
             username={user?.username} 
             className='w-9 h-9'
           />
-          <p className="font-medium text-gray-800 truncate">
+          <p className="font-medium text-gray-800 dark:text-gray-200 truncate">
             {user?.username}
           </p>
         </Link>
@@ -65,9 +65,9 @@ const SideBar = () => {
             <Link 
               href={link.route} 
               key={index} 
-              className='flex transition-all duration-300 ease-in-out hover:bg-gray-100 items-center gap-3 w-full py-3 rounded-lg pl-2 text-gray-700 hover:text-gray-900'
+              className='flex transition-all duration-300 ease-in-out hover:bg-gray-100 dark:hover:bg-gray-800 items-center gap-3 w-full py-3 rounded-lg pl-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
             >
-              <span className="flex-shrink-0">{link.icon}</span>
+              <span className="flex-shrink-0 text-gray-600 dark:text-gray-400">{link.icon}</span>
               <span className="font-medium capitalize truncate">{link.title}</span>
             </Link>
           ))}

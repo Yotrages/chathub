@@ -87,7 +87,7 @@ export const MemoryDetailModal: React.FC<MemoryDetailModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl dark:shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden transition-colors duration-200">
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 p-6 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
@@ -128,22 +128,22 @@ export const MemoryDetailModal: React.FC<MemoryDetailModalProps> = ({
         {/* Content */}
         <div className="flex h-[calc(90vh-200px)]">
           {/* Sidebar */}
-          <div className="w-1/3 border-r border-gray-200 bg-gray-50 p-6">
+          <div className="w-1/3 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30 p-6 transition-colors duration-200">
             <div className="space-y-6">
               {/* Context Summary */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
                   <Brain size={18} className="text-purple-600" />
                   Memory Context
                 </h3>
-                <p className="text-sm text-gray-600 leading-relaxed bg-white p-4 rounded-lg border-l-4 border-purple-400">
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed bg-white dark:bg-gray-800 p-4 rounded-lg border-l-4 border-purple-400 transition-colors duration-200">
                   {memory.context}
                 </p>
               </div>
 
               {/* Keywords */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
                   <Hash size={18} className="text-blue-600" />
                   Key Topics
                 </h3>
@@ -151,7 +151,7 @@ export const MemoryDetailModal: React.FC<MemoryDetailModalProps> = ({
                   {memory.keywords.map((keyword, index) => (
                     <span 
                       key={index}
-                      className="text-xs bg-gradient-to-r from-blue-100 to-purple-100 text-blue-800 px-3 py-1 rounded-full border border-blue-200"
+                      className="text-xs bg-gradient-to-r from-blue-100 dark:from-blue-900/40 to-purple-100 dark:to-purple-900/40 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full border border-blue-200 dark:border-blue-900/50 transition-colors duration-200"
                     >
                       #{keyword}
                     </span>
@@ -161,18 +161,18 @@ export const MemoryDetailModal: React.FC<MemoryDetailModalProps> = ({
 
               {/* Timeline Info */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
                   <Calendar size={18} className="text-green-600" />
                   Timeline
                 </h3>
-                <div className="bg-white p-4 rounded-lg space-y-2">
-                  <div className="text-sm text-gray-600">
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg space-y-2 transition-colors duration-200">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Started:</span> {formatRelativeDate(memory.createdAt)}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Last Activity:</span> {formatRelativeDate(memory.lastActivity)}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Duration:</span> {
                       Math.floor((new Date(memory.lastActivity).getTime() - new Date(memory.createdAt).getTime()) / (1000 * 60 * 60 * 24))
                     } days

@@ -62,14 +62,14 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
 
   return (
     <>
-      <div className="flex dark:bg-gray-900 flex-col w-full h-full">
+      <div className="flex dark:bg-gray-900 dark:border-gray-800 flex-col w-full h-full bg-white border-r border-gray-200 transition-colors duration-200">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl dark:text-white font-semibold">Chats</h1>
+            <h1 className="text-xl dark:text-gray-100 font-semibold text-gray-900">Chats</h1>
             <button
               onClick={() => setShowNewChat(true)}
-              className="p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+              className="p-2 bg-blue-500 dark:bg-blue-600 text-white rounded-full hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
             >
               <Plus size={20} />
             </button>
@@ -77,24 +77,24 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={20} />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             />
           </div>
 
           {/* Tabs */}
-          <div className="flex mt-4 bg-gray-100 rounded-lg p-1">
+          <div className="flex mt-4 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
             <button
               onClick={() => setActiveTab('all')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'all'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
               }`}
             >
               <MessageSquare size={16} className="inline mr-2" />
@@ -104,8 +104,8 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
               onClick={() => setActiveTab('groups')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
                 activeTab === 'groups'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-300'
               }`}
             >
               <Users size={16} className="inline mr-2" />
@@ -115,11 +115,11 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
         </div>
 
         {/* Chat List */}
-        <div className="flex-1 overflow-y-auto h-full">
+        <div className="flex-1 overflow-y-auto h-full bg-white dark:bg-gray-900">
           {isLoading ? (
-            <div className="p-4 text-center text-gray-500">Loading chats...</div>
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">Loading chats...</div>
           ) : filteredChats.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
+            <div className="p-4 text-center text-gray-500 dark:text-gray-400">
               {searchTerm ? 'No chats found' : 'No conversations yet'}
             </div>
           ) : (
@@ -132,7 +132,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
                     messageWindow()
                   }
                 }}
-                className="flex items-center justify-center p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100 transition-colors relative group"
+                className="flex items-center justify-center p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer border-b border-gray-100 dark:border-gray-700 transition-colors relative group"
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0 mr-3">
@@ -168,21 +168,21 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white hover:text-gray-900 truncate">
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-gray-900 dark:hover:text-white truncate">
                       {chat.name || 'Unknown Chat'}
                     </h3>
                     {chat.lastMessageTime && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         {formatTime(chat.lastMessageTime)}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-500 truncate">
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                       {chat.lastMessage?.content || 'No messages yet'}
                     </p>
                     {chat.unreadCount > 0 && (
-                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 dark:bg-red-600 rounded-full">
                         {chat.unreadCount > 99 ? '99+' : chat.unreadCount}
                       </span>
                     )}
@@ -193,7 +193,7 @@ export const ChatSidebar = ({isHomepage} : {isHomepage?: boolean}) => {
                 <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleDeleteChat(chat._id)}
-                    className="p-2 text-gray-500 hover:text-red-500"
+                    className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
                   >
                     <Trash2 size={16} />
                   </button>

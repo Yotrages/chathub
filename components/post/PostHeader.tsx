@@ -140,7 +140,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   ];
 
   return (
-    <div className="flex items-center justify-between p-6 pb-4">
+    <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 dark:border-gray-700">
       <div
         onClick={() => router.push(`/profile/${authorId._id}`)}
         className="flex items-center space-x-3 cursor-pointer group"
@@ -149,15 +149,15 @@ const PostHeader: React.FC<PostHeaderProps> = ({
           <UserAvatar
             username={authorId.username}
             avatar={authorId?.avatar}
-            className="w-12 h-12 ring-2 ring-gray-100 group-hover:ring-blue-200 transition-all duration-200"
+            className="w-12 h-12 ring-2 ring-gray-100 dark:ring-gray-700 group-hover:ring-blue-200 dark:group-hover:ring-blue-900 transition-all duration-200"
           />
           <div className="absolute inset-0 rounded-full bg-blue-500 opacity-0 group-hover:opacity-10 transition-opacity duration-200"></div>
         </div>
         <div>
-          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
             {authorId.username}
           </h3>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {formatTimeAgo(createdAt)} ago
           </p>
         </div>
@@ -170,8 +170,8 @@ const PostHeader: React.FC<PostHeaderProps> = ({
             onClick={() => setShowDropdown((prev) => !prev)}
             className={`p-2 rounded-full transition-all duration-200 ${
               showDropdown 
-                ? 'bg-blue-100 text-blue-600 rotate-90' 
-                : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
+                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rotate-90' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
             <MoreHorizontal size={20} />
@@ -190,7 +190,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
               <div 
                 className="absolute right-0 top-full mt-2 z-30 w-56 animate-in fade-in slide-in-from-top-2 duration-200"
               >
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
                   {/* Dropdown items */}
                   <div className="py-1">
                     {dropdownItems.map((item, index) => {
@@ -199,7 +199,13 @@ const PostHeader: React.FC<PostHeaderProps> = ({
                         <button
                           key={index}
                           onClick={item.onClick}
-                          className={`w-full flex items-center space-x-3 px-4 py-3 transition-all duration-150 ${item.hoverBg} ${item.color} group`}
+                          className={`w-full flex items-center space-x-3 px-4 py-3 transition-all duration-150 group ${
+                            item.color === "text-blue-600" ? "dark:text-blue-400 dark:hover:bg-blue-900/30 hover:bg-blue-50" :
+                            item.color === "text-green-600" ? "dark:text-green-400 dark:hover:bg-green-900/30 hover:bg-green-50" :
+                            item.color === "text-orange-600" ? "dark:text-orange-400 dark:hover:bg-orange-900/30 hover:bg-orange-50" :
+                            item.color === "text-red-600" ? "dark:text-red-400 dark:hover:bg-red-900/30 hover:bg-red-50" :
+                            "dark:text-gray-300 dark:hover:bg-gray-700 hover:bg-gray-50"
+                          } ${item.hoverBg}`}
                         >
                           <Icon 
                             size={18} 
@@ -221,7 +227,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
         {/* Close button */}
         <button
           onClick={onHide}
-          className="p-2 hover:bg-red-50 rounded-full transition-all duration-200 text-gray-400 hover:text-red-500 group"
+          className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-all duration-200 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 group"
         >
           <X 
             size={18} 

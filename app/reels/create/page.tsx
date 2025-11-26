@@ -165,8 +165,8 @@ const CreateReelPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 shadow-lg">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col transition-colors duration-200">
+      <div className="sticky top-0 z-10 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-800 dark:to-pink-800 px-4 py-3 shadow-lg dark:shadow-xl transition-colors duration-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
@@ -207,10 +207,10 @@ const CreateReelPage: React.FC = () => {
               <div
                 className={`relative rounded-xl overflow-hidden border-2 border-dashed transition-all duration-300 ${
                   dragActive
-                    ? "border-purple-500 bg-purple-50"
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-900/20"
                     : previewUrl
-                    ? "border-gray-300 shadow-inner"
-                    : "border-gray-300 bg-gray-50"
+                    ? "border-gray-300 dark:border-gray-700 shadow-inner"
+                    : "border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"
                 } ${previewUrl ? "h-80" : "h-64"}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -235,7 +235,7 @@ const CreateReelPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={togglePlayPause}
-                        className="p-3 bg-white/90 text-gray-800 rounded-full shadow-lg active:scale-95 transition-transform"
+                        className="p-3 bg-white/90 dark:bg-gray-700/90 text-gray-800 dark:text-white rounded-full shadow-lg dark:shadow-xl active:scale-95 transition-transform"
                       >
                         {isPlaying ? (
                           <PauseIcon className="h-6 w-6" />
@@ -258,22 +258,22 @@ const CreateReelPage: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-500 p-4">
-                    <div className="p-3 bg-purple-100 rounded-full mb-3">
-                      <PhotoIcon className="h-8 w-8 text-purple-600" />
+                  <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400 p-4">
+                    <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-3">
+                      <PhotoIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                     </div>
-                    <h3 className="text-base font-semibold text-gray-700 mb-2 text-center">
+                    <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-2 text-center">
                       {dragActive
                         ? "Drop your video here!"
                         : "Upload your reel"}
                     </h3>
-                    <p className="text-sm text-center text-gray-500 mb-3 px-2">
+                    <p className="text-sm text-center text-gray-500 dark:text-gray-400 mb-3 px-2">
                       Tap to browse or drag & drop a video file
                     </p>
-                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-400">
-                      <span className="bg-gray-200 px-2 py-1 rounded">MP4</span>
-                      <span className="bg-gray-200 px-2 py-1 rounded">MOV</span>
-                      <span className="bg-gray-200 px-2 py-1 rounded">
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                      <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">MP4</span>
+                      <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">MOV</span>
+                      <span className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
                         Max 50MB
                       </span>
                     </div>
@@ -396,7 +396,7 @@ const CreateReelPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 shadow-2xl">
+            <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 shadow-2xl dark:shadow-2xl transition-colors">
               <button
                 type="submit"
                 disabled={isPending || !file || !title.trim()}

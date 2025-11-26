@@ -111,7 +111,7 @@ export const StoriesContextMenu = ({
       {showDropdown && (
         <div 
           ref={dropdownRef}
-          className="absolute top-full right-0 mt-2 w-48 rounded-lg shadow-xl bg-white border border-gray-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="absolute top-full right-0 mt-2 w-48 rounded-lg shadow-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200 transition-colors"
         >
           <div className="py-1">
             <button
@@ -150,7 +150,7 @@ export const StoriesContextMenu = ({
 
       {showReportModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-xl shadow-2xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-2xl p-4 sm:p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto transition-colors duration-200">
             <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
                 Report Story

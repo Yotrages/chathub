@@ -31,7 +31,7 @@ export const ChatWindow = ({ onShowProfile }: ChatWindowProps) => {
 
   return (
     <div 
-      className="flex w-full max-w-full flex-col relative overflow-hidden"
+      className="flex w-full max-w-full flex-col relative overflow-hidden bg-white dark:bg-gray-900 transition-colors duration-200"
       style={{ height: 'calc(var(--vh, 1vh) * 100)' }}
     >
   

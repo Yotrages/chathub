@@ -15,13 +15,13 @@ const PostContent: React.FC<PostContentProps> = ({ content }) => {
 
   return (
     <div className="px-6 pb-4">
-      <p className="text-gray-800 leading-relaxed whitespace-pre-line">
+      <p className="text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-line">
         {displayContent}
       </p>
       {isContentLong && (
         <button
           onClick={() => setShowFullContent(!showFullContent)}
-          className="text-blue-500 hover:text-blue-600 text-sm font-medium mt-2 transition-colors"
+          className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 text-sm font-medium mt-2 transition-colors"
         >
           {showFullContent ? "Show less" : "Show more..."}
         </button>

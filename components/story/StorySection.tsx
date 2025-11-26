@@ -34,16 +34,16 @@ const StorySection: React.FC = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm py-4 px-1">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-md py-4 px-1 transition-colors duration-200">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Stories</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Stories</h2>
       </div>
       
       <div className="flex space-x-1 overflow-x-auto pb-2 scrollbar-hide">
         <div className="flex-shrink-0">
           <div 
             onClick={handleCreateStory}
-            className="relative w-24 xs:w-32 h-48 bg-white rounded-xl border border-gray-200 cursor-pointer overflow-hidden group hover:shadow-md transition-all duration-200"
+            className="relative w-24 xs:w-32 h-48 bg-white dark:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-600 cursor-pointer overflow-hidden group hover:shadow-md dark:hover:shadow-lg transition-all duration-200"
           >
             <div className="h-36 bg-gradient-to-br from-gray-100 to-gray-200 relative">
               {user?.avatar? (

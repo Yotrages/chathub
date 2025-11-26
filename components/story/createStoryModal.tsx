@@ -213,25 +213,25 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
 
   return (
     <div tabIndex={-1} role='dialog' aria-labelledby='emoji-picker' aria-modal="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[95vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl dark:shadow-2xl max-h-[95vh] overflow-hidden transition-colors duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 dark:bg-gray-800/50 transition-colors duration-200">
           {step === 'create' && (
             <button
               onClick={resetFormField}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             >
-              <ArrowLeftIcon className="h-5 w-5 text-gray-600" />
+              <ArrowLeftIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
           )}
-          <h2 className="text-xl font-bold text-gray-900 flex-1 text-center">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex-1 text-center">
             {step === 'type' ? 'Create Story' : 'Add to Story'}
           </h2>
           <button
             onClick={handleClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
           >
-            <XMarkIcon className="h-5 w-5 text-gray-600" />
+            <XMarkIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
 
@@ -335,9 +335,9 @@ const CreateStoryModal: React.FC<CreateStoryModalProps> = ({ isOpen, onClose }) 
             </div>
 
             {/* Controls */}
-            <div className="bg-white border-t border-gray-100">
+            <div className="bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 transition-colors duration-200">
               {/* Text Input */}
-              <div className="p-4 relative border-b border-gray-100">
+              <div className="p-4 relative border-b border-gray-100 dark:border-gray-700">
                 <div className="relative">
                   <textarea
                     value={text}

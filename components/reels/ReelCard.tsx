@@ -404,8 +404,8 @@ const ReelCard = forwardRef<ReelCardRef, EnhancedReelCardProps>(
     const containerClasses = isFullscreen
       ? "w-full h-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-3xl mx-auto bg-black rounded-lg overflow-hidden relative aspect-[9/16]"
       : isCompact
-      ? "w-32 sm:w-32 aspect-[9/16] bg-gray-900 rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-200"
-      : "w-full h-full bg-gray-900 rounded-lg shadow-lg overflow-hidden aspect-[9/16]";
+      ? "w-32 sm:w-32 aspect-[9/16] bg-gray-900 dark:bg-black rounded-lg shadow-lg dark:shadow-2xl overflow-hidden transform hover:scale-105 transition-transform duration-200"
+      : "w-full h-full bg-gray-900 dark:bg-black rounded-lg shadow-lg dark:shadow-2xl overflow-hidden aspect-[9/16]";
 
     return (
       <div className={containerClasses}>

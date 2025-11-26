@@ -28,15 +28,15 @@ const StoryViewers: React.FC<StoryViewersProps> = ({
 
   return (
     <div className="fixed bottom-0 inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-4 max-w-md w-full mx-4 max-h-[70vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-md w-full mx-4 max-h-[70vh] overflow-hidden transition-colors duration-200">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold flex items-center">
+          <h3 className="text-lg font-semibold flex items-center text-gray-900 dark:text-white">
             <EyeIcon className="h-5 w-5 mr-2" />
             Viewers ({viewersCount})
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -44,11 +44,11 @@ const StoryViewers: React.FC<StoryViewersProps> = ({
         
         <div className="overflow-y-auto max-h-96">
           {viewers.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No viewers yet</p>
+            <p className="text-gray-500 dark:text-gray-400 text-center py-8">No viewers yet</p>
           ) : (
             <div className="space-y-3">
               {viewers.map((viewer) => (
-                <div key={viewer.viewer._id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50">
+                <div key={viewer.viewer._id} className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                   <img
                     src={viewer.viewer.avatar || ''}
                     alt={viewer.viewer.username}

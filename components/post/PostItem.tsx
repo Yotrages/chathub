@@ -179,7 +179,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
 
   return (
     <>
-      <article className="bg-white rounded-2xl flex flex-col shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
+      <article className="bg-white dark:bg-gray-800 rounded-2xl flex flex-col shadow-sm dark:shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
         <PostHeader
           authorId={post.authorId}
           createdAt={post.createdAt}
@@ -214,17 +214,17 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
         />
 
         {showComments && (
-          <div className="w-full max-w-full h-[400px] sm:h-[500px] border-t border-gray-100">
+          <div className="w-full max-w-full h-[400px] sm:h-[500px] border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             {isFetchingComments ? (
-              <div className="flex items-center justify-center h-full text-gray-500">
+              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                 <p>Loading comments...</p>
               </div>
             ) : !hasSuccessfullyFetched && fetchAttempted ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
                 <p>Failed to load comments.</p>
                 <button
                   onClick={retryFetchComments}
-                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="mt-2 px-4 py-2 bg-blue-500 dark:bg-blue-600 text-white dark:text-gray-100 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
                 >
                   Retry
                 </button>

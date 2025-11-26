@@ -212,8 +212,20 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning>
+    <html suppressHydrationWarning lang="en">
       <head>
+        {/* Primary Meta Tags */}
+        <title>ChatHub - Connect with Friends and Communities</title>
+        <meta name="title" content="ChatHub - Connect with Friends and Communities" />
+        <meta 
+          name="description" 
+          content="Join ChatHub, the social platform where you can connect with friends, share moments, and build meaningful communities. Chat, share, and discover new connections." 
+        />
+        <meta name="keywords" content="ChatHub, social media, social network, connect friends, online community, chat, messaging, share photos" />
+        <meta name="author" content="ChatHub" />
+        <meta name="robots" content="index, follow" />
+        
+        {/* Viewport and Mobile */}
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
@@ -224,15 +236,70 @@ export default function MainLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
+        <meta name="apple-mobile-web-app-title" content="ChatHub" />
+        <meta name="format-detection" content="telephone=no" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://chathub-hazel.vercel.app" />
+        <meta property="og:title" content="ChatHub - Connect with Friends and Communities" />
+        <meta 
+          property="og:description" 
+          content="Join ChatHub, the social platform where you can connect with friends, share moments, and build meaningful communities." 
+        />
+        <meta property="og:image" content="https://yournetizen.com/og-image.jpg" />
+        <meta property="og:site_name" content="ChatHub" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://chathub-hazel.vercel.app" />
+        <meta property="twitter:title" content="ChatHub - Connect with Friends and Communities" />
+        <meta 
+          property="twitter:description" 
+          content="Join ChatHub, the social platform where you can connect with friends, share moments, and build meaningful communities." 
+        />
+        <meta property="twitter:image" content="https://chathub-hazel.vercel.app/twitter-image.jpg" />
+
+        {/* Favicon */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
+        {/* Theme Color */}
+        <meta name="theme-color" content="#3b82f6" />
+
+        {/* Canonical URL */}
+        <link rel="canonical" href="https://chathub-hazel.vercel.app" />
         
+        {/* Preconnect for Performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-        
-        <meta name="format-detection" content="telephone=no" />
+
+        {/* Structured Data for SEO */}
+        <script 
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              "name": "ChatHub",
+              "description": "Connect with friends and communities on ChatHub",
+              "url": "https://chathub-hazel.vercel.app",
+              "applicationCategory": "SocialNetworkingApplication",
+              "operatingSystem": "All",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            })
+          }}
+        />
       </head>
       <body>
         <ChunkErrorBoundary>
-        <ReduxProvider>
+          <ReduxProvider>
             <ThemeProvider defaultTheme="light" storageKey="chathub-theme">
               <ReactQueryProvider>
                 <SocketProvider>
@@ -268,8 +335,8 @@ export default function MainLayout({
                 </SocketProvider>
               </ReactQueryProvider>
             </ThemeProvider>
-        </ReduxProvider>
-          </ChunkErrorBoundary>
+          </ReduxProvider>
+        </ChunkErrorBoundary>
       </body>
     </html>
   );

@@ -33,20 +33,20 @@ export const MemoryThreadsPanel: React.FC<MemoryThreadsPanelProps> = ({
 
   if (isLoading) {
     return (
-      <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200">
+      <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 dark:from-gray-800/50 to-blue-50 dark:to-gray-800/30 rounded-xl border border-purple-200 dark:border-purple-900/50 transition-colors duration-200">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-6 h-6 bg-purple-400 rounded-full flex items-center justify-center animate-pulse">
+          <div className="w-6 h-6 bg-purple-400 dark:bg-purple-600 rounded-full flex items-center justify-center animate-pulse">
             <Brain size={14} className="text-white" />
           </div>
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors duration-200">
             Searching memories...
           </span>
         </div>
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="bg-white bg-opacity-50 rounded-lg p-3 animate-pulse">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+            <div key={i} className="bg-white dark:bg-gray-800 bg-opacity-50 dark:bg-opacity-30 rounded-lg p-3 animate-pulse transition-colors duration-200">
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
             </div>
           ))}
         </div>
@@ -60,17 +60,17 @@ export const MemoryThreadsPanel: React.FC<MemoryThreadsPanelProps> = ({
 
   return (
     <>
-      <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border-l-4 border-purple-400">
+      <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 dark:from-gray-800/50 to-blue-50 dark:to-gray-800/30 rounded-xl border-l-4 border-purple-400 dark:border-purple-600 transition-colors duration-200">
         <div className="flex items-center gap-2 mb-4">
           <div className="w-6 h-6 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full flex items-center justify-center">
             <Sparkles size={14} className="text-white" />
           </div>
-          <h4 className="text-sm font-semibold text-gray-800">
+          <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200 transition-colors duration-200">
             💭 Memories with {participantUsername || 'this person'}
           </h4>
         </div>
 
-        <div className="max-h-80 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-purple-200">
+        <div className="max-h-80 overflow-y-auto space-y-2 scrollbar-thin scrollbar-thumb-purple-200 dark:scrollbar-thumb-purple-800">
           {memories.slice(0, 4).map((memory) => (
             <MemoryThreadCard
               key={memory._id}

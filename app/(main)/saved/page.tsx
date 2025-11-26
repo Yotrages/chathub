@@ -35,10 +35,10 @@ const SavedPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-2 sm:py-4 px-2 sm:px-4 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 py-2 sm:py-4 px-2 sm:px-4 lg:px-8 transition-colors duration-200">
       <div className="max-w-4xl mx-auto">
         {/* Elegant Header Section */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl mb-4 sm:mb-8 overflow-hidden backdrop-blur-sm bg-white/95">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl mb-4 sm:mb-8 overflow-hidden backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 transition-colors duration-200">
           {/* Gradient Header */}
           <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 px-3 py-6 sm:px-6 sm:py-12">
             <div className="absolute inset-0 bg-black/10"></div>
@@ -64,7 +64,7 @@ const SavedPage = () => {
           </div>
 
           {/* Enhanced Tab Navigation */}
-          <div className="bg-white border-b border-gray-100">
+          <div className="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 transition-colors duration-200">
             <nav className="flex" aria-label="Saved Posts Tabs">
               {tabs.map((tab, index) => {
                 const Icon = tab.icon;
@@ -101,7 +101,7 @@ const SavedPage = () => {
           </div>
 
           {/* Tab Description & Sort Info */}
-          <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-gray-50 to-blue-50">
+          <div className="px-3 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700/50 dark:to-blue-900/20 transition-colors duration-200">
             <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-4">
               <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-pulse flex-shrink-0"></div>
@@ -137,7 +137,7 @@ const SavedPage = () => {
         </div>
 
         {/* Content Section with Enhanced Styling */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border border-white/20">
+        <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-xl overflow-hidden border border-white/20 dark:border-gray-700/30 transition-colors duration-200">
           <div className="p-3 sm:p-6 lg:p-8">
             <SavedPostsWrapper userId={user?._id as string} sortType={activeTab} />
           </div>

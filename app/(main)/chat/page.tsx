@@ -64,7 +64,7 @@ export default function ChatPage() {
   return (
     <div 
       ref={containerRef}
-      className="flex bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-700 overflow-hidden"
+      className="flex bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden transition-colors duration-200"
       style={{ height: chatHeight }}
     >
       {/* Sidebar - Never scrolls */}

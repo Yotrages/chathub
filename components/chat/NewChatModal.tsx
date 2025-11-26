@@ -77,22 +77,22 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black m-0 bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      <div className="bg-white rounded-lg w-full max-w-md flex flex-col" style={{ maxHeight: '70vh' }}>
+      <div className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md flex flex-col" style={{ maxHeight: '70vh' }}>
         {/* Header - Fixed */}
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 flex-shrink-0">
-          <h2 className="text-base sm:text-lg font-semibold truncate">New Chat</h2>
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+          <h2 className="text-base sm:text-lg font-semibold truncate dark:text-gray-100">New Chat</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full flex-shrink-0 ml-2 transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full flex-shrink-0 ml-2 transition-colors dark:text-gray-400"
           >
             <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="flex-1 overflow-y-auto min-h-0 dark:bg-gray-800">
           {/* Chat Type Selection */}
-          <div className="p-3 sm:p-4 border-b border-gray-200">
+          <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700">
             <div className="flex gap-2 sm:gap-3">
               <button
                 onClick={() => {
@@ -101,8 +101,8 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                 }}
                 className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg flex-1 text-xs sm:text-sm font-medium transition-colors ${
                   chatType === 'direct'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-blue-500 text-white dark:bg-blue-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 <MessageCircle size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
@@ -115,8 +115,8 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                 }}
                 className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg flex-1 text-xs sm:text-sm font-medium transition-colors ${
                   chatType === 'group'
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-blue-500 text-white dark:bg-blue-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                 }`}
               >
                 <Users size={14} className="sm:w-4 sm:h-4 flex-shrink-0" />
@@ -127,13 +127,13 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
 
           {/* Group Name and Avatar */}
           {chatType === 'group' && (
-            <div className="p-3 sm:p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+            <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 flex-shrink-0">
               <input
                 type="text"
                 placeholder="Group name (required)"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
-                className="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+                className="w-full px-2 sm:px-3 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 mb-3"
               />
               <AvatarUpload
                 label="Group Avatar"
@@ -145,15 +145,15 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
 
           {/* Selected Users Display - Compact */}
           {chatType === 'group' && selectedUsers.length > 0 && (
-            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200 bg-blue-50">
+            <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/30">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs sm:text-sm font-semibold text-blue-900">
+                <span className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-300">
                   Selected: {selectedUsers.length}
                 </span>
                 {hasMoreSelected && (
                   <button
                     onClick={() => setShowAllSelected(!showAllSelected)}
-                    className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                    className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
                   >
                     {showAllSelected ? (
                       <>
@@ -175,7 +175,7 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                 {visibleSelectedUsers.map((selectedUser: any) => (
                   <div
                     key={selectedUser._id}
-                    className="flex items-center gap-1 sm:gap-1.5 bg-white px-2 py-1 rounded-full text-xs group hover:bg-gray-50 transition-colors"
+                    className="flex items-center gap-1 sm:gap-1.5 bg-white dark:bg-gray-700 px-2 py-1 rounded-full text-xs group hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors dark:text-gray-100"
                   >
                     <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-white font-semibold text-xs">
@@ -190,14 +190,14 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                         e.stopPropagation();
                         handleUserToggle(selectedUser._id);
                       }}
-                      className="ml-1 hover:bg-red-100 rounded-full p-0.5 transition-colors flex-shrink-0"
+                      className="ml-1 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-full p-0.5 transition-colors flex-shrink-0"
                     >
-                      <X size={12} className="text-gray-500 group-hover:text-red-600" />
+                      <X size={12} className="text-gray-500 group-hover:text-red-600 dark:text-gray-400 dark:group-hover:text-red-400" />
                     </button>
                   </div>
                 ))}
                 {!showAllSelected && hasMoreSelected && (
-                  <div className="flex items-center px-2 py-1 bg-gray-200 rounded-full text-xs text-gray-600 font-medium">
+                  <div className="flex items-center px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-full text-xs text-gray-600 dark:text-gray-300 font-medium">
                     +{selectedUserDetails.length - 3}
                   </div>
                 )}
@@ -206,15 +206,15 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
           )}
 
           {/* Search - Sticky */}
-          <div className="p-3 sm:p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+          <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
             <div className="relative">
-              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 flex-shrink-0" size={16} />
+              <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 flex-shrink-0" size={16} />
               <input
                 type="text"
                 placeholder="Search users..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               />
             </div>
           </div>
@@ -222,9 +222,9 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
           {/* User List */}
           <div className="p-2 sm:p-3">
             {isLoading ? (
-              <div className="text-center text-gray-500 py-12 text-sm">Loading users...</div>
+              <div className="text-center text-gray-500 dark:text-gray-400 py-12 text-sm">Loading users...</div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center text-gray-500 py-12 text-sm">No users found</div>
+              <div className="text-center text-gray-500 dark:text-gray-400 py-12 text-sm">No users found</div>
             ) : (
               <div className="space-y-1">
                 {filteredUsers.map((userItem: any) => {
@@ -232,8 +232,8 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                   return (
                     <div
                       key={userItem._id}
-                      className={`flex items-center p-2 sm:p-2.5 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors ${
-                        isSelected ? 'bg-blue-50 hover:bg-blue-100' : ''
+                      className={`flex items-center p-2 sm:p-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-colors ${
+                        isSelected ? 'bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50' : ''
                       }`}
                       onClick={() => handleUserToggle(userItem._id)}
                     >
@@ -249,10 +249,10 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs sm:text-sm font-medium truncate text-gray-900">
+                        <p className="text-xs sm:text-sm font-medium truncate text-gray-900 dark:text-gray-100">
                           {userItem.username || 'Unknown User'}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {userItem.email}
                         </p>
                       </div>
@@ -265,10 +265,10 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
         </div>
 
         {/* Footer - Fixed */}
-        <div className="p-3 sm:p-4 border-t border-gray-200 flex justify-end gap-2 flex-shrink-0 bg-white">
+        <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-2 flex-shrink-0 bg-white dark:bg-gray-800">
           <button
             onClick={onClose}
-            className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium"
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium"
           >
             Cancel
           </button>
@@ -277,8 +277,8 @@ export const NewChatModal = ({ onClose }: NewChatModalProps) => {
             disabled={!canCreate}
             className={`px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-lg transition-colors font-medium ${
               canCreate
-                ? 'bg-blue-500 text-white hover:bg-blue-600'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700'
+                : 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-500 cursor-not-allowed'
             }`}
           >
             Create

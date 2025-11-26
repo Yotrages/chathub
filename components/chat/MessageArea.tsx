@@ -170,23 +170,23 @@ export const MessagesArea = ({
     <>
       <div 
         ref={messagesContainerRef}
-        className="h-full w-full overflow-y-auto overflow-x-hidden py-4 px-0.5 xs:p-4 space-y-4 surface-secondary"
+        className="h-full w-full overflow-y-auto overflow-x-hidden py-4 px-0.5 xs:p-4 space-y-4 surface-secondary dark:bg-gray-900"
         style={{ scrollBehavior: 'smooth' }}
       >
         {!isUserOnline && (
           <div className="text-center w-full text-red-500 mb-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-xs sm:text-sm">You are currently offline. Messages will not load or send.</p>
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <p className="text-xs sm:text-sm dark:text-red-300">You are currently offline. Messages will not load or send.</p>
             </div>
           </div>
         )}
         {isLoading ? (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
             <p>Loading messages...</p>
           </div>
         ) : chatMessages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-gray-500 dark:text-gray-400 mt-8">
             <div className="text-4xl mb-2">👋</div>
             <p>Start your conversation with {currentChat.name}</p>
             <p className="text-sm mt-1">Say hello and break the ice!</p>
@@ -202,7 +202,7 @@ export const MessagesArea = ({
               <div key={msg._id}>
                 {showDateSeparator && (
                   <div className="sticky top-0 z-10 text-center py-2">
-                    <span className="inline-block bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-0.5 rounded-full shadow-sm">
+                    <span className="inline-block bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-3 py-0.5 rounded-full shadow-sm">
                       {formatDate(currentDate)}
                     </span>
                   </div>

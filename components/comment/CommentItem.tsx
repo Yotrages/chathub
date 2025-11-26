@@ -164,8 +164,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           {isEditing ? (
             <div className="w-full">
               <form onSubmit={handleUpdateComment} className="w-full">
-                <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-blue-200 focus-within:border-blue-400 transition-colors">
-                  <div className="font-semibold text-sm text-gray-900 mb-2">
+                <div className="bg-gray-50 dark:bg-gray-700 rounded-xl sm:rounded-2xl p-2 sm:p-3 border-2 border-blue-200 dark:border-blue-700 focus-within:border-blue-400 dark:focus-within:border-blue-500 transition-colors">
+                  <div className="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-2">
                     {comment.authorId.username}
                   </div>
                   <div className="relative">
@@ -175,7 +175,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                       onChange={(e) => setCommentContent(e.target.value)}
                       placeholder="Edit your comment..."
                       rows={1}
-                      className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-800 placeholder-gray-500"
+                      className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-800 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                       style={{ minHeight: '20px' }}
                       autoFocus
                     />
@@ -201,7 +201,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
                   >
                     <X size={14} />
                     <span className="hidden xs:inline">Cancel</span>
@@ -209,7 +209,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   <button
                     type="submit"
                     disabled={!commentContent.trim() || commentContent === comment.content}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-xs sm:text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 dark:bg-blue-600 text-white text-xs sm:text-sm rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
                   >
                     <Check size={14} />
                     <span className="hidden xs:inline">Save</span>
@@ -241,7 +241,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               />
               {showReplyForm && (
                 <div className="relative mt-3">
-                  <div className="absolute left-[-0.75rem] sm:left-[-1.25rem] top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                  <div className="absolute left-[-0.75rem] sm:left-[-1.25rem] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
                   <ReplyForm
                     type={type}
                     dynamicId={dynamicId}

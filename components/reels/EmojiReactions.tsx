@@ -23,12 +23,12 @@ const EmojiReactions: React.FC<EmojiPickerProps> = ({ onEmojiSelect, isOpen, onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-4 max-w-sm w-full mx-4">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-sm w-full mx-4 transition-colors duration-200">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Choose Reaction</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Choose Reaction</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
           >
             <XMarkIcon className="h-6 w-6" />
           </button>
@@ -41,7 +41,7 @@ const EmojiReactions: React.FC<EmojiPickerProps> = ({ onEmojiSelect, isOpen, onC
                 onEmojiSelect(emoji.emoji, emoji.name);
                 onClose();
               }}
-              className="text-2xl p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="text-2xl p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               {emoji.emoji}
             </button>

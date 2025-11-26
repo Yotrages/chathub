@@ -257,9 +257,9 @@ const PostComments: React.FC<PostCommentsProps> = ({
   const participantUsername = postAuthor?.authorId?.username;
 
   return (
-    <div className="flex flex-col h-full w-full bg-gray-50">
+    <div className="flex flex-col h-full w-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Sticky Comment Input Area at TOP */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 shadow-sm z-20">
+      <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm dark:shadow-lg z-20 transition-colors duration-200">
         {preview && <div className="pt-3">{renderFilePreview(preview, previewType, originalFile)}</div>}
         
         {user && (
@@ -272,7 +272,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
               />
               
               <button 
-                className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors" 
+                className="flex-shrink-0 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors dark:text-gray-400" 
                 type="button" 
                 onClick={() => fileInputRef.current?.click()}
               >
@@ -296,7 +296,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
                     onChange={(e) => setCommentContent(e.target.value)}
                     placeholder="Write a comment..."
                     rows={1}
-                    className="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 bg-white border border-gray-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none overflow-hidden text-sm sm:text-base pr-8"
+                    className="flex-1 px-2 sm:px-3 py-2 sm:py-2.5 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent transition-all duration-200 resize-none overflow-hidden text-sm sm:text-base pr-8"
                     style={{ minHeight: '38px' }}
                   />
                   <button
@@ -320,7 +320,7 @@ const PostComments: React.FC<PostCommentsProps> = ({
               <button
                 type="submit"
                 disabled={!commentContent.trim()}
-                className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 flex items-center justify-center text-white rounded-lg sm:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 transition-all duration-200 transform hover:scale-105 active:scale-95"
+                className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 dark:bg-blue-600 flex items-center justify-center text-white rounded-lg sm:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 dark:hover:bg-blue-700 transition-all duration-200 transform hover:scale-105 active:scale-95"
               >
                 <Send size={16} className="sm:w-5 sm:h-5" />
               </button>

@@ -165,8 +165,8 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
 
   return (
     <>
-      <div className="px-2 xs:px-6 py-3 border-t border-gray-50">
-        <div className="flex justify-between items-center text-sm text-gray-600">
+      <div className="px-2 xs:px-6 py-3 border-t border-gray-50 dark:border-gray-700 dark:bg-gray-800">
+        <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center justify-center space-x-4">
             <button className="p-0 m-0 flex items-center xs:-space-x-0.5 cursor-pointer">
               {post.reactions &&
@@ -182,24 +182,24 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
                       {emoji}
                     </span>
                   ))}
-              <span className="hover:text-gray-800 text-sm sm:text-base cursor-pointer transition-colors">
+              <span className="hover:text-gray-800 dark:hover:text-gray-200 text-sm sm:text-base cursor-pointer transition-colors">
                 {reactions.length}
               </span>
             </button>
-            <span className="hover:text-gray-800 cursor-pointer text-sm sm:text-base transition-colors">
+            <span className="hover:text-gray-800 dark:hover:text-gray-200 cursor-pointer text-sm sm:text-base transition-colors">
               {comments.length} {comments.length === 1 ? "comment" : "comments"}
             </span>
-            <span className="hover:text-gray-800 text-sm sm:text-base cursor-pointer transition-colors">
+            <span className="hover:text-gray-800 dark:hover:text-gray-200 text-sm sm:text-base cursor-pointer transition-colors">
               {post.shareCount || 0}{" "}
               {post.shareCount === 1 ? "share" : "shares"}
             </span>
           </div>
-          <div className="flex items-center space-x-1 text-base text-gray-400">
+          <div className="flex items-center space-x-1 text-base text-gray-400 dark:text-gray-500">
             {images.length > 0 && <span>{images.length}</span>}
           </div>
         </div>
       </div>
-      <div className="px-2 xs:px-3 relative py-3 border-t border-gray-50">
+      <div className="px-2 xs:px-3 relative py-3 border-t border-gray-50 dark:border-gray-700 dark:bg-gray-800">
         <div
           onMouseLeave={() => setShowReactions(false)}
           className="absolute -top-24"
@@ -207,13 +207,13 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           {showReactions && (
             <div
               ref={reactionRef}
-              className="bg-white rounded-xl sm:rounded-2xl border border-gray-200 shadow-lg px-2 py-2 sm:py-3 flex items-center justify-center gap-1 backdrop-blur-sm"
+              className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-2xl px-2 py-2 sm:py-3 flex items-center justify-center gap-1 backdrop-blur-sm"
             >
               {reactionsIcon.map((item, index) => (
                 <button
                   key={index}
                   onClick={() => handleLike(item.emoji, item.name)}
-                  className="flex flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex flex-col items-center justify-center p-1 sm:px-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   <span className="text-xl hover:scale-125 transition-transform duration-200">
                     {item.emoji}
@@ -236,8 +236,8 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
             onClick={() => userReactionEmoji ? handleLike(userReactionEmoji.category, userReactionEmoji.name) : handleLike("👍", "Like")}
             className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-xl transition-all duration-200 ${
               isLiked
-                ? "text-red-500 bg-red-50 hover:bg-red-100"
-                : "text-gray-600 hover:bg-gray-50 hover:text-red-500"
+                ? "text-red-500 bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-red-500 dark:hover:text-red-400"
             }`}
           >
             {userReactionEmoji ? (
@@ -270,8 +270,8 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
             onClick={onShowComments}
             className={`flex items-center justify-center space-x-2 py-2 px-4 rounded-xl transition-all duration-200 ${
               showComments
-                ? "text-blue-500 bg-blue-50 hover:bg-blue-100"
-                : "text-gray-600 hover:bg-gray-50 hover:text-blue-500"
+                ? "text-blue-500 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-blue-500 dark:hover:text-blue-400"
             }`}
           >
             <MessageCircle size={20} />
@@ -280,7 +280,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
           </button>
           <button
             onClick={() => setShowShareModal(true)}
-            className="flex items-center justify-center space-x-2 py-2 px-4 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-green-500 transition-all duration-200"
+            className="flex items-center justify-center space-x-2 py-2 px-4 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-green-500 dark:hover:text-green-400 transition-all duration-200"
           >
             <Share2 size={20} />
             <span className="font-medium hidden qy:flex">Share</span>

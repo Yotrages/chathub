@@ -167,7 +167,7 @@ const CreateReelModal: React.FC<CreateReelModalProps> = ({ isOpen, onClose }) =>
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative max-h-[95vh] animate-slideUp">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl dark:shadow-2xl relative max-h-[95vh] animate-slideUp transition-colors duration-200">
         {/* Header */}
         <div className="relative bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
           <div className="flex items-center justify-between">

@@ -48,7 +48,7 @@ const OAuthSuccess = () => {
     }
   }, [router, dispatch]);
 
-  return <p>Logging you in...</p>;
+  return <p className="text-gray-900 dark:text-gray-300">Logging you in...</p>;
 };
 
 export default OAuthSuccess;

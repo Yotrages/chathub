@@ -36,7 +36,7 @@ const NotificationsPage: React.FC = () => {
     : notifications;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-gray-900 py-3 sm:py-6 px-2 sm:px-4 lg:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-900 py-3 sm:py-6 px-2 sm:px-4 lg:px-6 transition-colors duration-200">
       <div className="max-w-4xl mx-auto">
         {/* Header Section */}
         <div className="mb-4 sm:mb-6">

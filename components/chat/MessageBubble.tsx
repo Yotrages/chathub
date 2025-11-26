@@ -245,9 +245,9 @@ export const MessageBubble = ({
             className={`relative px-3 py-1.5 rounded-lg overflow-visible shadow-sm transition-all duration-200 ease-out group-hover:shadow-md ${
               isOwn
                 ? `bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-sm
-                   hover:shadow-blue-200`
-                : `bg-white text-gray-800 rounded-bl-sm border border-gray-100
-                   hover:shadow-gray-200`
+                   hover:shadow-blue-200 dark:hover:shadow-blue-900`
+                : `bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 rounded-bl-sm border border-gray-100 dark:border-gray-700
+                   hover:shadow-gray-200 dark:hover:shadow-gray-900`
             } select-none`}
             onTouchStart={handleLongPressStart}
             onTouchEnd={handleLongPressEnd}
@@ -302,23 +302,23 @@ export const MessageBubble = ({
                   .map(([emoji, reactions]) => (
                     <div
                       key={emoji}
-                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs cursor-pointer transition-all duration-200 bg-gray-100 hover:bg-gray-200 border shadow-sm hover:shadow-md"
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs cursor-pointer transition-all duration-200 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border dark:border-gray-600 shadow-sm hover:shadow-md"
                       onClick={() =>
                         onOpenLikesModal(message.reactions, "message")
                       }
                     >
                       <span className="text-xs">{emoji}</span>
-                      <span className="text-xs font-medium text-gray-600">
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                         {reactions.length}
                       </span>
                     </div>
                   ))}
                 {Object.keys(groupedReactions).length > 4 && (
                   <div
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 hover:bg-gray-200 cursor-pointer"
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer dark:border-gray-600"
                     onClick={() => onOpenLikesModal(message.reactions)}
                   >
-                    <span className="text-xs font-medium text-gray-600">
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                       +{Object.keys(groupedReactions).length - 4}
                     </span>
                   </div>
@@ -369,7 +369,7 @@ const MobileContextMenuItem = ({
   <button
     onClick={onClick}
     className={`w-full flex items-center space-x-4 px-4 py-1 rounded-xl transition-colors ${
-      danger ? "hover:bg-red-50 text-red-600" : "hover:bg-gray-50 text-gray-700"
+      danger ? "hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400" : "hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
     }`}
   >
     <span className="text-xl">{icon}</span>
@@ -535,15 +535,15 @@ const MobileContextMenu = ({
   if (showForwardModal) {
     return (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl overflow-hidden">
-          <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-blue-500 to-purple-600">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md mx-auto shadow-2xl dark:shadow-2xl overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-blue-500 dark:from-blue-600 to-purple-600 dark:to-purple-700">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Forward Message</h2>
               <button
                 onClick={() => setShowForwardModal(false)}
                 className="p-2 rounded-full hover:bg-white/20 transition-colors"
               >
-                <X size={16} />
+                <X size={16} className="text-white" />
               </button>
             </div>
           </div>
@@ -552,14 +552,14 @@ const MobileContextMenu = ({
               <button
                 key={chat._id}
                 onClick={() => handleForward(chat._id)}
-                className="w-full p-4 text-left hover:bg-gray-50 rounded-2xl flex items-center space-x-4 transition-all duration-200"
+                className="w-full p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700 rounded-2xl flex items-center space-x-4 transition-all duration-200"
               >
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
                   <span className="text-white text-sm font-bold">
                     {chat.name?.charAt(0) || "U"}
                   </span>
                 </div>
-                <span className="font-semibold text-gray-800">
+                <span className="font-semibold text-gray-800 dark:text-gray-200">
                   {chat.name || "Unknown Chat"}
                 </span>
               </button>
@@ -574,10 +574,10 @@ const MobileContextMenu = ({
    return ( 
    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[80] p-4">
       <div
-        className="bg-white rounded-3xl w-full max-w-md mx-auto shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-300 scale-100"
+        className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md mx-auto shadow-2xl dark:shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all duration-300 scale-100"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-500 to-blue-600">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-indigo-500 dark:from-indigo-600 to-blue-600 dark:to-blue-700">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-white">Message Info</h2>
             <button
@@ -595,8 +595,8 @@ const MobileContextMenu = ({
           {/* Loading State */}
           {infoLoading && (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <Loader2 className="w-12 h-12 text-indigo-500 animate-spin" />
-              <p className="text-gray-600 font-medium">
+              <Loader2 className="w-12 h-12 text-indigo-500 dark:text-indigo-400 animate-spin" />
+              <p className="text-gray-600 dark:text-gray-400 font-medium">
                 Loading message info...
               </p>
             </div>
@@ -605,15 +605,15 @@ const MobileContextMenu = ({
           {/* Error State */}
           {infoError && !infoLoading && (
             <div className="flex flex-col items-center justify-center py-12 space-y-4">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 text-red-500" />
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-red-500 dark:text-red-400" />
               </div>
-              <p className="text-red-600 font-medium text-center">
+              <p className="text-red-600 dark:text-red-400 font-medium text-center">
                 {infoError}
               </p>
               <button
                 onClick={handleInfo}
-                className="px-6 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors font-medium"
+                className="px-6 py-2 bg-indigo-500 dark:bg-indigo-600 text-white rounded-xl hover:bg-indigo-600 dark:hover:bg-indigo-700 transition-colors font-medium"
               >
                 Try Again
               </button>
@@ -623,38 +623,38 @@ const MobileContextMenu = ({
           {/* Success State */}
           {messageInfo && !infoLoading && !infoError && (
             <div className="space-y-6">
-              <div className="bg-gray-50 p-4 rounded-2xl">
-                <p className="text-sm font-semibold text-gray-700 mb-2">
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Sender
                 </p>
-                <p className="text-base text-gray-900">
+                <p className="text-base text-gray-900 dark:text-gray-100">
                   {messageInfo?.sender?.username || "Unknown"}
                 </p>
               </div>
-              <div className="bg-gray-50 p-4 rounded-2xl">
-                <p className="text-sm font-semibold text-gray-700 mb-2">
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-2xl">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                   Content
                 </p>
-                <p className="text-sm text-gray-900 break-words leading-relaxed">
+                <p className="text-sm text-gray-900 dark:text-gray-100 break-words leading-relaxed">
                   {messageInfo?.content || "No content"}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-4 rounded-2xl">
-                  <p className="text-sm font-semibold text-blue-700 mb-2">
+                <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-2xl">
+                  <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2">
                     Sent
                   </p>
-                  <p className="text-sm text-blue-900">
+                  <p className="text-sm text-blue-900 dark:text-blue-200">
                     {messageInfo?.timestamp.createdAt
                       ? new Date(messageInfo?.timestamp.createdAt).toLocaleString()
                       : "Unknown"}
                   </p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-2xl">
-                  <p className="text-sm font-semibold text-green-700 mb-2">
+                <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-2xl">
+                  <p className="text-sm font-semibold text-green-700 dark:text-green-300 mb-2">
                     Status
                   </p>
-                  <p className="text-sm text-green-900 font-medium">
+                  <p className="text-sm text-green-900 dark:text-green-200 font-medium">
                     {messageInfo?.readBy && messageInfo?.readBy.length > 0
                       ? "✓✓ Read"
                       : "✓ Delivered"}
@@ -662,8 +662,8 @@ const MobileContextMenu = ({
                 </div>
               </div>
               {messageInfo?.readBy && messageInfo?.readBy.length > 0 && (
-                <div className="bg-purple-50 p-4 rounded-2xl">
-                  <p className="text-sm font-semibold text-purple-700 mb-3">
+                <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-2xl">
+                  <p className="text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3">
                     Read by
                   </p>
                   <div className="space-y-3">
@@ -678,11 +678,11 @@ const MobileContextMenu = ({
                             username={reader.userId.username}
                             className="w-10 h-10 rounded-full"
                           />
-                          <span className="font-medium text-purple-900">
+                          <span className="font-medium text-purple-900 dark:text-purple-200">
                             {reader.userId?.username || "Unknown"}
                           </span>
                         </div>
-                        <span className="text-sm text-purple-600">
+                        <span className="text-sm text-purple-600 dark:text-purple-300">
                           {reader.readAt
                             ? new Date(reader.readAt).toLocaleString()
                             : "Unknown"}
@@ -706,16 +706,16 @@ const MobileContextMenu = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-t-3xl w-full max-w-md mx-auto shadow-2xl border-t border-gray-200 transform transition-all duration-300 ease-out"
+        className="bg-white dark:bg-gray-800 rounded-t-3xl w-full max-w-md mx-auto shadow-2xl dark:shadow-2xl border-t border-gray-200 dark:border-gray-700 transform transition-all duration-300 ease-out"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Handle bar */}
         <div className="flex justify-center pt-3 pb-2">
-          <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
+          <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
         </div>
 
         {/* Quick Reactions */}
-        <div className="px-4 py-3 border-b border-gray-100">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
           <div className="flex justify-around items-center">
             {[
               { emoji: "👍", name: "Like" },
@@ -727,7 +727,7 @@ const MobileContextMenu = ({
             ].map((reaction, index) => (
               <button
                 key={index}
-                className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors active:scale-95"
+                className="w-12 h-12 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors active:scale-95"
                 onClick={() =>
                   handleQuickReaction(reaction.emoji, reaction.name)
                 }
@@ -783,10 +783,10 @@ const MobileContextMenu = ({
         </div>
 
         {/* Cancel Button */}
-        <div className="px-4 py-4 border-t border-gray-100">
+        <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-700">
           <button
             onClick={onClose}
-            className="w-full py-3 text-center text-gray-600 font-medium hover:bg-gray-50 rounded-xl transition-colors"
+            className="w-full py-3 text-center text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl transition-colors"
           >
             Cancel
           </button>
