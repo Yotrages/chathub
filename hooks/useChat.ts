@@ -472,7 +472,7 @@ export const useChat = () => {
       postId,
     };
     dispatch(addMessage(optimisticMessage));
-    if (socket && isSocketReady()) {
+    if (socket && isConnected) {
       try {
         console.log("🔌 Attempting to send via socket...");
         const socketResult = await new Promise((resolve, reject) => {

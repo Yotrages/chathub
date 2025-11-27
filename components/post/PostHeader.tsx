@@ -140,7 +140,7 @@ const PostHeader: React.FC<PostHeaderProps> = ({
   ];
 
   return (
-    <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-100 dark:border-gray-700">
+    <div className="flex items-center justify-between p-6 pb-4">
       <div
         onClick={() => router.push(`/profile/${authorId._id}`)}
         className="flex items-center space-x-3 cursor-pointer group"

@@ -310,14 +310,14 @@ const Header: React.FC = () => {
 
   const NavLinks = [
     {
-      icon: <Home size={18} />,
+      icon: <Home size={20} />,
       name: "Home",
       route: "/",
     },
     {
       icon: (
         <span className="relative flex">
-          <Users size={18} className="text-gray-600" />
+          <Users size={20} className="text-gray-500 dark:text-gray-400" />
           {pendingRequestsData && pendingRequestsData?.data.length > 0 && (
             <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
               {pendingRequestsData?.data.length > 99
@@ -331,14 +331,14 @@ const Header: React.FC = () => {
       route: `/profile/${user?._id}/connections`,
     },
     {
-      icon: <Video size={18} />,
+      icon: <Video size={20} />,
       name: "Reels",
       route: "/reels",
     },
     {
       icon: (
         <span className="relative flex">
-          <MessageCircleMore size={18} className="text-gray-600" />
+          <MessageCircleMore size={20} className="text-gray-500 dark:text-gray-400" />
           {chatsWithUnreadCount > 0 && (
             <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
               {chatsWithUnreadCount > 99 ? "99+" : chatsWithUnreadCount}
@@ -377,8 +377,8 @@ const Header: React.FC = () => {
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
       <header className="bg-white dark:bg-gray-800 shadow-lg dark:shadow-2xl border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-3 xs:px-4 py-3 xs:py-4">
-          <div className="sm:flex items-center justify-between gap-2 xs:gap-4">
+        <div className="max-w-6xl mx-auto px-2 xs:px-4 pt-3 xs:py-4">
+          <div className="sm:flex items-center justify-between space-y-1 sm:space-y-0 xs:gap-4">
             <div className="flex items-center justify-between">
               <Link
                 href="/"
@@ -417,7 +417,7 @@ const Header: React.FC = () => {
                 <div className="relative w-full">
                   <Input
                     type="search"
-                    className="border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all duration-200"
+                    className="border-gray-200 dark:border-gray-600 focus:bg-white dark:focus:bg-gray-700 text-gray-900 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all duration-200"
                     icon={<Search size={16} className="text-gray-400 dark:text-gray-500" />}
                     left_content
                     placeholder="Search posts, users, reels..."
@@ -674,10 +674,8 @@ const Header: React.FC = () => {
               </form>
             </div>
 
-            {/* Navigation & User Section */}
-            <div className="flex items-center justify-between sm:space-x-4">
               {/* Navigation Links */}
-              <nav className="flex flex-1 pr-4 items-center justify-between md:gap-5 gap-1">
+              <nav className="flex items-center justify-between md:gap-5 xs:gap-3 gap-1">
                 {NavLinks.map((item, index) => (
                   <Link
                     href={item.route}
@@ -702,7 +700,7 @@ const Header: React.FC = () => {
                           ? setShowNotifications(!showNotifications)
                           : handleNotificationNavigate()
                       }
-                      className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 transition-colors duration-150 min-w-0"
+                      className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 min-w-0"
                     />
                   )}
                   {user && (
@@ -713,8 +711,6 @@ const Header: React.FC = () => {
                     />
                   )}
                 </div>
-              </nav>
-
               {/* User Profile */}
               <button
                 onClick={() => router.push(`/profile/${user?._id}`)}
@@ -737,7 +733,8 @@ const Header: React.FC = () => {
                   {user?.username}
                 </span>
               </button>
-            </div>
+              </nav>
+
           </div>
         </div>
       </header>

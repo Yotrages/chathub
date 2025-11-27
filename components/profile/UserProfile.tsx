@@ -13,11 +13,12 @@ interface PostListProps {
   isLoading?: boolean;
   type?: "posts" | "likes" | "saved";
   userId: string;
+  username?: string;
   sortType?: string; 
 }
 
 
-export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "latest" }: PostListProps) => {
+export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "latest", username }: PostListProps) => {
   const dispatch: AppDispatch = useDispatch();
   const { userPosts, likedPosts, savedPosts, isLoading: postsLoading } = useSelector(
     (state: RootState) => state.post
@@ -25,7 +26,6 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
   const pagination = useSelector(
     selectPagination(type === "posts" ? "userPosts" : type === "likes" ? "likedPosts" : "savedPosts")
   );
-  const { user } = useSelector((state: RootState) => state.auth);
 
   const { trigger: triggerUserPosts } = useGetUserPosts(1, userId);
   const { trigger: triggerLikedPosts } = useGetLikedPosts(1, userId);
@@ -120,7 +120,7 @@ export const UserPosts = ({ isLoading, type = "posts", userId, sortType = "lates
             ? "No liked posts yet"
             : type === "saved"
             ? "No saved posts yet"
-            : `No posts yet from ${user?.username}`}
+            : `No posts yet from ${username}`}
         </p>
       </div>
     );

@@ -66,7 +66,7 @@ const SuggestedFollow = () => {
                       {user.username}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user.followers?.length || 0} followers
+                      {user.followers?.length || 0} {user.followers && user.followers?.length > 1 ? "followers" : "follower"}
                     </p>
                   </div>
 

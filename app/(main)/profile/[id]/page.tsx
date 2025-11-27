@@ -40,7 +40,7 @@ const UserProfilePage = () => {
   const [windowWidth, setWindowWidth] = useState(0);
   const [mounted, setMounted] = useState(false);
   
-  const { data: profileData, isLoading: profileLoading } = useGetUser(id as string);
+  const { data: profileData, isLoading: profileLoading, error: profileError } = useGetUser(id as string);
   const { mutate: followUser, isLoading: followLoading } = useFollowUser(id as string, () => {
      setProfileUser(prev => prev ? { ...prev, isFollowing: true } : null)
   });
@@ -130,27 +130,36 @@ const UserProfilePage = () => {
 
   const handleMessage = async () => {
     if (!currentUser || !profileUser) return;
+    
     const matchedChat = chats.find((c) => {
       return c.participants.some((u) => u._id === profileUser._id) && c.type === 'direct'
-    })
+    });
+    
     if (matchedChat) {
-      dispatch(setActiveChat(matchedChat._id))
+      dispatch(setActiveChat(matchedChat._id));
+      router.push('/chat');
     } else {
-      await createChat([currentUser._id, profileUser._id], "direct");
+      try {
+        const result = await createChat([profileUser._id], "direct");
+        if (result.isSuccess) {
+          router.push('/chat');
+        }
+      } catch (error) {
+        console.error('Failed to create chat:', error);
+      }
     }
-    router.push(windowWidth < 768 ? '/message' : '/chat');
   };
 
   if (!mounted || isLoading || profileLoading) {
     return <ProfileSkeleton />;
   }
 
-  if (!profileUser) {
+  if (!profileUser || profileError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4 transition-colors duration-200">
         <div className="text-center">
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">User not found</h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">The user you&apos;re looking for doesn&apos;t exist.</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2">Failed to load user</h2>
+          <button onClick={() => window.location.reload()} className="text-gray-600 dark:text-gray-400 text-sm bg-black dark:bg-gray-800 rounded-md py-3 px-4 sm:text-base">Try again</button>
         </div>
       </div>
     );
@@ -391,10 +400,10 @@ const UserProfilePage = () => {
         </div>
 
         <div className="px-0.5 xs:px-2 sm:px-4 py-4 sm:py-8">
-          {activeTab === 'posts' && <UserPostsList userId={id as string}/>}
-          {activeTab === 'reels' && <UserReelsComponent userId={id as string} activeTab='reels'/>}
-          {activeTab === 'likes' && <UserPostsList userId={id as string} type="likes" />}
-          {activeTab === 'saved' && isOwnProfile && <UserPostsList userId={id as string} type="saved" />}
+          {activeTab === 'posts' && <UserPostsList username={profileUser.username as string} userId={id as string}/>}
+          {activeTab === 'reels' && <UserReelsComponent username={profileUser.username as string} userId={id as string} activeTab='reels'/>}
+          {activeTab === 'likes' && <UserPostsList username={profileUser.username as string} userId={id as string} type="likes" />}
+          {activeTab === 'saved' && isOwnProfile && <UserPostsList username={profileUser.username as string} userId={id as string} type="saved" />}
         </div>
 
         {showEditModal && windowWidth >= 640 && (

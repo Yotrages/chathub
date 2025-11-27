@@ -11,15 +11,15 @@ import { useInView } from "react-intersection-observer";
 interface UserReelsComponentProps {
   activeTab: string;
   userId: string;
+  username?: string;
 }
 
-const UserReelsComponent: React.FC<UserReelsComponentProps> = ({ userId }) => {
+const UserReelsComponent: React.FC<UserReelsComponentProps> = ({ userId, username }) => {
   const {
     userReels,
     pagination,
     isLoading: reelsLoading,
   } = useSelector((state: RootState) => state.reels);
-  const { user } = useSelector((state: RootState) => state.auth);
   const { trigger } = useGetUserReels(
     pagination.userReels?.currentPage || 1,
     userId
@@ -59,7 +59,7 @@ const UserReelsComponent: React.FC<UserReelsComponentProps> = ({ userId }) => {
   if (userReels?.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-lg p-8 text-center transition-colors duration-200">
-        <p className="text-gray-500 dark:text-gray-400">{`No reels yet from ${user?.username}`}</p>
+        <p className="text-gray-500 dark:text-gray-400">{`No reels yet from ${username}`}</p>
       </div>
     );
   }

@@ -3,8 +3,11 @@ import { useApiController } from "./useFetch";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/libs/redux/store";
 import { addSuggestedUsers, setSuggestedUsersWithPagination } from "@/libs/redux/authSlice";
+import { errorNotification } from "@/libs/feedback/notification";
+import { useRouter } from "next/navigation";
 
 export const useGetUser = (userId: string) => {
+  const router = useRouter()
   return useApiController({
     method: 'GET',
     url: `/auth/users/${userId}`,
@@ -12,6 +15,12 @@ export const useGetUser = (userId: string) => {
       enabled: !!userId,
       staleTime: 2 * 60 * 1000,
     },
+    onError: (error) => {
+      if (error.response?.status === 403) {
+        errorNotification("Not allowed to view this profile");
+        router.back();
+      }
+    }
   });
 };
 
