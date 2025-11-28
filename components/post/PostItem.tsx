@@ -13,7 +13,6 @@ import { ReactionsModal } from "./LikesModal";
 import { PostModal } from "./PostModal";
 import { removePost, selectComments } from "@/libs/redux/postSlice";
 import { useRouter } from "next/navigation";
-import { useGetComments } from "@/hooks/usePosts";
 
 interface PostItemProps {
   post: Post;
@@ -164,16 +163,16 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
         }
   }
 
-  const retryFetchComments = () => {
-    if (!isOnline) {
-      console.log("Cannot retry - user is offline");
-      return;
-    }
+  // const retryFetchComments = () => {
+  //   if (!isOnline) {
+  //     console.log("Cannot retry - user is offline");
+  //     return;
+  //   }
 
-    console.log(`Manually retrying comment fetch for postId ${post._id}`);
-    setFetchAttempted(false);
-    setHasSuccessfullyFetched(false);
-  };
+  //   console.log(`Manually retrying comment fetch for postId ${post._id}`);
+  //   setFetchAttempted(false);
+  //   setHasSuccessfullyFetched(false);
+  // };
 
   if (hide) return null;
 
