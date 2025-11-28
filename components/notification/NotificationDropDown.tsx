@@ -69,7 +69,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 max-h-[80vh] overflow-hidden"
+      className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-900 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-[9999] max-h-[80vh] overflow-hidden"
     >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">

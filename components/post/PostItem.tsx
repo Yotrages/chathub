@@ -40,16 +40,16 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
   const comments = useSelector(selectComments(post._id));
-  const { trigger: fetchComments, isLoading: isFetchingComments } =
-    useGetComments(
-      post._id,
-      () => {
-        setHasSuccessfullyFetched(true);
-      },
-      () => {
-        setFetchAttempted(false);
-      }
-    );
+  // const { trigger: fetchComments, isLoading: isFetchingComments } =
+  //   useGetComments(
+  //     post._id,
+  //     () => {
+  //       setHasSuccessfullyFetched(true);
+  //     },
+  //     () => {
+  //       setFetchAttempted(false);
+  //     }
+  //   );
 
   useEffect(() => {
     const handleOnline = () => {
@@ -71,48 +71,48 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isOnline) {
-      console.log(
-        `User is offline, skipping comment fetch for postId ${post._id}`
-      );
-      return;
-    }
+  // useEffect(() => {
+  //   if (!isOnline) {
+  //     console.log(
+  //       `User is offline, skipping comment fetch for postId ${post._id}`
+  //     );
+  //     return;
+  //   }
 
-    if (hasSuccessfullyFetched) {
-      console.log(
-        `Comments already successfully fetched for postId ${post._id}, skipping`
-      );
-      return;
-    }
+  //   if (hasSuccessfullyFetched) {
+  //     console.log(
+  //       `Comments already successfully fetched for postId ${post._id}, skipping`
+  //     );
+  //     return;
+  //   }
 
-    if (fetchAttempted) {
-      console.log(
-        `Fetch already attempted for postId ${post._id}, waiting for result`
-      );
-      return;
-    }
+  //   if (fetchAttempted) {
+  //     console.log(
+  //       `Fetch already attempted for postId ${post._id}, waiting for result`
+  //     );
+  //     return;
+  //   }
 
-    if (comments && comments.length > 0) {
-      console.log(
-        `Comments already exist in store for postId ${post._id}, marking as successfully fetched`
-      );
-      setHasSuccessfullyFetched(true);
-      return;
-    }
+  //   if (comments && comments.length > 0) {
+  //     console.log(
+  //       `Comments already exist in store for postId ${post._id}, marking as successfully fetched`
+  //     );
+  //     setHasSuccessfullyFetched(true);
+  //     return;
+  //   }
 
-    console.log(`Fetching comments for postId ${post._id}`);
-    setFetchAttempted(true);
+  //   console.log(`Fetching comments for postId ${post._id}`);
+  //   setFetchAttempted(true);
 
-    fetchComments();
-  }, [
-    post._id,
-    isOnline,
-    hasSuccessfullyFetched,
-    fetchAttempted,
-    comments,
-    fetchComments,
-  ]);
+  //   fetchComments();
+  // }, [
+  //   post._id,
+  //   isOnline,
+  //   hasSuccessfullyFetched,
+  //   fetchAttempted,
+  //   comments,
+  //   fetchComments,
+  // ]);
 
   useEffect(() => {
     if (isOnline && !hasSuccessfullyFetched && !fetchAttempted) {
@@ -179,7 +179,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
 
   return (
     <>
-      <article className="bg-white dark:bg-gray-800 rounded-2xl flex flex-col shadow-sm dark:shadow-lg border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
+      <article className="bg-white dark:bg-gray-800 rounded-2xl flex flex-col shadow-sm dark:shadow-lg border border-gray-100 dark:border-gray-700 hover:shadow-md dark:hover:shadow-xl transition-shadow duration-200">
         <PostHeader
           authorId={post.authorId}
           createdAt={post.createdAt}
@@ -215,7 +215,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
 
         {showComments && (
           <div className="w-full max-w-full h-[400px] sm:h-[500px] border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            {isFetchingComments ? (
+            {/* {isFetchingComments ? (
               <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
                 <p>Loading comments...</p>
               </div>
@@ -229,7 +229,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
                   Retry
                 </button>
               </div>
-            ) : (
+            ) : ( */}
               <PostComments
                 type="post"
                 dynamicId={post._id}
@@ -239,7 +239,7 @@ export const PostItem = ({ post, isModal = false }: PostItemProps) => {
                 commentContent={commentContent}
                 setCommentContent={setCommentContent}
               />
-            )}
+            {/* )} */}
           </div>
         )}
         {isOpen && (

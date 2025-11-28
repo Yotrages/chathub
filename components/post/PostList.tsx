@@ -10,28 +10,28 @@ interface PostListProps {
   initialLoading?: boolean;
 }
 export const PostList = ({ initialLoading = false }: PostListProps) => {
-  const { posts, pagination, isLoading: postsLoading } = useSelector((state: RootState) => state.post);
+  const { posts, pagination } = useSelector((state: RootState) => state.post);
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: false,
   });
-  const { trigger } = useGetPosts(pagination.posts?.currentPage || 1);
+  const { trigger, isLoading } = useGetPosts(pagination.posts?.currentPage || 1);
   const hasMore = pagination.posts?.hasNextPage ?? false;
   const debouncedTrigger = useCallback(
     debounce(() => {
-      if (!postsLoading && hasMore) {
+      if (!isLoading && hasMore) {
         trigger();
       }
     }, 500),
-    [trigger, postsLoading, hasMore]
+    [trigger, isLoading, hasMore]
   );
   useEffect(() => {
-    if (inView && hasMore && !postsLoading) {
+    if (inView && hasMore && !isLoading) {
       debouncedTrigger();
     }
     return () => debouncedTrigger.cancel();
-  }, [inView, hasMore, postsLoading, debouncedTrigger]);
-  if ((initialLoading || postsLoading) && posts.length === 0) {
+  }, [inView, hasMore, isLoading, debouncedTrigger]);
+  if ((initialLoading || isLoading) && posts.length === 0) {
     return (
       <div className="space-y-4 px-4 sm:px-0">
         {[...Array(3)].map((_, i) => (
@@ -74,7 +74,7 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
           role="region"
           aria-live="polite"
         >
-          {postsLoading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center space-x-2">
               <div
                 className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
