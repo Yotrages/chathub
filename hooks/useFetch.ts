@@ -438,7 +438,7 @@ interface AuthResponse {
 // Auth Login Hook
 export const useLogin = (from?: string, options?: Partial<Omit<UseApiControllerOptions<LoginData, AuthResponse>, 'method'>>): MutationResult<LoginData, AuthResponse> => {
   const loginSchema = z.object({
-    email: z.string().min(1, "Username is required"),
+    email: z.string().min(1, "Email is required"),
     password: z.string().min(1, "Password is required"),
   });
 

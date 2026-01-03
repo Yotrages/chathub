@@ -74,7 +74,7 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
           role="region"
           aria-live="polite"
         >
-          {isLoading ? (
+          {isLoading && (
             <div className="flex items-center justify-center space-x-2">
               <div
                 className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"
@@ -82,14 +82,6 @@ export const PostList = ({ initialLoading = false }: PostListProps) => {
               ></div>
               <span className="text-gray-500">Loading more posts...</span>
             </div>
-          ) : (
-            <button
-              onClick={() => trigger()}
-              className="text-gray-400 hover:text-blue-500 transition"
-              aria-label="Load more posts"
-            >
-              Load more
-            </button>
           )}
         </div>
       )}

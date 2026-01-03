@@ -183,7 +183,7 @@ const PostEngagement: React.FC<PostEngagementProps> = ({
                     </span>
                   ))}
               <span className="hover:text-gray-800 dark:hover:text-gray-200 text-sm sm:text-base cursor-pointer transition-colors">
-                {reactions.length}
+                {reactions.length > 0 && reactions.length}
               </span>
             </button>
             <span className="hover:text-gray-800 dark:hover:text-gray-200 cursor-pointer text-sm sm:text-base transition-colors">
