@@ -17,18 +17,18 @@ interface InputProps {
   gap?: string;
   right_content?: boolean;
   register?: UseFormRegisterReturn<any>;
-  icon?: React.ReactNode
-  readyMade?: boolean
-  className?: string
-  value?: any
+  icon?: React.ReactNode;
+  readyMade?: boolean;
+  className?: string;
+  value?: any;
   autoFocus?: boolean;
   disabled?: boolean;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onBlur?: React.FocusEventHandler<HTMLInputElement>;
-  onKeyPress?: React.KeyboardEventHandler<HTMLInputElement>
+  onKeyPress?: React.KeyboardEventHandler<HTMLInputElement>;
   onFocus?: React.FocusEventHandler<HTMLInputElement>;
   maxLength?: number;
-  ref?: RefObject<HTMLInputElement | null>
+  ref?: RefObject<HTMLInputElement | null>;
 }
 
 export const Input = ({
@@ -55,8 +55,10 @@ export const Input = ({
   onKeyPress,
   ...props
 }: InputProps) => {
+  const inputClassName = `focus:outline-none ${className ?? ""}`;
+
   return (
-    <div className={`flex ${className} flex-col gap-1 items-start w-full`}>
+    <div className={`flex flex-col gap-1 items-start w-full`}>
       <label
         htmlFor={label}
         id={label}
@@ -66,105 +68,103 @@ export const Input = ({
       </label>
       {props.left_content ? (
         readyMade ? (
-           <div className="flex relative">
-          <span>
-            <FaSearch className="absolute top-4 left-3" />
-          </span>
-          <input
-          ref={ref}
-          maxLength={maxLength}
-          disabled={disabled}
-          onKeyPress={onKeyPress}
-          onChange={onChange}
-          onBlur={onBlur}
-          onFocus={onFocus}
-            type={type}
-            value={value}
-            style={{
-              width: width ?? "100%",
-              paddingBlock: py,
-              paddingInline: px,
-              border: border ?? "1px solid #d1d5db",
-              height: height,
-              maxWidth: props.max_width,
-              borderRadius: border_radius,
-              paddingLeft: props.left_content ? "10px" : px,
-              paddingRight: props.right_content ? "10px" : px,
-            }}
-            placeholder={placeholder}
-            className={`focus:outline-none`}
-            {...register}
-          />
-        </div>
+          <div className="flex relative">
+            <span>
+              <FaSearch className="absolute top-4 left-3" />
+            </span>
+            <input
+              ref={ref}
+              maxLength={maxLength}
+              disabled={disabled}
+              onKeyPress={onKeyPress}
+              onChange={onChange}
+              onBlur={onBlur}
+              onFocus={onFocus}
+              type={type}
+              value={value}
+              style={{
+                width: width ?? "100%",
+                paddingBlock: py,
+                paddingInline: px,
+                border: border ?? "1px solid #d1d5db",
+                height: height,
+                maxWidth: props.max_width,
+                borderRadius: border_radius,
+                paddingLeft: props.left_content ? "10px" : px,
+                paddingRight: props.right_content ? "10px" : px,
+              }}
+              placeholder={placeholder}
+              className={inputClassName}
+              {...register}
+            />
+          </div>
         ) : (
           <div className="flex relative">
-          <span className="absolute top-4 left-3">
-            {icon}
-          </span>
-          <input
-          ref={ref}
-          maxLength={maxLength}
-          disabled={disabled}
-           onChange={onChange}
-          onBlur={onBlur}
-          onKeyPress={onKeyPress}
-          onFocus={onFocus}
-          autoFocus={props.autoFocus}
-            type={type}
-            value={value}
-            style={{
-              width: width ?? "100%",
-              paddingBlock: py,
-              paddingInline: px,
-              border: border ?? "1px solid #d1d5db",
-              height: height,
-              maxWidth: props.max_width,
-              borderRadius: border_radius,
-              paddingLeft: props.left_content ? "35px" : px,
-              paddingRight: props.right_content ? "20px" : px,
-            }}
-            placeholder={placeholder}
-            className={`focus:outline-none`}
-            {...register}
-          />
-        </div>
+            <span className="absolute top-4 left-3">{icon}</span>
+            <input
+              ref={ref}
+              maxLength={maxLength}
+              disabled={disabled}
+              onChange={onChange}
+              onBlur={onBlur}
+              onKeyPress={onKeyPress}
+              onFocus={onFocus}
+              autoFocus={props.autoFocus}
+              type={type}
+              value={value}
+              style={{
+                width: width ?? "100%",
+                paddingBlock: py,
+                paddingInline: px,
+                border: border ?? "1px solid #d1d5db",
+                height: height,
+                maxWidth: props.max_width,
+                borderRadius: border_radius,
+                paddingLeft: props.left_content ? "35px" : px,
+                paddingRight: props.right_content ? "20px" : px,
+              }}
+              placeholder={placeholder}
+              className={inputClassName}
+              {...register}
+            />
+          </div>
         )
       ) : props.right_content ? (
         readyMade ? (
           <div className="flex relative">
-          <input
-          ref={ref}
-          maxLength={maxLength}
-          disabled={disabled}
-           onChange={onChange}
-           onKeyPress={onKeyPress}
-          onBlur={onBlur}
-          onFocus={onFocus}
-            type={type}
-            style={{
-              width: width ?? "100%",
-              paddingBlock: py,
-              paddingInline: px,
-              border: border ?? "1px solid #d1d5db",
-              height: height,
-              maxWidth: props.max_width,
-              borderRadius: border_radius,
-            }}
-            placeholder={placeholder}
-            className="focus:outline-none"
-            {...register}
-          />
-          <FaSearch className="absolute top-4 right-5" />
-        </div>
+            <input
+              ref={ref}
+              maxLength={maxLength}
+              disabled={disabled}
+              onChange={onChange}
+              onKeyPress={onKeyPress}
+              onBlur={onBlur}
+              onFocus={onFocus}
+              type={type}
+              style={{
+                width: width ?? "100%",
+                paddingBlock: py,
+                paddingInline: px,
+                border: border ?? "1px solid #d1d5db",
+                height: height,
+                maxWidth: props.max_width,
+                borderRadius: border_radius,
+              }}
+              placeholder={placeholder}
+              className={inputClassName}
+              {...register}
+            />
+            <FaSearch className="absolute top-4 right-5" />
+          </div>
         ) : (
           icon
         )
       ) : (
         <input
-        ref={ref}
-        maxLength={maxLength}
-        disabled={disabled}
-         onChange={onChange}
+          ref={ref}
+          maxLength={maxLength}
+          disabled={disabled}
+          onChange={onChange}
           onBlur={onBlur}
           onFocus={onFocus}
           type={type}
@@ -180,7 +180,7 @@ export const Input = ({
             borderRadius: border_radius,
           }}
           placeholder={placeholder}
-          className="focus:outline-none"
+          className={inputClassName}
           {...register}
         />
       )}
