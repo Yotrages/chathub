@@ -207,7 +207,7 @@ const Header: React.FC = () => {
     setIsFocused(false);
     setAutocompleteSuggestions(null);
     setSearchQuery("");
-    setTimeout(() => setIsNavigating(false), 100); 
+    setTimeout(() => setIsNavigating(false), 100);
   };
 
   const handleSuggestionClick = (query: string) => {
@@ -296,17 +296,6 @@ const Header: React.FC = () => {
       }
     };
   }, []);
-
-//   const NetworkIcon = ({ count }: { count?: number }) => (
-//   <span className="relative flex">
-//     <Users size={18} className="text-gray-600" />
-//     {count && count > 0 && (
-//       <span className="absolute -top-[11px] -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
-//         {count > 99 ? "99+" : count}
-//       </span>
-//     )}
-//   </span>
-// );
 
   const NavLinks = [
     {
@@ -408,7 +397,6 @@ const Header: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Search - Hidden on mobile */}
             <div
               ref={inputSearchRef}
               className="hidden sm:block flex-1 max-w-lg mx-4"
@@ -417,7 +405,7 @@ const Header: React.FC = () => {
                 <div className="relative w-full">
                   <Input
                     type="search"
-                    className="border-gray-200 dark:border-gray-600 focus:bg-white dark:focus:bg-gray-700 text-gray-900 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900 transition-all duration-200"
+                    className="border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500"
                     icon={<Search size={16} className="text-gray-400 dark:text-gray-500" />}
                     left_content
                     placeholder="Search posts, users, reels..."
@@ -429,13 +417,11 @@ const Header: React.FC = () => {
                     onFocus={() => setIsFocused(true)}
                   />
 
-                  {/* Desktop Search Dropdown */}
                   {(shouldShowFrequentSearches ||
                     shouldShowFilteredFrequentSearches ||
                     shouldShowAutocomplete) && (
-                    <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl dark:shadow-2xl mt-2 max-h-96 overflow-y-auto z-[9999]">
+                    <div className="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl dark:shadow-2xl mt-2 max-h-96 overflow-y-auto z-50">
                       <div className="p-2">
-                        {/* Frequent/Recent Searches */}
                         {(shouldShowFrequentSearches ||
                           shouldShowFilteredFrequentSearches) && (
                           <>
@@ -461,7 +447,7 @@ const Header: React.FC = () => {
                                     size={14}
                                     className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0"
                                   />
-                                  <span className="text-gray-700 dark:text-gray-300 truncate">
+                                  <span className="text-gray-700 dark:text-gray-200 truncate">
                                     {q}
                                   </span>
                                 </div>
@@ -469,13 +455,11 @@ const Header: React.FC = () => {
                           </>
                         )}
 
-                        {/* Autocomplete Suggestions */}
                         {shouldShowAutocomplete && (
                           <>
-                            {/* Users */}
                             {autocompleteSuggestions.users.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                                   Users
                                 </p>
                                 {autocompleteSuggestions.users.map((user) => (
@@ -484,7 +468,7 @@ const Header: React.FC = () => {
                                     onClick={() =>
                                       handleSuggestionClick(user.username)
                                     }
-                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150"
                                   >
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
                                       {user.avatar ? (
@@ -502,11 +486,11 @@ const Header: React.FC = () => {
                                       )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 truncate font-medium">
+                                      <p className="text-sm text-gray-700 dark:text-gray-100 truncate font-medium">
                                         {user.username}
                                       </p>
                                       {user.name && (
-                                        <p className="text-xs text-gray-500 truncate">
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                           {user.name}
                                         </p>
                                       )}
@@ -516,10 +500,9 @@ const Header: React.FC = () => {
                               </>
                             )}
 
-                            {/* Posts */}
                             {autocompleteSuggestions.posts.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                                   Posts
                                 </p>
                                 {autocompleteSuggestions.posts.map((post) => (
@@ -530,17 +513,17 @@ const Header: React.FC = () => {
                                         post.content.substring(0, 50)
                                       )
                                     }
-                                    className="flex items-start px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                    className="flex items-start px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150"
                                   >
                                     <FileText
                                       size={16}
-                                      className="text-gray-400 mr-3 flex-shrink-0 mt-0.5"
+                                      className="text-gray-400 dark:text-gray-300 mr-3 flex-shrink-0 mt-0.5"
                                     />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 line-clamp-2">
+                                      <p className="text-sm text-gray-700 dark:text-gray-100 line-clamp-2">
                                         {truncateText(post.content, 80)}
                                       </p>
-                                      <p className="text-xs text-gray-500 mt-1">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         by @{post.authorId.username}
                                       </p>
                                     </div>
@@ -549,10 +532,9 @@ const Header: React.FC = () => {
                               </>
                             )}
 
-                            {/* Reels */}
                             {autocompleteSuggestions.reels.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                                   Reels
                                 </p>
                                 {autocompleteSuggestions.reels.map((reel) => (
@@ -561,17 +543,17 @@ const Header: React.FC = () => {
                                     onClick={() =>
                                       handleSuggestionClick(reel.title)
                                     }
-                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                    className="flex items-center px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150"
                                   >
                                     <Video
                                       size={16}
-                                      className="text-gray-400 mr-3 flex-shrink-0"
+                                      className="text-gray-400 dark:text-gray-300 mr-3 flex-shrink-0"
                                     />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 truncate font-medium">
+                                      <p className="text-sm text-gray-700 dark:text-gray-100 truncate font-medium">
                                         {reel.title}
                                       </p>
-                                      <p className="text-xs text-gray-500 truncate">
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                         by @{reel.authorId.username}
                                       </p>
                                     </div>
@@ -582,42 +564,39 @@ const Header: React.FC = () => {
 
                             {autocompleteSuggestions.stories.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                                   Stories
                                 </p>
-                                {autocompleteSuggestions.stories.map(
-                                  (story) => (
-                                    <div
-                                      key={`mobile-reel-${story._id}`}
-                                      onClick={() => {
-                                        handleSuggestionClick(
-                                          story.text.substring(0, 50)
-                                        );
-                                      }}
-                                      className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
-                                    >
-                                      <Video
-                                        size={18}
-                                        className="text-gray-400 mr-3 flex-shrink-0"
-                                      />
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm text-gray-700 truncate font-medium">
-                                          {story.text}
-                                        </p>
-                                        <p className="text-xs text-gray-500 truncate">
-                                          by @{story.authorId.username}
-                                        </p>
-                                      </div>
+                                {autocompleteSuggestions.stories.map((story) => (
+                                  <div
+                                    key={`story-${story._id}`}
+                                    onClick={() => {
+                                      handleSuggestionClick(
+                                        story.text.substring(0, 50)
+                                      );
+                                    }}
+                                    className="flex items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
+                                  >
+                                    <Video
+                                      size={18}
+                                      className="text-gray-400 dark:text-gray-300 mr-3 flex-shrink-0"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm text-gray-700 dark:text-gray-100 truncate font-medium">
+                                        {story.text}
+                                      </p>
+                                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                        by @{story.authorId.username}
+                                      </p>
                                     </div>
-                                  )
-                                )}
+                                  </div>
+                                ))}
                               </>
                             )}
 
-                            {/* Hashtags */}
                             {autocompleteSuggestions.hashtags.length > 0 && (
                               <>
-                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                                   Hashtags
                                 </p>
                                 {autocompleteSuggestions.hashtags.map(
@@ -627,12 +606,12 @@ const Header: React.FC = () => {
                                       onClick={() =>
                                         handleSuggestionClick(hashtag)
                                       }
-                                      className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150"
+                                      className="flex items-center px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150"
                                     >
                                       <span className="text-blue-500 mr-3 font-semibold">
                                         #
                                       </span>
-                                      <span className="text-gray-700 truncate">
+                                      <span className="text-gray-700 dark:text-gray-100 truncate">
                                         {hashtag.slice(1)}
                                       </span>
                                     </div>
@@ -643,26 +622,22 @@ const Header: React.FC = () => {
                           </>
                         )}
 
-                        {/* Loading state */}
                         {isLoadingSuggestions && (
                           <div className="px-3 py-4 text-center">
                             <div className="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
                           </div>
                         )}
 
-                        {/* Current search option */}
                         {searchQuery && (
                           <div
-                            onClick={() =>
-                              handleFrequentSearchClick(searchQuery)
-                            }
-                            className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
+                            onClick={() => handleFrequentSearchClick(searchQuery)}
+                            className="flex items-center px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 dark:border-gray-700 mt-2 pt-4"
                           >
                             <Search
                               size={14}
                               className="text-blue-500 mr-3 flex-shrink-0"
                             />
-                            <span className="text-gray-700 truncate">
+                            <span className="text-gray-700 dark:text-gray-100 truncate">
                               Search for &quot;{searchQuery}&quot;
                             </span>
                           </div>
@@ -674,49 +649,47 @@ const Header: React.FC = () => {
               </form>
             </div>
 
-              {/* Navigation Links */}
-              <nav className="flex items-center justify-between md:gap-5 xs:gap-3 gap-1">
-                {NavLinks.map((item, index) => (
-                  <Link
-                    href={item.route}
-                    key={index}
-                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150 min-w-0 group"
-                  >
-                    <span className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-150">
-                      {item.icon}
-                    </span>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden md:block truncate mt-1 transition-colors duration-150">
-                      {item.name}
-                    </p>
-                  </Link>
-                ))}
+            <nav className="flex items-center justify-between md:gap-5 xs:gap-3 gap-1">
+              {NavLinks.map((item, index) => (
+                <Link
+                  href={item.route}
+                  key={index}
+                  className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150 min-w-0 group"
+                >
+                  <span className="text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-150">
+                    {item.icon}
+                  </span>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden md:block truncate mt-1 transition-colors duration-150">
+                    {item.name}
+                  </p>
+                </Link>
+              ))}
 
-                {/* Notification Icon */}
-                <div className="relative max-w-full">
-                  {user && (
-                    <NotificationIcon
-                      onClick={() =>
-                        window.innerWidth >= 632
-                          ? setShowNotifications(!showNotifications)
-                          : handleNotificationNavigate()
-                      }
-                      className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 min-w-0"
-                    />
-                  )}
-                  {user && (
-                    <NotificationDropdown
-                      isOpen={showNotifications}
-                      onClose={() => setShowNotifications(false)}
-                      onNavigate={handleNotificationNavigate}
-                    />
-                  )}
-                </div>
-              {/* User Profile */}
+              <div className="relative max-w-full">
+                {user && (
+                  <NotificationIcon
+                    onClick={() =>
+                      window.innerWidth >= 632
+                        ? setShowNotifications(!showNotifications)
+                        : handleNotificationNavigate()
+                    }
+                    className="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150 min-w-0"
+                  />
+                )}
+                {user && (
+                  <NotificationDropdown
+                    isOpen={showNotifications}
+                    onClose={() => setShowNotifications(false)}
+                    onNavigate={handleNotificationNavigate}
+                  />
+                )}
+              </div>
+
               <button
                 onClick={() => router.push(`/profile/${user?._id}`)}
-                className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150 min-w-0 group"
+                className="flex items-center gap-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-150"
               >
-                <div className="w-8 h-8 xs:w-9 xs:h-9 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-blue-200 dark:group-hover:ring-blue-900 transition-all duration-150">
+                <div className="w-8 h-8 xs:w-9 xs:h-9 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-transparent group-hover:ring-blue-200 dark:group-hover:ring-blue-500/50">
                   {user?.avatar ? (
                     <img
                       src={user.avatar}
@@ -733,22 +706,21 @@ const Header: React.FC = () => {
                   {user?.username}
                 </span>
               </button>
-              </nav>
-
+            </nav>
           </div>
         </div>
       </header>
 
-      {/* Mobile Search Modal */}
       {showSearch && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 sm:hidden">
           <div
             ref={mobileSearchRef}
             className="bg-white dark:bg-gray-800 m-4 mt-8 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-top-4 duration-300"
           >
-            {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Search</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Search
+              </h3>
               <button
                 onClick={() => setShowSearch(false)}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-150"
@@ -757,12 +729,11 @@ const Header: React.FC = () => {
               </button>
             </div>
 
-            {/* Search Input */}
             <div className="p-4">
               <form onSubmit={handleSearchSubmit}>
                 <Input
                   type="search"
-                  className="w-full bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:border-blue-300 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900"
+                  className="w-full bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 focus:bg-white dark:focus:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   icon={<Search size={16} className="text-gray-400 dark:text-gray-500" />}
                   left_content
                   placeholder="Search posts, users, reels..."
@@ -777,17 +748,15 @@ const Header: React.FC = () => {
               </form>
             </div>
 
-            {/* Mobile Search Results */}
             {(shouldShowFrequentSearches ||
               shouldShowFilteredFrequentSearches ||
               shouldShowAutocomplete) && (
               <div className="max-h-96 overflow-y-auto">
                 <div className="p-2">
-                  {/* Frequent/Recent Searches */}
                   {(shouldShowFrequentSearches ||
                     shouldShowFilteredFrequentSearches) && (
                     <>
-                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2">
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2">
                         Recent Searches
                       </p>
                       {frequentSearches
@@ -805,25 +774,25 @@ const Header: React.FC = () => {
                             onClick={() => {
                               handleFrequentSearchClick(q);
                             }}
-                            className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                            className="flex items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
                           >
                             <Search
                               size={16}
-                              className="text-gray-400 mr-3 flex-shrink-0"
+                              className="text-gray-400 dark:text-gray-500 mr-3 flex-shrink-0"
                             />
-                            <span className="text-gray-700 truncate">{q}</span>
+                            <span className="text-gray-700 dark:text-gray-100 truncate">
+                              {q}
+                            </span>
                           </div>
                         ))}
                     </>
                   )}
 
-                  {/* Autocomplete Suggestions */}
                   {shouldShowAutocomplete && (
                     <>
-                      {/* Users */}
                       {autocompleteSuggestions.users.length > 0 && (
                         <>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                             Users
                           </p>
                           {autocompleteSuggestions.users.map((user) => (
@@ -832,7 +801,7 @@ const Header: React.FC = () => {
                               onClick={() => {
                                 handleSuggestionClick(user.username);
                               }}
-                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
                             >
                               <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center mr-3 flex-shrink-0 overflow-hidden">
                                 {user.avatar ? (
@@ -848,11 +817,11 @@ const Header: React.FC = () => {
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 truncate font-medium">
+                                <p className="text-sm text-gray-700 dark:text-gray-100 truncate font-medium">
                                   {user.username}
                                 </p>
                                 {user.name && (
-                                  <p className="text-xs text-gray-500 truncate">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     {user.name}
                                   </p>
                                 )}
@@ -862,10 +831,9 @@ const Header: React.FC = () => {
                         </>
                       )}
 
-                      {/* Posts */}
                       {autocompleteSuggestions.posts.length > 0 && (
                         <>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                             Posts
                           </p>
                           {autocompleteSuggestions.posts.map((post) => (
@@ -876,17 +844,17 @@ const Header: React.FC = () => {
                                   post.content.substring(0, 50)
                                 );
                               }}
-                              className="flex items-start px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                              className="flex items-start px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
                             >
                               <FileText
                                 size={18}
-                                className="text-gray-400 mr-3 flex-shrink-0 mt-0.5"
+                                className="text-gray-400 dark:text-gray-300 mr-3 flex-shrink-0 mt-0.5"
                               />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 line-clamp-2">
+                                <p className="text-sm text-gray-700 dark:text-gray-100 line-clamp-2">
                                   {truncateText(post.content, 80)}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                   by @{post.authorId.username}
                                 </p>
                               </div>
@@ -895,10 +863,9 @@ const Header: React.FC = () => {
                         </>
                       )}
 
-                      {/* Reels */}
                       {autocompleteSuggestions.reels.length > 0 && (
                         <>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                             Reels
                           </p>
                           {autocompleteSuggestions.reels.map((reel) => (
@@ -909,17 +876,17 @@ const Header: React.FC = () => {
                                   reel.title.substring(0, 50)
                                 );
                               }}
-                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
                             >
                               <Video
                                 size={18}
-                                className="text-gray-400 mr-3 flex-shrink-0"
+                                className="text-gray-400 dark:text-gray-300 mr-3 flex-shrink-0"
                               />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 truncate font-medium">
+                                <p className="text-sm text-gray-700 dark:text-gray-100 truncate font-medium">
                                   {reel.title}
                                 </p>
-                                <p className="text-xs text-gray-500 truncate">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                   by @{reel.authorId.username}
                                 </p>
                               </div>
@@ -930,28 +897,28 @@ const Header: React.FC = () => {
 
                       {autocompleteSuggestions.stories.length > 0 && (
                         <>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                             Stories
                           </p>
                           {autocompleteSuggestions.stories.map((story) => (
                             <div
-                              key={`mobile-reel-${story._id}`}
+                              key={`mobile-story-${story._id}`}
                               onClick={() => {
                                 handleSuggestionClick(
                                   story.text.substring(0, 50)
                                 );
                               }}
-                              className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                              className="flex items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
                             >
                               <Video
                                 size={18}
-                                className="text-gray-400 mr-3 flex-shrink-0"
+                                className="text-gray-400 dark:text-gray-300 mr-3 flex-shrink-0"
                               />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-700 truncate font-medium">
+                                <p className="text-sm text-gray-700 dark:text-gray-100 truncate font-medium">
                                   {story.text}
                                 </p>
-                                <p className="text-xs text-gray-500 truncate">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                   by @{story.authorId.username}
                                 </p>
                               </div>
@@ -960,10 +927,9 @@ const Header: React.FC = () => {
                         </>
                       )}
 
-                      {/* Hashtags */}
                       {autocompleteSuggestions.hashtags.length > 0 && (
                         <>
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 px-2 mt-3">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2 px-2 mt-3">
                             Hashtags
                           </p>
                           {autocompleteSuggestions.hashtags.map(
@@ -973,12 +939,12 @@ const Header: React.FC = () => {
                                 onClick={() => {
                                   handleSuggestionClick(hashtag);
                                 }}
-                                className="flex items-center px-3 py-3 hover:bg-gray-50 cursor-pointer transition-colors duration-150"
+                                className="flex items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors duration-150"
                               >
                                 <span className="text-blue-500 mr-3 font-semibold text-lg">
                                   #
                                 </span>
-                                <span className="text-gray-700 truncate">
+                                <span className="text-gray-700 dark:text-gray-100 truncate">
                                   {hashtag.slice(1)}
                                 </span>
                               </div>
@@ -989,26 +955,24 @@ const Header: React.FC = () => {
                     </>
                   )}
 
-                  {/* Loading state */}
                   {isLoadingSuggestions && (
                     <div className="px-3 py-4 text-center">
                       <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
                     </div>
                   )}
 
-                  {/* Current search option */}
                   {searchQuery && (
                     <div
                       onClick={() => {
                         handleFrequentSearchClick(searchQuery);
                       }}
-                      className="flex items-center px-3 py-2.5 hover:bg-gray-50 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 mt-2 pt-4"
+                      className="flex items-center px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer rounded-lg transition-colors duration-150 border-t border-gray-100 dark:border-gray-700 mt-2 pt-4"
                     >
                       <Search
                         size={14}
                         className="text-blue-500 mr-3 flex-shrink-0"
                       />
-                      <span className="text-gray-700 truncate">
+                      <span className="text-gray-700 dark:text-gray-100 truncate">
                         Search for &apos;{searchQuery}&apos;
                       </span>
                     </div>
@@ -1017,14 +981,13 @@ const Header: React.FC = () => {
               </div>
             )}
 
-            {/* Empty State */}
             {!shouldShowFrequentSearches &&
               !shouldShowFilteredFrequentSearches &&
               !shouldShowAutocomplete &&
               !isLoadingSuggestions && (
                 <div className="p-8 text-center">
-                  <Search size={32} className="text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Start typing to search</p>
+                  <Search size={32} className="text-gray-300 dark:text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-500 dark:text-gray-400">Start typing to search</p>
                 </div>
               )}
           </div>
