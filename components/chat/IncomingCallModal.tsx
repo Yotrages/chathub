@@ -1,5 +1,6 @@
 import { Phone, PhoneOff, Video } from 'lucide-react';
 import { useEffect, useState, useRef } from 'react';
+import { ringtoneManager } from '@/utils/ringtone';
 
 interface IncomingCallModalProps {
   incomingCall: { from: string; isVideo: boolean; callId: string } | null;
@@ -28,10 +29,12 @@ export const IncomingCallModal = ({
       }
       setTimeRemaining(45);
       setIsRinging(false);
+      ringtoneManager.stop();
       return;
     }
 
     setIsRinging(true);
+    ringtoneManager.playIncoming();
     
     timerRef.current = setInterval(() => {
       setTimeRemaining(prev => {
@@ -50,6 +53,7 @@ export const IncomingCallModal = ({
       }
       setTimeRemaining(45);
       setIsRinging(false);
+      ringtoneManager.stop();
     };
   }, [incomingCall, callState]); 
 
@@ -57,6 +61,7 @@ export const IncomingCallModal = ({
 
   const handleAccept = () => {
     setIsRinging(false);
+    ringtoneManager.stop();
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -66,6 +71,7 @@ export const IncomingCallModal = ({
 
   const handleDecline = () => {
     setIsRinging(false);
+    ringtoneManager.stop();
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;

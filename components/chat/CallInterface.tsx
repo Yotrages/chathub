@@ -11,8 +11,9 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UserAvatar } from "../constant/UserAvatar";
+import { ringtoneManager } from "@/utils/ringtone";
 
 interface CallInterfaceProps {
   callState: string;
@@ -28,6 +29,7 @@ interface CallInterfaceProps {
   remoteVideoRef: React.RefObject<HTMLVideoElement | null>;
   remoteAudioRef: React.RefObject<HTMLAudioElement | null>; 
   currentChat: any;
+  incomingCall?: { from: string; isVideo: boolean; callId: string } | null;
   onToggleAudioMute: () => void;
   onToggleVideoMute: () => void;
   onToggleRemoteAudio: () => void;
@@ -59,6 +61,7 @@ export const CallInterface = ({
   remoteVideoRef,
   remoteAudioRef,
   currentChat,
+  incomingCall,
   onToggleAudioMute,
   onToggleVideoMute,
   onToggleRemoteAudio,
@@ -67,6 +70,19 @@ export const CallInterface = ({
   onToggleMinimize,
   formatDuration,
 }: CallInterfaceProps) => {
+  useEffect(() => {
+    const isOutgoingCalling = !incomingCall && (callState === "calling" || callState === "ringing");
+    if (isOutgoingCalling) {
+      ringtoneManager.playOutgoing();
+    } else {
+      ringtoneManager.stop();
+    }
+
+    return () => {
+      ringtoneManager.stop();
+    };
+  }, [callState, incomingCall]);
+
   if (callState === "idle") return null;
 
   return (

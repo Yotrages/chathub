@@ -238,16 +238,16 @@ const CreatePostPage: React.FC = () => {
           </div>
 
           {/* File info */}
-          <div className="p-2 bg-white">
-            <p className="text-xs font-medium text-gray-800 truncate">
+          <div className="p-2 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 transition-colors duration-200">
+            <p className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
               {file.name}
             </p>
             <div className="flex items-center justify-between">
-              <p className="text-xs text-gray-500 flex items-center">
+              <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                 <span className="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
                 New
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 {fileUploadService.formatFileSize(file.size)}
               </p>
             </div>
@@ -311,14 +311,14 @@ const CreatePostPage: React.FC = () => {
         <div className="space-y-4">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Content Input */}
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <label className="block text-base font-medium text-gray-700 mb-3">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-transparent dark:border-gray-700/60 p-4 transition-colors duration-200">
+              <label className="block text-base font-medium text-gray-700 dark:text-gray-200 mb-3">
                 What&apos;s on your mind?
               </label>
               <textarea
                 {...register("content")}
                 placeholder="Share your thoughts..."
-                className="w-full p-4 border overflow-hidden border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200 text-base"
+                className="w-full p-4 border overflow-hidden border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all duration-200 text-base"
                 rows={4}
               />
               {errors.content && (
@@ -330,12 +330,12 @@ const CreatePostPage: React.FC = () => {
 
             {/* File Previews */}
             {totalFiles > 0 && (
-              <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-transparent dark:border-gray-700/60 p-4 space-y-4 transition-colors duration-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-base font-semibold text-gray-800">
+                  <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">
                     Media Files
                   </h3>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     {totalFiles} file{totalFiles > 1 ? "s" : ""}
                   </div>
                 </div>
@@ -347,11 +347,11 @@ const CreatePostPage: React.FC = () => {
                 </div>
 
                 {/* File Summary */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-sm text-gray-600">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 transition-colors duration-200">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     <span className="font-medium">{totalFiles}</span> file{totalFiles > 1 ? "s" : ""} selected
                   </p>
-                  <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-500">
+                  <div className="flex flex-wrap gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>
                       📸 {newFiles.filter((f) => f.type.startsWith("image/")).length} images
                     </span>
@@ -370,13 +370,13 @@ const CreatePostPage: React.FC = () => {
             )}
 
             {/* Add Files Section */}
-            <div className="bg-white rounded-xl shadow-sm p-4">
-              <h3 className="text-base font-semibold text-gray-800 mb-4">Add Media</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-transparent dark:border-gray-700/60 p-4 transition-colors duration-200">
+              <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100 mb-4">Add Media</h3>
               
-              <div className="border-2 border-dashed border-gray-200 rounded-lg p-4">
+              <div className="border-2 border-dashed border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 rounded-lg p-4 transition-colors duration-200">
                 <div className="text-center">
-                  <Camera size={32} className="text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600 mb-4">
+                  <Camera size={32} className="text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                     Add files to your post
                   </p>
                   <div className="grid grid-cols-3 gap-2">
@@ -410,10 +410,10 @@ const CreatePostPage: React.FC = () => {
             </div>
 
             {/* Visibility Section */}
-            <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-transparent dark:border-gray-700/60 p-4 space-y-4 transition-colors duration-200">
               <div className="flex items-center space-x-2">
-                <EyeIcon className="h-5 w-5 text-blue-600" />
-                <h3 className="text-base font-semibold text-gray-800">Who can see this?</h3>
+                <EyeIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100">Who can see this?</h3>
               </div>
               
               <div className="space-y-3">
@@ -424,8 +424,8 @@ const CreatePostPage: React.FC = () => {
                       key={option.value}
                       className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         visibility === option.value 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200'
+                          ? 'border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-900/20' 
+                          : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/40'
                       }`}
                     >
                       <input
@@ -439,17 +439,17 @@ const CreatePostPage: React.FC = () => {
                       <div className={`p-2 rounded-lg ${
                         visibility === option.value 
                           ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                       }`}>
                         <IconComponent className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className={`font-medium ${
-                          visibility === option.value ? 'text-blue-700' : 'text-gray-700'
+                          visibility === option.value ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
                         }`}>
                           {option.label}
                         </div>
-                        <div className="text-sm text-gray-500 leading-tight">
+                        <div className="text-sm text-gray-500 dark:text-gray-400 leading-tight">
                           {option.description}
                         </div>
                       </div>
@@ -460,7 +460,7 @@ const CreatePostPage: React.FC = () => {
             </div>
 
       {/* Fixed Bottom Button - Outside Form */}
-      <div className="sticky min-w-full bottom-0 bg-white border-t border-gray-200 p-4 shadow-2xl z-10">
+      <div className="sticky min-w-full bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 p-4 shadow-2xl z-10 transition-colors duration-200">
         <button
         type="submit"
           onClick={() => handleSubmit(onSubmit)}

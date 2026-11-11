@@ -121,6 +121,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
         remoteVideoRef={remoteVideoRef}
         remoteAudioRef={remoteAudioRef}
         currentChat={currentCallChat}
+        incomingCall={incomingCall}
         onToggleAudioMute={toggleAudioMute}
         onToggleVideoMute={toggleVideoMute}
         onToggleRemoteAudio={toggleRemoteAudio}
